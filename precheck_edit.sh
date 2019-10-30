@@ -201,7 +201,7 @@ bus_c () {
                     fi
                 else
                     echo -e "\n\t Wrong option. Try again \n"
-                	bus_c
+                    bus_c
                 fi
             ;;
             esac
@@ -371,39 +371,43 @@ uniprot_c () {
     fi
 }
 java_c () {
-    jav=$( java -version 2>&1 | awk '{print $3}' | grep "1.8" | wc -l )
-    if [ $jav -eq 1 ];then
+    jav=$( java -version 2>&1 | awk '{print $3}' | grep [0-9] | cut -f 1,2 -d "." | tr -d "." | tr -d "\"" )
+    if [ $jav -eq 18 ] || [ $jav -eq 110 ];then
         echo -e "\n\t -- Java 1.8 (or later) is installed -- \n"
-        rep=yes
-    elif [ $jav -eq 0 ];then
-        echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement of Nextflow --\e[39m\n"
+	rep=yes
+    elif [ $jav -eq 17 ];then
+        echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement for Nextflow --\e[39m\n"
         exit 0
     fi
 }
 nextflow_c () {
     #Check Nextflow
     cd $mypwd
-    check_next=$( command -v nextflow )
-    if [ `echo $check_next | wc -l` -eq 1 ];then
+    check_next=$( command -v nextflow | wc -l )
+    if [ $check_next -eq 1 ];then
         echo -e "\n\t -- Nextflow is installed -- \n"
-    elif [ `echo $check_next | wc -l` -eq 1 ];then
-        echo -e "\n\t -- Nextflow is not installed -- \n"
-        echo -e -n "\n\t    Do you want me to try to install Nextflow for you? (y or n): "
-        read ans
-        if [ "$ans" == "y" ] || [ "$ans" == "yes" ] || [ "$ans" == "Y" ] || [ "$ans" == "YES" ] || [ "$ans" == "Yes" ];then
-            java_c
-            if [ $rep == "yes" ];then
-                echo -e "\n\t -- Downloading Nextflow ... -- \n"
-                curl -s https://get.nextflow.io | bash
-                echo -e "\n\t -- Nextflow is now installed on $mypwd -- \n"
-            fi
-        elif [ "$ans" == "n" ] || [ "$ans" == "no" ] || [ "$ans" == "N" ] || [ "$ans" == "NO" ] || [ "$ans" == "No" ];then
-            echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check again --\e[39m\n"
-            exit 0
-        else
-            echo -e "\n\t\e[31m -- ERROR: Yes or No answer not specified. Rerun the pre-check again --\e[39m\n"
-            exit 0
-        fi
+    elif [ $check_next -eq 0 ];then
+	check_next=$( ./nextflow info | head -n 1 | wc -l )
+        if [ $check_next -eq 1 ];then
+            echo -e "\n\t -- Nextflow is installed -- \n"
+	else
+            echo -e -n "\n\t    Do you want me to try to install Nextflow for you? (y or n): "
+            read ans
+            if [ "$ans" == "y" ] || [ "$ans" == "yes" ] || [ "$ans" == "Y" ] || [ "$ans" == "YES" ] || [ "$ans" == "Yes" ];then
+                java_c
+                if [ "$rep" == "yes" ];then
+                    echo -e "\n\t -- Downloading Nextflow ... -- \n"
+                    curl -s https://get.nextflow.io | bash
+		    echo -e "\n\t -- Nextflow is now installed on $mypwd (local installation) -- \n"
+                fi
+            elif [ "$ans" == "n" ] || [ "$ans" == "no" ] || [ "$ans" == "N" ] || [ "$ans" == "NO" ] || [ "$ans" == "No" ];then
+                echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check again --\e[39m\n"
+                exit 0
+	    else
+                echo -e "\n\t Wrong option. Try again \n"
+	        nextflow_c
+    	    fi
+	fi
     fi
 }
 get_var () {
