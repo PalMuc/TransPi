@@ -1,7 +1,8 @@
 FROM continuumio/miniconda3
 
 LABEL authors="Ramon Rivera-Vicens" \
-      description="Docker image containing all requirements for TransPi pipeline"
+      description="Docker image containing all requirements for TransPi pipeline" \
+      version="1.0dev"
 
 RUN apt update; apt install -y gcc bc procps
 
