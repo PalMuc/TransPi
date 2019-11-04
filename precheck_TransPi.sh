@@ -53,31 +53,36 @@ conda_c() {
         echo -e "\n\t -- Conda is not intalled. Please install Anaconda or Miniconda (https://www.anaconda.com) and rerun this script --\n"
         echo -e -n "\n\t    Do you want me to try to install Anaconda for you? (y,n,exit): "
         read ans
-        if [ "$ans" == "y" ] || [ "$ans" == "yes" ] || [ "$ans" == "Y" ] || [ "$ans" == "YES" ] || [ "$ans" == "Yes" ];then
-            echo -e "\n\t -- Downloading Anaconda ... -- \n"
-            wget https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
-            echo -e "\n\t -- Starting anaconda installation -- \n"
-            bash Anaconda3-2019.10-Linux-x86_64.sh
-            echo -e "\n\t -- Installation done -- \n"
-            rm Anaconda3-2019.10-Linux-x86_64.sh
-            source ~/.bashrc
-            if [ -f transpi_env.yml ];then
-                echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
-                conda env create -f transpi_env.yml
-            else
-                echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please check requirements and rerun the pre-check --\e[39m\n"
+        case $ans in
+            [yY] | [yY][eE][sS])
+                echo -e "\n\t -- Downloading Anaconda ... -- \n"
+                wget https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+                echo -e "\n\t -- Starting anaconda installation -- \n"
+                bash Anaconda3-2019.10-Linux-x86_64.sh
+                echo -e "\n\t -- Installation done -- \n"
+                rm Anaconda3-2019.10-Linux-x86_64.sh
+                source ~/.bashrc
+                if [ -f transpi_env.yml ];then
+                    echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
+                    conda env create -f transpi_env.yml
+                else
+                    echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please check requirements and rerun the pre-check --\e[39m\n"
+                    exit 0
+                fi
+            ;;
+            [nN] | [nN][oO])
+                echo -e "\n\t\e[31m -- ERROR: Download and Install Anaconda. Then rerun the pre-check again --\e[39m\n"
                 exit 0
-            fi
-        elif [ "$ans" == "n" ] || [ "$ans" == "no" ] || [ "$ans" == "N" ] || [ "$ans" == "NO" ] || [ "$ans" == "No" ];then
-            echo -e "\n\t\e[31m -- ERROR: Download and Install Anaconda. Then rerun the pre-check again --\e[39m\n"
-            exit 0
-	elif [ "$ans" == "exit" ];then
-	    echo -e "\n\t -- Exiting -- \n"
-        exit 0
-    else
-        echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
-	    conda_c
-    fi
+            ;;
+            exit)
+	           echo -e "\n\t -- Exiting -- \n"
+               exit 0
+            ;;
+            *)
+                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+	            conda_c
+            ;;
+        esac
     fi
 }
 pfam_c() {
@@ -319,19 +324,24 @@ uni_c () {
 unicomp_c () {
     echo -e -n "\n\t    Do you want me to uncompress the file(s)? (y,n,exit): "
     read ans
-    if [ "$ans" == "y" ] || [ "$ans" == "yes" ] || [ "$ans" == "Y" ] || [ "$ans" == "YES" ] || [ "$ans" == "Yes" ];then
-        echo -e "\n\n\t -- Uncompressing file(s) ... -- \n"
-        gunzip *fasta.gz
-    elif [ "$ans" == "n" ] || [ "$ans" == "no" ] || [ "$ans" == "N" ] || [ "$ans" == "NO" ] || [ "$ans" == "No" ];then
-        echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and rerun the pre-check again --\e[39m\n"
-        exit 0
-    elif [ "$ans" == "exit" ];then
-        echo -e "\n\t -- Exiting -- \n"
-        exit 0
-    else
-        echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
-        unicomp_c
-    fi
+    case $ans in
+        [yY] | [yY][eE][sS])
+            echo -e "\n\n\t -- Uncompressing file(s) ... -- \n"
+            gunzip *fasta.gz
+        ;;
+        [nN] | [nN][oO])
+            echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and rerun the pre-check again --\e[39m\n"
+            exit 0
+        ;;
+        exit)
+            echo -e "\n\t -- Exiting -- \n"
+            exit 0
+        ;;
+        *)
+            echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+            unicomp_c
+        ;;
+    esac
 }
 uniprot_c () {
     #Check UNIPROT
