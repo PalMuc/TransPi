@@ -1,0 +1,10 @@
+busco_db/
+diamonddb/
+hmmerdb/
+nextflow
+pipeline_info/
+reads/
+uniprot_db/
+work/
+.varfile.sh
+.nextflow*
