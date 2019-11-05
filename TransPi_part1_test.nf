@@ -83,6 +83,9 @@ process results_dir {
 reads_ch=Channel.fromFilePairs("${params.mypwd}/reads/*_R{1,2}.fastq.gz")
 
 process uncompress_reads {
+
+    tag "${sample_id}"
+
     input:
         set sample_id, input_read from reads_ch
 
@@ -100,6 +103,8 @@ process uncompress_reads {
 process normalize_reads {
 
     label 'med_mem'
+
+    tag "${sample_id}"
 
     input:
         set sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") from uncompress_ch
@@ -130,6 +135,8 @@ process trinity_assembly {
 
     label 'med_mem'
 
+    tag "${sample_id}"
+
     input:
         set sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_trinity
 
@@ -151,6 +158,8 @@ process trinity_assembly {
 process soap_assembly {
 
     label 'med_mem'
+
+    tag "${sample_id}"
 
     input:
         val k from "${params.k}"
@@ -185,12 +194,16 @@ process soap_assembly {
         cat output*.scafSeq >${sample_id}.SOAP.fa
 
         cp ${sample_id}.SOAP.fa ${params.mypwd}/results/${sample_id}.SOAP.fa
+	
+	rm -rf output*
         """
 }
 
 process velvet_oases_assembly {
 
     label 'med_mem'
+
+    tag "${sample_id}"
 
     input:
         val k from "${params.k}"
@@ -201,7 +214,7 @@ process velvet_oases_assembly {
 
     script:
         """
-		echo -e "\n-- Starting with Velveth --\n"
+	echo -e "\n-- Starting with Velveth --\n"
         for x in `echo $k | tr "," " "`;do
             echo -e "\n-- k\${x} --\n"
             ${params.vh} oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
@@ -221,19 +234,23 @@ process velvet_oases_assembly {
 
         echo -e "\n-- Finished with Velvet/Oases assemblies --\n"
 
-		for x in `echo $k | tr "," " "`;do
+	for x in `echo $k | tr "," " "`;do
             sed -i "s/>/>Velvet.k\${x}./g" oases.\${x}/contigs.fa
         done
 
-		cat oases.*/contigs.fa >${sample_id}.Velvet.fa
+	cat oases.*/contigs.fa >${sample_id}.Velvet.fa
 
         cp ${sample_id}.Velvet.fa ${params.mypwd}/results/${sample_id}.Velvet.fa
+        
+	rm -rf oases.*
         """
 }
 
 process idba_assembly {
 
     label 'med_mem'
+
+    tag "${sample_id}"
 
     input:
         val k from "${params.k}"
@@ -247,9 +264,10 @@ process idba_assembly {
         echo -e "\n-- Starting IDBA assemblies --\n"
 
         set +u
-
-        source activate /home/rrivera/anaconda3
-
+        
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate base
+        
         echo -e "\n-- Converting reads for IDBA --\n"
         fq2fa --merge left-${sample_id}.norm.fq right-${sample_id}.norm.fq ${sample_id}_reads.fa
 
@@ -267,6 +285,10 @@ process idba_assembly {
         cat ${sample_id}_idba_*/contig.fa >${sample_id}.IDBA.fa
 
         cp ${sample_id}.IDBA.fa ${params.mypwd}/results/${sample_id}.IDBA.fa
+
+	rm ${sample_id}_reads.fa
+
+	rm -rf ${sample_id}_idba_*
         """
 }
 
@@ -274,13 +296,15 @@ process evigene {
 
     label 'med_mem'
 
+    tag "${sample_id}"
+    
     publishDir "${params.mypwd}/evigene"
 
     input:
         set sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
         set sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap
         set sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet
-		set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
+	set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
 
     output:
         set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate )
@@ -300,12 +324,18 @@ process evigene {
 
         cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
         cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
-        """
+        
+	if [ -d tmpfiles/ ];then
+	    rm -rf tmpfiles/
+	fi
+	"""
 }
 
 process busco {
 
     label 'big_cpus'
+
+    tag "${sample_id}"
 
     // This is a test of publishDir
     publishDir "${params.mypwd}/busco"
@@ -320,8 +350,9 @@ process busco {
     script:
         """
         set +u
-
-        source activate /home/rrivera/anaconda3
+        
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate base
 
         echo -e "\n-- Starting with BUSCO --\n"
 
@@ -342,6 +373,8 @@ process busco {
 process transdecoder {
 
     label 'low_cpus'
+
+    tag "${sample_id}"
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_transdecoder
@@ -427,10 +460,11 @@ process transdecoder {
 
 }
 
-/*
 process diamond_trinotate {
 
     label 'big_cpus'
+
+    tag "${sample_id}"
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_diamond
@@ -459,9 +493,12 @@ process diamond_trinotate {
         """
 }
 
+/*
 process hmmer_trinotate {
 
     label 'low_cpus'
+
+    tag "${sample_id}"
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_hmmer
@@ -485,6 +522,8 @@ process signalP_trinotate {
 
     label 'low_cpus'
 
+    tag "${sample_id}"
+
     input:
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_signalp
 
@@ -506,6 +545,8 @@ process signalP_trinotate {
 process tmhmm_tinotate {
 
     label 'low_cpus'
+
+    tag "${sample_id}"
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_tmhmm
@@ -529,6 +570,8 @@ process rnammer_trinotate {
 
     label 'low_cpus'
 
+    tag "${sample_id}"
+
     input:
         set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_rnammer
 
@@ -550,6 +593,8 @@ process rnammer_trinotate {
 process trinotate {
 
     label 'low_cpus'
+
+    tag "${sample_id}"
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate
@@ -632,6 +677,8 @@ process trinotate {
 }
 */
 process summary_evigene_individual {
+    tag "${sample_id}"
+
     input:
         set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary
 
@@ -684,6 +731,8 @@ process summary_evigene_individual {
 }
 
 process summary_busco_individual {
+    tag "${sample_id}"
+
     input:
         set sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt") from busco_summary
 
@@ -704,6 +753,8 @@ process summary_busco_individual {
 }
 
 process summary_transdecoder_individual {
+    tag "${sample_id}"
+
     input:
         set sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary
 
@@ -720,6 +771,8 @@ process summary_transdecoder_individual {
 }
 /*
 process summary_trinotate_individual {
+    tag "${sample_id}"
+
     input:
         set sample_id, file("${sample_id}.GO.terms.txt") from trinotate_summary
 
@@ -762,24 +815,34 @@ process summary_trinotate_individual {
 }
 
 process get_combined_sum {
-    publishDir "${params.mypwd}/summaries/"
-
-    input:
-        set sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") from final_sum_1
-        set sample_id, file("${sample_id}.sum_busco.txt") from final_sum_2
-        set sample_id, file("${sample_id}.sum_transdecoder.txt") from final_sum_3
-        set sample_id, file("${sample_id}.sum_GO.txt") from final_sum_4
-
-    output:
-        set sample_id, file("all_sum_preEG.txt"), file("all_sum_EG.txt"), file("all_sum_busco.txt"), file("all_sum_transdecoder.txt"), file("all_sum_GO.txt") into all_sum
-
     script:
         """
-        cat *.sum_preEG.txt >all_sum_preEG.txt
-        cat *.sum_EG.txt >all_sum_EG.txt
-        cat *.sum_busco.txt >all_sum_busco.txt
-        cat *.sum_transdecoder.txt >all_sum_transdecoder.txt
-        cat *.sum_GO.txt >all_sum_GO.txt
+	cd ${params.mypwd}/results/
+        ls -1 *.sum_preEG.txt >.list
+        for x in `cat .list`;do
+            echo -e "\n-- \$x --\n"
+            cat \${x}.sum_preEG.txt >all_sum_preEG.txt
+        done
+        ls -1 *.sum_EG.txt >.list
+        for x in `cat .list`;do
+            echo -e "\n-- \$x --\n"
+            cat \${x}.sum_EG.txt >all_sum_EG.txt
+        done
+        ls -1 *.sum_busco.txt >.list
+        for x in `cat .list`;do
+            echo -e "\n-- \$x --\n"
+            cat \${x}.sum_busco.txt >all_sum_busco.txt
+        done
+        ls -1 *.sum_transdecoder.txt >.list
+        for x in `cat .list`;do
+            echo -e "\n-- \$x --\n"
+            cat \${x}.sum_transdecoder.txt >all_sum_transdecoder.txt
+        done
+        ls -1 *.sum_GO.txt >.list
+        for x in `cat .list`;do
+            echo -e "\n-- \$x --\n"
+            cat \${x}.sum_GO.txt >all_sum_GO.txt
+        done
         """
 }
 
