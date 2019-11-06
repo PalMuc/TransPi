@@ -1,5 +1,5 @@
 # You can use this file to create a conda environment for this pipeline:
-#   conda env create -f environment.yml
+#   conda env create -f transpi_env.yml
 name: TransPi
 channels:
   - conda-forge
