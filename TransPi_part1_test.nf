@@ -120,7 +120,7 @@ process normalize_reads {
         """
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TransPi
+        conda activate TransPi 
 	
         echo -e "\n-- Starting Normalization --\n"
 
