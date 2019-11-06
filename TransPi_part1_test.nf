@@ -50,21 +50,21 @@ process hmmer_db {
             mkdir hmmerdb
             cd hmmerdb
             cp ${params.pfloc} .
-    		    hmmpress ${params.pfname}
-    		    export pf=`pwd`/${params.pfname}
-    		    cd ../
+    		hmmpress ${params.pfname}
+    		export pf=`pwd`/${params.pfname}
+    		cd ../
         elif [ -d hmmerdb/ ];then
-    		    echo -e "-- Folder is present. Checking if HMMER database is built --\n"
-    		    cd hmmerdb
-    		    if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
+    	    echo -e "-- Folder is present. Checking if HMMER database is built --\n"
+    		cd hmmerdb
+    		if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
                 echo -e "-- HMMER database not present, creating one --\n"
-        	      cp ${params.pfloc} .
-        	      hmmpress ${params.pfname}
-        	      export pf=`pwd`/${params.pfname}
-    		    elif [ -e ${params.pfname}.h3f ] && [ -e ${params.pfname}.h3i ] && [ -e ${params.pfname}.h3m ] && [ -e ${params.pfname}.h3p ];then
-        	      echo -e "-- HMMER database already created --\n"
-        	      export pf=`pwd`/${params.pfname}
-    		    fi
+        	    cp ${params.pfloc} .
+        	    hmmpress ${params.pfname}
+        	    export pf=`pwd`/${params.pfname}
+    	    elif [ -e ${params.pfname}.h3f ] && [ -e ${params.pfname}.h3i ] && [ -e ${params.pfname}.h3m ] && [ -e ${params.pfname}.h3p ];then
+                echo -e "-- HMMER database already created --\n"
+        	    export pf=`pwd`/${params.pfname}
+    	    fi
             cd ../
         fi
         """
@@ -118,7 +118,7 @@ process normalize_reads {
         //def mem_MB=(task.memory.toMega())
 
         """
-	set +u
+	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -149,7 +149,7 @@ process trinity_assembly {
 
     script:
         """
-	set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -178,7 +178,7 @@ process soap_assembly {
 
     script:
         """
-	set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -207,7 +207,7 @@ process soap_assembly {
 
         cp ${sample_id}.SOAP.fa ${params.mypwd}/results/${sample_id}.SOAP.fa
 	
-	rm -rf output*
+        rm -rf output*
         """
 }
 
@@ -226,11 +226,11 @@ process velvet_oases_assembly {
 
     script:
         """
-	set +u
+	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
-	echo -e "\n-- Starting with Velveth --\n"
+	    echo -e "\n-- Starting with Velveth --\n"
         for x in `echo $k | tr "," " "`;do
             echo -e "\n-- k\${x} --\n"
             ${params.vh} oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
@@ -250,15 +250,15 @@ process velvet_oases_assembly {
 
         echo -e "\n-- Finished with Velvet/Oases assemblies --\n"
 
-	for x in `echo $k | tr "," " "`;do
+        for x in `echo $k | tr "," " "`;do
             sed -i "s/>/>Velvet.k\${x}./g" oases.\${x}/contigs.fa
         done
 
-	cat oases.*/contigs.fa >${sample_id}.Velvet.fa
+        cat oases.*/contigs.fa >${sample_id}.Velvet.fa
 
         cp ${sample_id}.Velvet.fa ${params.mypwd}/results/${sample_id}.Velvet.fa
         
-	rm -rf oases.*
+        rm -rf oases.*
         """
 }
 
@@ -277,7 +277,7 @@ process idba_assembly {
 
     script:
         """
-	set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -301,9 +301,9 @@ process idba_assembly {
 
         cp ${sample_id}.IDBA.fa ${params.mypwd}/results/${sample_id}.IDBA.fa
 
-	rm ${sample_id}_reads.fa
+        rm ${sample_id}_reads.fa
 
-	rm -rf ${sample_id}_idba_*
+        rm -rf ${sample_id}_idba_*
         """
 }
 
@@ -319,7 +319,7 @@ process evigene {
         set sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
         set sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap
         set sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet
-	set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
+        set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
 
     output:
         set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate )
@@ -340,10 +340,10 @@ process evigene {
         cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
         cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
         
-	if [ -d tmpfiles/ ];then
-	    rm -rf tmpfiles/
-	fi
-	"""
+	    if [ -d tmpfiles/ ];then
+	        rm -rf tmpfiles/
+	    fi
+	    """
 }
 
 process busco {
@@ -364,7 +364,7 @@ process busco {
 
     script:
         """
-	set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 
@@ -403,7 +403,7 @@ process transdecoder {
 
     script:
         """
-	set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -493,7 +493,7 @@ process diamond_trinotate {
 
     script:
         """
-	set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -530,7 +530,7 @@ process hmmer_trinotate {
 
     script:
         """
-	set +u
+	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -606,7 +606,7 @@ process rnammer_trinotate {
 
     script:
         """
-	set +u
+	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 	
@@ -641,7 +641,7 @@ process trinotate {
 
     script:
         """
-	set +u
+	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TrasnPi
 	

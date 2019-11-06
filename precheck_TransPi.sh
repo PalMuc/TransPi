@@ -400,24 +400,75 @@ nextflow_c () {
 	check_next=$( ./nextflow info | head -n 1 | wc -l )
         if [ $check_next -eq 1 ];then
             echo -e "\n\t -- Nextflow is installed -- \n"
-	else
+	    else
             echo -e -n "\n\t    Do you want me to try to install Nextflow for you? (y or n): "
             read ans
-            if [ "$ans" == "y" ] || [ "$ans" == "yes" ] || [ "$ans" == "Y" ] || [ "$ans" == "YES" ] || [ "$ans" == "Yes" ];then
-                java_c
-                if [ "$rep" == "yes" ];then
-                    echo -e "\n\t -- Downloading Nextflow ... -- \n"
-                    curl -s https://get.nextflow.io | bash
-		    echo -e "\n\t -- Nextflow is now installed on $mypwd (local installation) -- \n"
-                fi
-            elif [ "$ans" == "n" ] || [ "$ans" == "no" ] || [ "$ans" == "N" ] || [ "$ans" == "NO" ] || [ "$ans" == "No" ];then
-                echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check again --\e[39m\n"
+            case $ans in
+                [yY] | [yY][eE][sS])
+                    java_c
+                    if [ "$rep" == "yes" ];then
+                        echo -e "\n\t -- Downloading Nextflow ... -- \n"
+                        curl -s https://get.nextflow.io | bash
+		                echo -e "\n\t -- Nextflow is now installed on $mypwd (local installation) -- \n"
+                    fi
+                ;;
+                [nN] | [nN][oO])
+                    echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check again --\e[39m\n"
+                    exit 0
+                ;;
+                *)
+                    echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+                    nextflow_c
+                ;;
+            esac
+	    fi
+    fi
+}
+evi_bash () {
+    if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
+        echo -e "\n\t -- Adding info and sourcing .bashrc file -- \n"
+        echo -e "\
+        # EvidentialGene
+        export PATH=\"\$PATH:CHANGE/evigene/scripts/prot/\"
+        # EvidentialGene(other scripts)
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/\"
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"
+        " >> ~/.bashrc
+        source ~/.bashrc
+    else
+        source ~/.bashrc
+    fi
+}
+evi_c () {
+    echo -e "\n\t -- EvidentialGene installation -- \n"
+    check_evi=$( command -v tr2aacds.pl | wc -l )
+    if [ $check_evi -eq 0 ];then
+        echo -e "\n\t -- EvidentialGene is not installed -- \n"
+        echo -e -n "\n\t    Do you want me to try to install EvidentialGene for you? (y or n): "
+        read ans
+        case $ans in
+            [yY] | [yY][eE][sS])
+                echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
+                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19jan01.tar
+                tar -xf evigene19jan01.tar
+                mv evigene19jan01/ evigene/
+                rm evigene19jan01.tar
+            ;;
+            [nN] | [nN][oO])
+                echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check again --\e[39m\n"
                 exit 0
-	    else
-                echo -e "\n\t Wrong option. Try again \n"
-	        nextflow_c
-    	    fi
-	fi
+            ;;
+            *)
+                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+                evi_c
+            ;;
+        esac
+    elif [ $check_evi -eq 1 ];then
+        echo -e "\n\t -- EvidentialGene is already installed -- \n"
     fi
 }
 get_var () {
@@ -438,6 +489,9 @@ get_var () {
     echo -e "\t UNIPROT database:\t $uniprot"
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
+    cat sample.nextflow.config | sed -e "s|mypwd|mypwd=${mypwd}|" -e "s|buscodb|buscodb=${buscodb}|" -e "s|uniprot|uniprot=${uniprot}|" \
+        -e "s|uniname|uniname=${uniname}|" -e "s|pfloc|pfloc=${pfloc}|" -e "s|pfname|pfname=${pfname}|" >nextflow.config
+    evi_bash
 }
 #Main
 if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
@@ -456,6 +510,7 @@ elif [ -d "$mypwd" ];then
     bus_c
     uniprot_c
     nextflow_c
+    evi_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
