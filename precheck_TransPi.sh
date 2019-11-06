@@ -463,6 +463,50 @@ evi_c () {
         echo -e "\n\t -- EvidentialGene is already installed -- \n"
     fi
 }
+trisql_c () {
+    if [ ! -e *.sqlite ];then
+        echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
+        echo -e -n "\n\t    Do you want me to try to install the custom sqlite database for you? (y or n): "
+        read ans
+        case $ans in
+            [yY] | [yY][eE][sS])
+                echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
+                source ~/.basrhrc
+                check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+                if [ $check_sql -eq 0 ];then
+                    echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
+                    echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                    echo -e "\n\t\e[31m -- Try to \`source ~/.bashrc\` before running the pre-check --\e[39m\n"
+                    exit 0
+                elif [ $check_sql -eq 1 ];then
+                    Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate.sqlite
+                    rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                fi
+            ;;
+            [nN] | [nN][oO])
+                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/sqlite_db". Then rerun the pre-check again --\e[39m\n"
+                exit 0
+            ;;
+            *)
+                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+                trisql_c
+            ;;
+        esac
+    else
+        echo -e "\n\t -- Custom sqlite databe for Trinotate found at "${mypwd}/sqlite_db" -- \n"
+    fi
+}
+buildsql_c () {
+    cd ${mypwd}
+    if [ -d sqlite_db/ ];then
+        cd sqlite_db
+        trisql_c
+    else
+        mkdir sqlite_db/
+        cd sqlite_db
+        trisql_c
+    fi
+}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -472,6 +516,7 @@ get_var () {
     echo "pfloc=$mypwd/hmmerdb/Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
+    echo "Tsql=$mypwd/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
@@ -482,7 +527,7 @@ get_var () {
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat sample.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|buscodb|buscodb=\"${buscodb}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" >nextflow.config
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
     evi_bash
 }
 #Main
@@ -503,6 +548,7 @@ elif [ -d "$mypwd" ];then
     uniprot_c
     nextflow_c
     evi_c
+    buildsql_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi

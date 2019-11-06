@@ -10,22 +10,22 @@
 ----------------------------------------------------------------------------------------
 */
 
-process diamond_db {
+process custom_diamond_db {
     script:
         """
         cd ${params.mypwd}
         echo -e "-- Checking if Diamond database folder is present --\n"
-        if [ ! -d diamonddb/ ];then
+        if [ ! -d diamonddb_custom/ ];then
             echo -e "-- Folder is not present, creating one and the Diamond database --\n"
-            mkdir diamonddb
-            cd diamonddb
+            mkdir diamonddb_custom/
+            cd diamonddb_custom
             cp ${params.uniprot} .
             diamond makedb --in ${params.uniname} -d ${params.uniname}
             export unidb=`pwd`/${params.uniname}
             cd ../
-        elif [ -d diamonddb/ ];then
+        elif [ -d diamonddb_custom/ ];then
             echo -e "-- Folder is present. Checking if Diamond database is built --\n"
-            cd diamonddb
+            cd diamonddb_custom
             if [ ! -e ${params.uniname}.dmnd ];then
                 echo -e "-- Diamond database not present, creating one --\n"
                 cp ${params.uniprot} .
@@ -67,6 +67,71 @@ process hmmer_db {
     	    fi
             cd ../
         fi
+        """
+}
+
+process swiss_diamond_db {
+    script:
+        """
+        set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        cd ${params.mypwd}/sqlite_db
+        if [ -e uniprot_sprot.pep ];then
+            ${params.mypwd}
+            if [ ! -d diamonddb_swiss/ ];then
+                echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                mkdir diamonddb_swiss
+                cd diamonddb_swiss
+                cp ${params.mypwd}/sqlite_db/uniprot_sprot.pep .
+                diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                export swissdb=`pwd`/uniprot_sprot.pep
+            elif [ -d diamonddb_swiss/ ];then
+                cd diamonddb_swiss
+                if [ ! -e uniprot_sprot.pep.dmnd ];then
+                    echo -e "-- Diamond database not present, creating one --\n"
+                    cp ${params.mypwd}/sqlite_db/uniprot_sprot.pep .
+                    diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                    export swissdb=`pwd`/uniprot_sprot.pep
+                elif [ -e uniprot_sprot.pep.dmnd ];then
+                    echo -e "-- Diamond database already created --\n"
+                    export swissdb=`pwd`/uniprot_sprot.pep
+                fi
+            fi
+        elif [ ! -e uniprot_sprot.pep ];then
+            cd ${params.mypwd}
+            if [ ! -d diamonddb_swiss/ ];then
+                echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                mkdir diamonddb_swiss
+                cd diamonddb_swiss
+                wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
+                EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
+                rm ind.*
+                mv uniprot_sprot.dat.gz.pep uniprot_sprot.pep
+                diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                export swissdb=`pwd`/uniprot_sprot.pep
+            elif [ -d diamonddb_swiss/ ];then
+                echo -e "-- Folder is present. Checking if Diamond database is built --\n"
+                cd diamonddb_swiss
+                if [ ! -e uniprot_sprot.pep.dmnd ];then
+                    if [ ! -e uniprot_sprot.pep ];then
+                        echo -e "-- Diamond database not present, creating one --\n"
+                        wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
+                        EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
+                        rm ind.*
+                        mv uniprot_sprot.dat.gz.pep uniprot_sprot.pep
+                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                        export swissdb=`pwd`/uniprot_sprot.pep
+                    elif [ -e uniprot_sprot.pep ];then
+                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                        export swissdb=`pwd`/uniprot_sprot.pep
+                    fi
+                elif [ -e uniprot_sprot.pep.dmnd ];then
+                    echo -e "-- Diamond database already created --\n"
+                    export swissdb=`pwd`/uniprot_sprot.pep
+                fi
+            fi
         """
 }
 
@@ -120,8 +185,8 @@ process normalize_reads {
         """
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TransPi 
-	
+        conda activate TransPi
+
         echo -e "\n-- Starting Normalization --\n"
 
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
@@ -152,7 +217,7 @@ process trinity_assembly {
         set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
         ${params.tr} --max_memory \${mem}G --seqType fq --left right-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
@@ -181,7 +246,7 @@ process soap_assembly {
         set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
         echo -e "\n-- Generating SOAP config file --\n"
         echo "max_rd_len="${params.max_rd_len} >>config.txt
         echo "[LIB]" >>config.txt
@@ -206,7 +271,7 @@ process soap_assembly {
         cat output*.scafSeq >${sample_id}.SOAP.fa
 
         cp ${sample_id}.SOAP.fa ${params.mypwd}/results/${sample_id}.SOAP.fa
-	
+
         rm -rf output*
         """
 }
@@ -229,7 +294,7 @@ process velvet_oases_assembly {
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
 	    echo -e "\n-- Starting with Velveth --\n"
         for x in `echo $k | tr "," " "`;do
             echo -e "\n-- k\${x} --\n"
@@ -257,7 +322,7 @@ process velvet_oases_assembly {
         cat oases.*/contigs.fa >${sample_id}.Velvet.fa
 
         cp ${sample_id}.Velvet.fa ${params.mypwd}/results/${sample_id}.Velvet.fa
-        
+
         rm -rf oases.*
         """
 }
@@ -280,9 +345,9 @@ process idba_assembly {
         set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
         echo -e "\n-- Starting IDBA assemblies --\n"
-        
+
         echo -e "\n-- Converting reads for IDBA --\n"
         fq2fa --merge left-${sample_id}.norm.fq right-${sample_id}.norm.fq ${sample_id}_reads.fa
 
@@ -312,7 +377,7 @@ process evigene {
     label 'med_mem'
 
     tag "${sample_id}"
-    
+
     publishDir "${params.mypwd}/evigene"
 
     input:
@@ -322,7 +387,7 @@ process evigene {
         set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
 
     output:
-        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate )
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
         set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
     script:
@@ -339,7 +404,7 @@ process evigene {
 
         cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
         cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
-        
+
 	    if [ -d tmpfiles/ ];then
 	        rm -rf tmpfiles/
 	    fi
@@ -399,6 +464,7 @@ process transdecoder {
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_signalp
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_tmhmm
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_trinotate
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_diamond_custom
         set sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
 
     script:
@@ -406,13 +472,13 @@ process transdecoder {
         set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
         unidb=${params.mypwd}/diamonddb/${params.uniname}
         pf=${params.mypwd}/hmmerdb/${params.pfname}
 
         echo -e "\n-- TransDecoder.LongOrfs... --\n"
 
-        TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa
+        ${params.torf} -t ${sample_id}.combined.okay.fa
 
         echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
 
@@ -420,19 +486,19 @@ process transdecoder {
 
         echo -e "\n-- Starting Diamond (blastp) --\n"
 
-        diamond blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
+        ${params.diam} blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
 
         echo -e "\n-- Done with Diamond (blastp) --\n"
 
         echo -e "\n-- Starting HMMER --\n"
 
-        hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout \$pf \$fname.transdecoder_dir/longest_orfs.pep
+        ${params.hmsc} --cpu ${task.cpus} --domtblout pfam.domtblout \$pf \$fname.transdecoder_dir/longest_orfs.pep
 
         echo -e "\n-- Done with HMMER --\n"
 
         echo -e "\n-- TransDecoder.Predict... --\n"
 
-        TransDecoder.Predict -t ${sample_id}.combined.okay.fa --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
+        ${params.tpred} -t ${sample_id}.combined.okay.fa --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
 
         echo -e "\n-- Done with TransDecoder.Predict --\n"
 
@@ -478,7 +544,7 @@ process transdecoder {
 
 }
 
-process diamond_trinotate {
+process swiss_diamond_trinotate {
 
     label 'big_cpus'
 
@@ -496,25 +562,61 @@ process diamond_trinotate {
         set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
-        unidb=${params.mypwd}/diamonddb/${params.uniname}
+
+        swissdb=${params.mypwd}/diamonddb_swiss/uniprot_sprot.pep
 
         #Diamond (BLAST) Homologies
 
         echo -e "\n-- Starting with Diamond (blastx) --\n"
 
-        diamond blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+        ${params.diam} blastx -d \$swissdb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
 
         echo -e "\n-- Done with Diamond (blastx) --\n"
 
         echo -e "\n-- Starting with Diamond (blastp) --\n"
 
-        diamond blastp -d \$unidb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+        ${params.diam} blastp -d \$swissdb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
         echo -e "\n-- Done with Diamond (blastp)  --\n"
         """
 }
 
+process custom_diamond_trinotate {
+
+    label 'big_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate_custom
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_diamond_custom
+
+    output:
+        set sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") into trinotate_ch_diamond_custom
+
+    script:
+        """
+        set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
+
+        #Diamond (BLAST) Homologies
+
+        echo -e "\n-- Starting with Diamond (blastx) --\n"
+
+        ${params.diam} blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+
+        echo -e "\n-- Done with Diamond (blastx) --\n"
+
+        echo -e "\n-- Starting with Diamond (blastp) --\n"
+
+        ${params.diam} blastp -d \$unidb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+
+        echo -e "\n-- Done with Diamond (blastp)  --\n"
+        """
+}
 
 process hmmer_trinotate {
 
@@ -533,12 +635,12 @@ process hmmer_trinotate {
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
         pf=${params.mypwd}/hmmerdb/${params.pfname}
 
         echo -e "\n-- Starting with HMMER --\n"
 
-        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out \$pf ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+        ${params.hmsc} --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out \$pf ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
 
         echo -e "\n-- Done with HMMER --\n"
         """
@@ -562,7 +664,7 @@ process signalP_trinotate {
 
         echo -e "\n-- Starting with SignalP --\n"
 
-        signalp -f short -n ${sample_id}.signalp.out ${sample_id}.combined.okay.fa.transdecoder.pep
+        ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.combined.okay.fa.transdecoder.pep
 
         echo -e "\n-- Done with SignalP --\n"
         """
@@ -586,7 +688,7 @@ process tmhmm_tinotate {
 
         echo -e "\n-- Starting with tmHMM --\n"
 
-        tmhmm --short < ${sample_id}.combined.okay.fa.transdecoder.pep >${sample_id}.tmhmm.out
+        ${params.tmhmm} --short < ${sample_id}.combined.okay.fa.transdecoder.pep >${sample_id}.tmhmm.out
 
         echo -e "\n-- Done with tmHMM --\n"
         """
@@ -609,7 +711,7 @@ process rnammer_trinotate {
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
-	
+
         #RNAMMER to identify rRNA transcripts
 
         echo -e "\n-- Starting with RNAMMER --\n"
@@ -630,6 +732,7 @@ process trinotate {
         set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_trinotate
         set sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") from trinotate_ch_diamond
+        set sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") from trinotate_ch_diamond_custom
         set sample_id, file("${sample_id}.TrinotatePFAM.out") from trinotate_ch_hmmer
         set sample_id, file("${sample_id}.signalp.out") from trinotate_ch_signalp
         set sample_id, file("${sample_id}.tmhmm.out") from trinotate_ch_tmhmm
@@ -644,7 +747,7 @@ process trinotate {
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TrasnPi
-	
+
         #Generate gene_trans_map
         #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
         cat ${sample_id}.combined.okay.fa | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
@@ -653,34 +756,41 @@ process trinotate {
 
         #Get Trinotate.sqlite from folder (original)
         cp ${params.Tsql} .
+        sqlname=`echo ${params.Tsql} | tr "\/" "\n" | grep "\.sqlite"`
 
         echo -e "\n-- Running Trinotate --\n"
 
-        Trinotate Trinotate.sqlite init --gene_trans_map ${sample_id}.combined.okay.fa.gene_trans_map --transcript_fasta ${sample_id}.combined.okay.fa --transdecoder_pep ${sample_id}.combined.okay.fa.transdecoder.pep
+        Trinotate \$sqlname init --gene_trans_map ${sample_id}.combined.okay.fa.gene_trans_map --transcript_fasta ${sample_id}.combined.okay.fa --transdecoder_pep ${sample_id}.combined.okay.fa.transdecoder.pep
 
         echo -e "\n-- Ending run of Trinotate --\n"
 
         echo -e "\n-- Loading hits and predictions to sqlite database... --\n"
 
         #Load protein hits
-        Trinotate Trinotate.sqlite LOAD_swissprot_blastp ${sample_id}.diamond_blastp.outfmt6
+        Trinotate \$sqlname LOAD_swissprot_blastp ${sample_id}.diamond_blastp.outfmt6
 
         #Load transcript hits
-        Trinotate Trinotate.sqlite LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
+        Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
+
+        #Load custom protein hits
+        Trinotate \$sqlname LOAD_custom_blast --outfmt6 --prog blastp --dbtype ${sample_id}.custom.diamond_blastp.outfmt6
+
+        #Load custom transcript hits
+        Trinotate \$sqlname LOAD_custom_blast --outfmt6 --prog blastx --dbtype ${sample_id}.custom.diamond_blastx.outfmt6
 
         #Load Pfam domain entries
-        Trinotate Trinotate.sqlite LOAD_pfam ${sample_id}.TrinotatePFAM.out
+        Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
 
         #Load transmembrane domains
         if [ -e ${sample_id}.tmhmm.out ] && [ -s ${sample_id}.tmhmm.out ];then
-            Trinotate Trinotate.sqlite LOAD_tmhmm ${sample_id}.tmhmm.out
+            Trinotate \$sqlname LOAD_tmhmm ${sample_id}.tmhmm.out
         else
             echo "No transmembrane domains (tmhmm)"
         fi
 
         #Load signal peptide predictions
         if [ -e ${sample_id}.signalp.out ] && [ -s ${sample_id}.signalp.out ];then
-            Trinotate Trinotate.sqlite LOAD_signalp ${sample_id}.signalp.out
+            Trinotate \$sqlname LOAD_signalp ${sample_id}.signalp.out
         else
             echo "No Signal-P"
         fi
@@ -691,7 +801,7 @@ process trinotate {
 
         echo -e "\n-- Generating report... --\n"
 
-        Trinotate Trinotate.sqlite report >${sample_id}.trinotate_annotation_report.xls
+        Trinotate \$sqlname report >${sample_id}.trinotate_annotation_report.xls
 
         echo -e "\n-- Report generated --\n"
 
