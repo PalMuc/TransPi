@@ -6,7 +6,7 @@
 ========================================================================================
                        Transcriptomes Analysis Pipeline
                        Author: Ramon E. Rivera-Vicens
-                       Version: 1.0
+                       Version: 1.0 (Palmuc)
 ----------------------------------------------------------------------------------------
 */
 
@@ -118,6 +118,10 @@ process normalize_reads {
         //def mem_MB=(task.memory.toMega())
 
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         echo -e "\n-- Starting Normalization --\n"
 
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
@@ -145,6 +149,10 @@ process trinity_assembly {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
         ${params.tr} --max_memory \${mem}G --seqType fq --left right-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
@@ -170,6 +178,10 @@ process soap_assembly {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         echo -e "\n-- Generating SOAP config file --\n"
         echo "max_rd_len="${params.max_rd_len} >>config.txt
         echo "[LIB]" >>config.txt
@@ -214,6 +226,10 @@ process velvet_oases_assembly {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
 	echo -e "\n-- Starting with Velveth --\n"
         for x in `echo $k | tr "," " "`;do
             echo -e "\n-- k\${x} --\n"
@@ -261,12 +277,11 @@ process idba_assembly {
 
     script:
         """
-        echo -e "\n-- Starting IDBA assemblies --\n"
-
-        set +u
-        
+	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate base
+        conda activate TrasnPi
+	
+        echo -e "\n-- Starting IDBA assemblies --\n"
         
         echo -e "\n-- Converting reads for IDBA --\n"
         fq2fa --merge left-${sample_id}.norm.fq right-${sample_id}.norm.fq ${sample_id}_reads.fa
@@ -349,10 +364,9 @@ process busco {
 
     script:
         """
-        set +u
-        
+	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate base
+        conda activate TrasnPi
 
         echo -e "\n-- Starting with BUSCO --\n"
 
@@ -389,6 +403,10 @@ process transdecoder {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         unidb=${params.mypwd}/diamonddb/${params.uniname}
         pf=${params.mypwd}/hmmerdb/${params.pfname}
 
@@ -475,6 +493,10 @@ process diamond_trinotate {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         unidb=${params.mypwd}/diamonddb/${params.uniname}
 
         #Diamond (BLAST) Homologies
@@ -493,7 +515,7 @@ process diamond_trinotate {
         """
 }
 
-/*
+
 process hmmer_trinotate {
 
     label 'low_cpus'
@@ -508,6 +530,10 @@ process hmmer_trinotate {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         pf=${params.mypwd}/hmmerdb/${params.pfname}
 
         echo -e "\n-- Starting with HMMER --\n"
@@ -611,6 +637,10 @@ process trinotate {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TrasnPi
+	
         #Generate gene_trans_map
         #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
         cat ${sample_id}.combined.okay.fa | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
@@ -675,7 +705,7 @@ process trinotate {
         echo -e "\n-- DONE with Trinotate --\n"
         """
 }
-*/
+
 process summary_evigene_individual {
     tag "${sample_id}"
 
@@ -769,7 +799,7 @@ process summary_transdecoder_individual {
         echo -e "##### \n" >>${sample_id}.sum_transdecoder.txt
         """
 }
-/*
+
 process summary_trinotate_individual {
     tag "${sample_id}"
 
@@ -910,4 +940,3 @@ process get_run_info {
         cp run_info.txt ${params.mypwd}/results/run_info.txt
         """
 }
-*/
