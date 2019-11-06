@@ -427,17 +427,9 @@ nextflow_c () {
 evi_bash () {
     if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
         echo -e "\n\t -- Adding info and sourcing .bashrc file -- \n"
-        echo -e "\
-        # EvidentialGene
-        export PATH=\"\$PATH:CHANGE/evigene/scripts/prot/\"
-        # EvidentialGene(other scripts)
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/\"
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"
-        " >> ~/.bashrc
+        echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n \
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n \
+        export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
         source ~/.bashrc
     else
         source ~/.bashrc
