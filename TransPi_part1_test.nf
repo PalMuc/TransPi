@@ -95,7 +95,7 @@ process uncompress_reads {
     script:
         """
         echo ${sample_id}
-        zcat ${input_read[0]} >left-${sample_id}.fq
+        zcat ${input_read[0]} >left-${sample_id}.fq &
         zcat ${input_read[1]} >right-${sample_id}.fq
         """
 }
