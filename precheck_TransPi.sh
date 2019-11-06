@@ -427,9 +427,9 @@ nextflow_c () {
 evi_bash () {
     if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
         echo -e "\n\t -- Adding info and sourcing .bashrc file -- \n"
-        echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n \
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n \
-        export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
+        echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
+        echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
+        echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
         source ~/.bashrc
     else
         source ~/.bashrc
@@ -439,6 +439,7 @@ evi_c () {
     echo -e "\n\t -- EvidentialGene installation -- \n"
     check_evi=$( command -v tr2aacds.pl | wc -l )
     if [ $check_evi -eq 0 ];then
+        if [ ! -d evigene/ ];then
         echo -e "\n\t -- EvidentialGene is not installed -- \n"
         echo -e -n "\n\t    Do you want me to try to install EvidentialGene for you? (y or n): "
         read ans
@@ -459,6 +460,9 @@ evi_c () {
                 evi_c
             ;;
         esac
+        else
+            echo -e "\n\t -- EvidentialGene directory was found at $mypwd (local installation) -- \n"
+        fi
     elif [ $check_evi -eq 1 ];then
         echo -e "\n\t -- EvidentialGene is already installed -- \n"
     fi
