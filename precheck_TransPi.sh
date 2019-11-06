@@ -295,12 +295,9 @@ bus_c () {
     done
     else
         echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"buslist.txt\" is available. Please check requirements and rerun the pre-check --\e[39m\n\n"
-        #
 	#
 	#
 	# Try to get it automatically from GitHub  ############################################################################################################
-	#
-	#
 	#
 	exit 0
     fi
@@ -436,7 +433,6 @@ evi_bash () {
     fi
 }
 evi_c () {
-    echo -e "\n\t -- EvidentialGene installation -- \n"
     check_evi=$( command -v tr2aacds.pl | wc -l )
     if [ $check_evi -eq 0 ];then
         if [ ! -d evigene/ ];then
