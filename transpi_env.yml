@@ -16,3 +16,4 @@ dependencies:
   - transdecoder=5.5.0
   - trinotate=3.1.1
   - diamond=0.9.26
+  - hmmer=3.2.1
