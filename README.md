@@ -3,7 +3,7 @@
 ### STEPS (Palmuc)
 
 1- Run the precheck  
-2- Modify the `nextflow.config` for the desire kmers, read length, etc. 
+2- Modify the `nextflow.config` for the desire kmers, read length, etc.   
 3- Run the pipeline
 
 
