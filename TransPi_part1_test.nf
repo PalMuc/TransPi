@@ -120,7 +120,7 @@ process normalize_reads {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         echo -e "\n-- Starting Normalization --\n"
 
@@ -137,7 +137,7 @@ process normalize_reads {
 
 process trinity_assembly {
 
-    label 'med_mem'
+    label 'med_mem2'
 
     tag "${sample_id}"
 
@@ -151,7 +151,7 @@ process trinity_assembly {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
@@ -180,7 +180,7 @@ process soap_assembly {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         echo -e "\n-- Generating SOAP config file --\n"
         echo "max_rd_len="${params.max_rd_len} >>config.txt
@@ -228,7 +228,7 @@ process velvet_oases_assembly {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
 	echo -e "\n-- Starting with Velveth --\n"
         for x in `echo $k | tr "," " "`;do
@@ -279,7 +279,7 @@ process idba_assembly {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         echo -e "\n-- Starting IDBA assemblies --\n"
         
@@ -366,7 +366,7 @@ process busco {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 
         echo -e "\n-- Starting with BUSCO --\n"
 
@@ -405,7 +405,7 @@ process transdecoder {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         unidb=${params.mypwd}/diamonddb/${params.uniname}
         pf=${params.mypwd}/hmmerdb/${params.pfname}
@@ -495,7 +495,7 @@ process diamond_trinotate {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         unidb=${params.mypwd}/diamonddb/${params.uniname}
 
@@ -532,7 +532,7 @@ process hmmer_trinotate {
         """
 	set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 	
         pf=${params.mypwd}/hmmerdb/${params.pfname}
 
@@ -606,6 +606,10 @@ process rnammer_trinotate {
 
     script:
         """
+	set +u
+        source ~/anaconda3/etc/profile.d/conda.sh
+        conda activate TransPi
+	
         #RNAMMER to identify rRNA transcripts
 
         echo -e "\n-- Starting with RNAMMER --\n"
