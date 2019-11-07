@@ -22,4 +22,4 @@
 
 
 ### OPTIONAL  
-Make an account with your email at `https://tower.nf/login` for monitoring the pipeline on any internet browser without connecting to the server.  
+Make an account with your email at [Nextflow Tower](https://tower.nf/login) for monitoring the pipeline on any internet browser without connecting to the server.  
