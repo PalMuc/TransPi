@@ -1,6 +1,6 @@
 # TransPi
 
-### REQUIRENMENTS   
+### REQUIREMENTS   
 - Directories
 
   reads = with paired-end reads (e.g. IndA_R1.fastq.gz, IndA_R2.fastq.gz).  
