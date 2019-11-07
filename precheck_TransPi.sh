@@ -471,7 +471,7 @@ trisql_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-                source ~/.bashrc
+                source ~/anaconda3/etc/profile.d/conda.sh
                 conda activate TransPi
                 check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
                 if [ $check_sql -eq 0 ];then
