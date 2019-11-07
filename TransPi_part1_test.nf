@@ -70,7 +70,7 @@ process swiss_diamond_db {
 
         cd ${params.mypwd}/sqlite_db
         if [ -e uniprot_sprot.pep ];then
-            ${params.mypwd}
+            cd ${params.mypwd}
             if [ ! -d diamonddb_swiss/ ];then
                 echo -e "-- Folder is not present, creating one and the Diamond database --\n"
                 mkdir diamonddb_swiss
