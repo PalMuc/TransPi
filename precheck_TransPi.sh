@@ -471,12 +471,12 @@ trisql_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-                source ~/.basrhrc
+                source ~/.bashrc
+                conda activate TransPi
                 check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
                 if [ $check_sql -eq 0 ];then
                     echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
                     echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-                    echo -e "\n\t\e[31m -- Try to \`source ~/.bashrc\` before running the pre-check --\e[39m\n"
                     exit 0
                 elif [ $check_sql -eq 1 ];then
                     Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate.sqlite
