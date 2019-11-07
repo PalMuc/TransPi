@@ -950,36 +950,26 @@ process summary_trinotate_individual {
 }
 
 process get_combined_sum {
+    publishDir "${params.mypwd}/summaries/"
+
+    input:
+        set sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") from final_sum_1
+        set sample_id, file("${sample_id}.sum_busco.txt") from final_sum_2
+        set sample_id, file("${sample_id}.sum_transdecoder.txt") from final_sum_3
+        set sample_id, file("${sample_id}.sum_GO.txt") from final_sum_4
+
+    output:
+        set sample_id, file("all_sum_preEG.txt"), file("all_sum_EG.txt"), file("all_sum_busco.txt"), file("all_sum_transdecoder.txt"), file("all_sum_GO.txt") into all_sum
+
     script:
         """
-	cd ${params.mypwd}/results/
-        ls -1 *.sum_preEG.txt >.list
-        for x in `cat .list`;do
-            echo -e "\n-- \$x --\n"
-            cat \${x}.sum_preEG.txt >all_sum_preEG.txt
-        done
-        ls -1 *.sum_EG.txt >.list
-        for x in `cat .list`;do
-            echo -e "\n-- \$x --\n"
-            cat \${x}.sum_EG.txt >all_sum_EG.txt
-        done
-        ls -1 *.sum_busco.txt >.list
-        for x in `cat .list`;do
-            echo -e "\n-- \$x --\n"
-            cat \${x}.sum_busco.txt >all_sum_busco.txt
-        done
-        ls -1 *.sum_transdecoder.txt >.list
-        for x in `cat .list`;do
-            echo -e "\n-- \$x --\n"
-            cat \${x}.sum_transdecoder.txt >all_sum_transdecoder.txt
-        done
-        ls -1 *.sum_GO.txt >.list
-        for x in `cat .list`;do
-            echo -e "\n-- \$x --\n"
-            cat \${x}.sum_GO.txt >all_sum_GO.txt
-        done
+        cat *.sum_preEG.txt >all_sum_preEG.txt
+        cat *.sum_EG.txt >all_sum_EG.txt
+        cat *.sum_busco.txt >all_sum_busco.txt
+        cat *.sum_transdecoder.txt >all_sum_transdecoder.txt
+        cat *.sum_GO.txt >all_sum_GO.txt
         """
-}
+} 
 
 process get_run_info {
     script:
