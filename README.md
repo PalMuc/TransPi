@@ -6,7 +6,7 @@
   reads = with paired-end reads (e.g. IndA_R1.fastq.gz, IndA_R2.fastq.gz).  
           Make sure reads end with _R2.fastq.gz  
           
-  uniprot_db = custom database from Uniprot (e.g metazoans, corals, etc.). Do not include here swiss prot. Swiss prot will be         install in anpther directory.
+  uniprot_db = custom database from Uniprot (e.g metazoans, corals, etc.). Do not include here swiss prot. Swiss prot will be         install in another directory.
 
 
 ### STEPS (Palmuc - to be test)  
