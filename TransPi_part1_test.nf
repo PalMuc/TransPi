@@ -45,20 +45,11 @@ process hmmer_db {
         """
         cd ${params.mypwd}
         echo -e "-- Checking if HMMER database folder is present --\n"
-        if [ ! -d hmmerdb/ ];then
-            echo -e "-- Folder is not present, creating one and the HMMER database --\n"
-            mkdir hmmerdb
-            cd hmmerdb
-            cp ${params.pfloc} .
-    		hmmpress ${params.pfname}
-    		export pf=`pwd`/${params.pfname}
-    		cd ../
-        elif [ -d hmmerdb/ ];then
+        if [ -d hmmerdb/ ];then
     	    echo -e "-- Folder is present. Checking if HMMER database is built --\n"
     		cd hmmerdb
     		if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
                 echo -e "-- HMMER database not present, creating one --\n"
-        	    cp ${params.pfloc} .
         	    hmmpress ${params.pfname}
         	    export pf=`pwd`/${params.pfname}
     	    elif [ -e ${params.pfname}.h3f ] && [ -e ${params.pfname}.h3i ] && [ -e ${params.pfname}.h3m ] && [ -e ${params.pfname}.h3p ];then
