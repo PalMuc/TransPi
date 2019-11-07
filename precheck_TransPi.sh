@@ -423,7 +423,7 @@ nextflow_c () {
 }
 evi_bash () {
     if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
-        echo -e "\n\t -- Adding info and sourcing .bashrc file -- \n"
+        echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
         echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
         echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
         echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
