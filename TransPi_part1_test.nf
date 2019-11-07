@@ -747,7 +747,7 @@ process trinotate {
 
         #Get Trinotate.sqlite from folder (original)
         cp ${params.Tsql} .
-        sqlname=`echo ${params.Tsql} | tr "\/" "\n" | grep "\.sqlite"`
+        sqlname=`echo ${params.Tsql} | tr "\\/" "\n" | grep "\\.sqlite"`
 
         echo -e "\n-- Running Trinotate --\n"
 
@@ -969,7 +969,7 @@ process get_combined_sum {
         cat *.sum_transdecoder.txt >all_sum_transdecoder.txt
         cat *.sum_GO.txt >all_sum_GO.txt
         """
-} 
+}
 
 process get_run_info {
     script:
