@@ -123,6 +123,7 @@ process swiss_diamond_db {
                     export swissdb=`pwd`/uniprot_sprot.pep
                 fi
             fi
+        fi
         """
 }
 
