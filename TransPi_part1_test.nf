@@ -465,7 +465,7 @@ process transdecoder {
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 
-        unidb=${params.mypwd}/diamonddb/${params.uniname}
+        unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
         pf=${params.mypwd}/hmmerdb/${params.pfname}
 
         echo -e "\n-- TransDecoder.LongOrfs... --\n"
