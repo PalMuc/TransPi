@@ -194,7 +194,7 @@ process normalize_reads {
 
 process trinity_assembly {
 
-    label 'med_mem2'
+    label 'med_mem'
 
     tag "${sample_id}"
 
@@ -700,7 +700,7 @@ process rnammer_trinotate {
 
     script:
         """
-	    set +u
+	set +ue
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 
