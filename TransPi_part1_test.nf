@@ -6,7 +6,7 @@
 ========================================================================================
                        Transcriptomes Analysis Pipeline
                        Author: Ramon E. Rivera-Vicens
-                       Version: 1.0 (Palmuc)
+                       Version: 1.0 (dev)
 ----------------------------------------------------------------------------------------
 */
 
@@ -52,7 +52,7 @@ process hmmer_db {
                 echo -e "-- HMMER database not present, creating one --\n"
         	    hmmpress ${params.pfname}
         	    export pf=`pwd`/${params.pfname}
-    	    elif [ -e ${params.pfname}.h3f ] && [ -e ${params.pfname}.h3i ] && [ -e ${params.pfname}.h3m ] && [ -e ${params.pfname}.h3p ];then
+    	    elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
                 echo -e "-- HMMER database already created --\n"
         	    export pf=`pwd`/${params.pfname}
     	    fi
@@ -139,24 +139,6 @@ process results_dir {
 
 reads_ch=Channel.fromFilePairs("${params.mypwd}/reads/*_R{1,2}.fastq.gz")
 
-process uncompress_reads {
-
-    tag "${sample_id}"
-
-    input:
-        set sample_id, input_read from reads_ch
-
-    output:
-        set sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into uncompress_ch
-
-    script:
-        """
-        echo ${sample_id}
-        zcat ${input_read[0]} >left-${sample_id}.fq &
-        zcat ${input_read[1]} >right-${sample_id}.fq
-        """
-}
-
 process normalize_reads {
 
     label 'med_mem'
@@ -164,20 +146,22 @@ process normalize_reads {
     tag "${sample_id}"
 
     input:
-        set sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") from uncompress_ch
+        set sample_id, input_read from reads_ch
 
     output:
-        set sample_id, file("right-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_idba )
+        set sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_idba )
 
     script:
-
         //def mem=(task.memory)
         //def mem_MB=(task.memory.toMega())
-
         """
-	    set +u
+        set +u
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
+
+        echo ${sample_id}
+        zcat ${input_read[0]} >left-${sample_id}.fq &
+        zcat ${input_read[1]} >right-${sample_id}.fq
 
         echo -e "\n-- Starting Normalization --\n"
 
@@ -700,7 +684,7 @@ process rnammer_trinotate {
 
     script:
         """
-	set +ue
+        set +ue
         source ~/anaconda3/etc/profile.d/conda.sh
         conda activate TransPi
 
@@ -774,14 +758,14 @@ process trinotate {
         Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
 
         #Load transmembrane domains
-        if [ -e ${sample_id}.tmhmm.out ] && [ -s ${sample_id}.tmhmm.out ];then
+        if [ -s ${sample_id}.tmhmm.out ];then
             Trinotate \$sqlname LOAD_tmhmm ${sample_id}.tmhmm.out
         else
             echo "No transmembrane domains (tmhmm)"
         fi
 
         #Load signal peptide predictions
-        if [ -e ${sample_id}.signalp.out ] && [ -s ${sample_id}.signalp.out ];then
+        if [ -s ${sample_id}.signalp.out ];then
             Trinotate \$sqlname LOAD_signalp ${sample_id}.signalp.out
         else
             echo "No Signal-P"
@@ -1003,7 +987,7 @@ process get_run_info {
         v=\$( hmmsearch -h | head -n 2 | cut -f 3 -d " " | grep [0-9] )
         echo "HMMER:"\$v >>run_info.txt
 
-        v=\$( echo "2017.12.21" )
+        v=\$( echo "2019.01.01" )
         echo "EvidentialGene:"\$v >>run_info.txt
 
         v=\$( echo "1.2" )
