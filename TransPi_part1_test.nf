@@ -173,6 +173,8 @@ process normalize_reads {
 
         mv left.norm.fq left-"${sample_id}".norm.fq
         mv right.norm.fq right-"${sample_id}".norm.fq
+
+        rm left-${sample_id}.fq right-${sample_id}.fq
         """
 }
 
@@ -196,7 +198,7 @@ process trinity_assembly {
 
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-        ${params.tr} --max_memory \${mem}G --seqType fq --left right-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
+        ${params.tr} --max_memory \${mem}G --seqType fq --left left-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
 
         mv trinity_out_dir.Trinity.fasta ${sample_id}.Trinity.fa
 
