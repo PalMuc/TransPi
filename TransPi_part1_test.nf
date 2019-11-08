@@ -662,7 +662,7 @@ process signalP_trinotate {
         """
 }
 
-process tmhmm_tinotate {
+process tmhmm_trinotate {
 
     label 'low_cpus'
 
