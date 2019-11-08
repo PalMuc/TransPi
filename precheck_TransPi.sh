@@ -36,8 +36,8 @@ conda_c() {
     if [ -f "$check_conda" ] && [ "$ver" -gt "45" ];then
         echo -e "\n\t -- Conda is intalled (v4.5 or higher). Checking environment... --\n"
         #Check environment
-        check_env=$( conda env list | grep "TransPi" )
-        if [ `echo check_env | wc -l` -eq 0 ];then
+        check_env=$( conda env list | grep -c "TransPi" )
+        if [ "$check_env" -eq 0 ];then
             echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
             if [ -f transpi_env.yml ];then
                 echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
@@ -46,7 +46,7 @@ conda_c() {
                 echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found \(transpi_env.yml\). Please check requirements and rerun the pre-check --\e[39m\n"
                 exit 0
             fi
-        elif [ `echo check_env | wc -l` -eq 1 ];then
+        elif [ "$check_env" -eq 1 ];then
             echo -e "\n\t -- TransPi environment is installed and ready to be used --\n"
         fi
     else
