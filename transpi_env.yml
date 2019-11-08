@@ -17,3 +17,6 @@ dependencies:
   - trinotate=3.1.1
   - diamond=0.9.26
   - hmmer=3.2.1
+  - exonerate=2.4
+  - cd-hit=4.8.1
+  - perl-xml-simple=2.25
