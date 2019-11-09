@@ -724,7 +724,7 @@ process trinotate {
         """
 	    set +u
         source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TrasnPi
+        conda activate TransPi
 
         #Generate gene_trans_map
         #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
