@@ -904,7 +904,7 @@ process summary_trinotate_individual {
     script:
         """
         #Summary of Trinotate (Gene Ontologies)
-        echo -e "Summary of Trinotate/Gene Ontologies \\n" >>sum_GO.txt
+        echo -e "Summary of Trinotate/Gene Ontologies \\n" >>${sample_id}.sum_GO.txt
         echo "- Individual "${sample_id} >>${sample_id}.sum_GO.txt
         echo -e "\\t Total transcripts with GO:" >>${sample_id}.sum_GO.txt
         num=\$( cat ${sample_id}.GO.terms.txt | wc -l )
