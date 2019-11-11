@@ -479,7 +479,7 @@ trisql_c () {
                     echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
                     exit 0
                 elif [ $check_sql -eq 1 ];then
-                    Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate.sqlite
+                    Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                     rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
                 fi
             ;;

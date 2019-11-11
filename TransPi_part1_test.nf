@@ -751,10 +751,10 @@ process trinotate {
         Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
 
         #Load custom protein hits
-        Trinotate \$sqlname LOAD_custom_blast --outfmt6 --prog blastp --dbtype ${sample_id}.custom.diamond_blastp.outfmt6
+        Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${sample_id}_custom_uniprot
 
         #Load custom transcript hits
-        Trinotate \$sqlname LOAD_custom_blast --outfmt6 --prog blastx --dbtype ${sample_id}.custom.diamond_blastx.outfmt6
+        Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${sample_id}_custom_uniprot
 
         #Load Pfam domain entries
         Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
