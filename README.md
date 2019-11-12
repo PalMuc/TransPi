@@ -1,7 +1,7 @@
 # TransPi
 
 ## REQUIREMENTS   
-- Directories *before* the precheck is run  
+- Directories **before** the precheck is run  
 
   reads = with paired-end reads (e.g. IndA_R1.fastq.gz, IndA_R2.fastq.gz).    
   		**Make sure reads end with _R1.fastq.gz and _R1.fastq.gz**  
@@ -10,49 +10,101 @@
 		**Example: uniprot-taxonomy_metazoaA33208.fasta**   
 
 
-## STEPS (VM testing)   
-1- After the requirentments are satisfied you can now run the precheck. Precehck run needs a PATH as narguments for running installing (locally) all the databse and programs it needs.  
+## STEPS before running the pipeline    
+1- After the requirentments are satisfied you can now run the precheck. Precheck run needs a PATH as an argument for running and installing (locally) all the databases and programs the pipieline needs.   
 
 ```
 bash precheck_TransPi.sh /home/ubuntu/TransPi
 ```  
 
-2- If the precheck run was succesful, a file called `nextflow.config` will be created. You just need to edit now the `PATH` of rnammer, tmhmm and siglnalp. This file is created using the `template.nextflow.config`. It is convenient then to modify the `PATH` of rnammer, tmhmm and siglnalp in the `template.nextflow.config` so the only changes need to be in the kmers and reads length.   
+2- If the precheck run was succesful, a file called `nextflow.config` will be created. Modify in the `nextflow.config` the kmer list for your reads and read lengths. Example:    
 
-3- To run the pipeline, first activate the conda environment before running TransPi.
+```  
+    // kmers list (depends on read length!)
+    k="25,37,45,53"
+
+    //#maximal read length
+    max_rd_len="76"
+
+``` 
+
+3-  In the same file, `nextflow.config`, edit now the `PATH` of rnammer, tmhmm and siglnalp. Example:     
+
+```
+    //rnammer
+    rnam="/home/ubuntu/pipe/rnammer/rnammer"
+    //tmhmm
+    tmhmm="/home/ubuntu/pipe/tmhmm-2.0c/bin/tmhmm"
+    //signalP
+    signalp="/home/ubuntu/pipe/signalp-4.1/signalp"
+
+```   
+
+The file `nextflow.config` is created using the `template.nextflow.config`. It is convenient then to modify the `PATH` of rnammer, tmhmm and siglnalp in the `template.nextflow.config` so the every time you run the precheck just the PATH for the databases (*e.g.* BUSCO) are changed.     
+
+
+4- If your installation of conda is not located on `~/anaconda3` modify the `nextflow.config` for the `PATH` of your conda installation. Example:  
+
+```
+
+    //Examples: ~/anaconda3/...    ~/tools/anaconda3/...   ~/tools/py3/anaconda3/...
+    condash="~/anaconda3/etc/profile.d/conda.sh"
+
+```  
+
+## RUNNING the pipeline (VM testing)  
+
+1- To run the pipeline, first activate the conda environment before of TransPi.  
 
 ```
 conda activate TransPi
 ```  
 
-4- Run the pipeline.   
+2- Run the pipeline.   
 
 ```
 ./nextflow TransPi_part1_test.nf
 ```
 
-5- If an error occur and you need to resume the run just include the `-resume` when calling the pipeline.  
+3- If an error occur and you need to resume the run just include the `-resume` when calling the pipeline.  
 
 ```
 ./nextflow TransPi_part1_test.nf -resume
-```  
 
-Possible errors:  
-
-1- The pipeline is written to use the installation of conda stored at `~/anaconda3`. If your installation differs from this `PATH` you need to modify the pipeline like this: `sed -i "s|/OLD/PATH/HERE|/NEW/PATH/HERE|g" TransPi_part1_test.nf`    
-
-Example: 
-```
-sed -i "s|\~/anaconda3|\~/tools/python3/anaconda3|g" TransPi_part1_test.nf
-```   
+```    
+ 
 
 ## NOTES
-1- The precheck run is designed to create a new `nextflow.config` file after each run with the respectives `PATH`.  
-2- To avoid calling the pipeline using `./nextflow` you can modify the nextflow command like this `chmod 777 nextflow`. For running the pipeline you just need to use:
+1- The precheck run is designed to create a new `nextflow.config` every time is run with with the respectives `PATH` to the databases. You can modify the values that do not need editing for your analysis on the `template.nextflow.config` to avoid doing the changes after the precheck run.  
+
+2- The `template.nextflow.config` file has different configuration for the each program of the pipeline (*e.g.* some with a lot of CPUs, others with a small amount of CPUs). You can modify this depending on the resources you have in your system. Example:
+
+```
+process {
+    withLabel: big_cpus {
+        cpus='30'
+        memory='15 GB'
+        clusterOptions='-p lemmium --qos=normal'
+        executor='slurm'
+    }
+
+```
+
+In this case, the processes using the label `big_cpus` will use 30 CPUs. If your system only has 20 please modify this values accordingly to avoid errors. Also, you will notice that we are using `SLURM` as our job manager in our server. If you do not need this specification just simply get rid of the followiing lines that are custom for our system.    
+
+```
+	//erase this lines
+        clusterOptions='-p lemmium --qos=normal'
+        executor='slurm'
+```  
+
+
+3- To avoid calling the pipeline using `./nextflow` you can modify the nextflow command like this `chmod 777 nextflow`. For running the pipeline you just need to use:  
 
 ```
 nextflow TransPi_part1_test.nf
-```  
+
+```    
 
 
 ## OPTIONAL   
