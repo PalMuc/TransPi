@@ -13,6 +13,10 @@
 process custom_diamond_db {
     script:
         """
+        set +u
+        source ${params.condash}
+        conda activate TransPi
+        
         cd ${params.mypwd}
         echo -e "-- Checking if Diamond database folder is present --\n"
         if [ ! -d diamonddb_custom/ ];then
@@ -43,6 +47,10 @@ process custom_diamond_db {
 process hmmer_db {
     script:
         """
+        set +u
+        source ${params.condash}
+        conda activate TransPi
+
         cd ${params.mypwd}
         echo -e "-- Checking if HMMER database folder is present --\n"
         if [ -d hmmerdb/ ];then
@@ -65,7 +73,7 @@ process swiss_diamond_db {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         cd ${params.mypwd}/sqlite_db
@@ -156,7 +164,7 @@ process normalize_reads {
         //def mem_MB=(task.memory.toMega())
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         echo ${sample_id}
@@ -193,7 +201,7 @@ process trinity_assembly {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         mem=\$( echo ${task.memory} | cut -f 1 -d " " )
@@ -222,7 +230,7 @@ process soap_assembly {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         echo -e "\n-- Generating SOAP config file --\n"
@@ -270,7 +278,7 @@ process velvet_oases_assembly {
     script:
         """
 	    set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
 	    echo -e "\n-- Starting with Velveth --\n"
@@ -321,7 +329,7 @@ process idba_assembly {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         echo -e "\n-- Starting IDBA assemblies --\n"
@@ -408,7 +416,7 @@ process busco {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         echo -e "\n-- Starting with BUSCO --\n"
@@ -448,7 +456,7 @@ process transdecoder {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
@@ -538,7 +546,7 @@ process swiss_diamond_trinotate {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         swissdb=${params.mypwd}/diamonddb_swiss/uniprot_sprot.pep
@@ -575,7 +583,7 @@ process custom_diamond_trinotate {
     script:
         """
         set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
@@ -611,7 +619,7 @@ process hmmer_trinotate {
     script:
         """
 	    set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         pf=${params.mypwd}/hmmerdb/${params.pfname}
@@ -687,7 +695,7 @@ process rnammer_trinotate {
     script:
         """
         set +ue
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         #RNAMMER to identify rRNA transcripts
@@ -723,7 +731,7 @@ process trinotate {
     script:
         """
 	    set +u
-        source ~/anaconda3/etc/profile.d/conda.sh
+        source ${params.condash}
         conda activate TransPi
 
         #Generate gene_trans_map
