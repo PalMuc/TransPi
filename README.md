@@ -47,8 +47,8 @@ The file `nextflow.config` is created using the `template.nextflow.config`. It i
 
 ```
 
-    //Examples: ~/anaconda3/...    ~/tools/anaconda3/...   ~/tools/py3/anaconda3/...
-    condash="~/anaconda3/etc/profile.d/conda.sh"
+    //Examples: ~/anaconda3...    ~/tools/anaconda3...   ~/tools/py3/anaconda3...
+    condash="~/anaconda3"
 
 ```  
 
