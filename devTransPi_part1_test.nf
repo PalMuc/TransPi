@@ -373,8 +373,8 @@ process evigene {
         set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
 
     output:
-        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
-        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
+        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.aa") into evigene_summary
 
     script:
         def mem_MB=(task.memory.toMega())
@@ -390,6 +390,7 @@ process evigene {
 
         cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
         cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
+        cp okayset/${sample_id}.combined.okay.combined.aa ${sample_id}.combined.okay.aa
 
 	    if [ -d tmpfiles/ ];then
 	        rm -rf tmpfiles/
@@ -397,22 +398,21 @@ process evigene {
 	    """
 }
 
-process busco {
+process busco_evigene {
 
     label 'big_cpus'
 
     tag "${sample_id}"
 
     // This is a test of publishDir
-    publishDir "${params.mypwd}/busco"
+    publishDir "${params.mypwd}/busco_evigene"
 
     input:
-        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") from evigene_ch_busco
-        set sample_id, file("${sample_id}.combined.okay.pep") from 
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") from evigene_ch_busco
 
     output:
-        set sample_id, file("run_${sample_id}.fa.bus"), file("run_${sample_id}.cds.bus"), file("run_${sample_id}.pep.bus") into busco_ch
-        set sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt"), file("short_summary_${sample_id}.pep.bus.txt") into busco_summary
+        set sample_id, file("run_${sample_id}.fa.bus"), file("run_${sample_id}.cds.bus"), file("run_${sample_id}.aa.bus") into busco_ch
+        set sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt"), file("short_summary_${sample_id}.aa.bus.txt") into busco_summary
 
     script:
         """
@@ -426,19 +426,24 @@ process busco {
 
         run_BUSCO.py -i ${sample_id}.combined.okay.cds -o ${sample_id}.cds.bus -l ${params.buscodb} -m tran -c ${task.cpus}
 
-        run_BUSCO.py -i ${sample_id}.combined.okay.pep -o ${sample_id}.pep.bus -l ${params.buscodb} -m prot -c ${task.cpus}
+        ##
+        run_BUSCO.py -i ${sample_id}.combined.okay.aa -o ${sample_id}.aa.bus -l ${params.buscodb} -m prot -c ${task.cpus}
 
         echo -e "\n-- DONE with BUSCO --\n"
 
         cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.fa.bus.txt
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.cds.bus.txt
+        ##
+        cp run_${sample_id}.pep.bus/short_summary_${sample_id}.aa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.aa.bus.txt
 
         cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt .
+        ##
+        cp run_${sample_id}.pep.bus/short_summary_${sample_id}.aa.bus.txt .
         """
 }
 
-process transdecoder {
+process transdecoder_long {
 
     label 'low_cpus'
 
@@ -455,6 +460,8 @@ process transdecoder {
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_trinotate
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_diamond_custom
         set sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
+        //
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_busco
 
     script:
         """
@@ -528,9 +535,135 @@ process transdecoder {
 
         echo -e "\n-- DONE with TransDecoder --\n"
 
-        cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/${sample_id}.transdecoder.stats
+        cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/${sample_id}.transdecoder.stats_long
         """
 
+}
+
+process transdecoder_short {
+
+    label 'low_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_transdecoder_short
+
+    output:
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_diamond_short
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_hmmer_short
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_signalp_short
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_tmhmm_short
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_trinotate_short
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_diamond_custom_short
+        set sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_short
+        //
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep_short") into transdecoder_ch_busco_short
+
+    script:
+        """
+        set +u
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
+        pf=${params.mypwd}/hmmerdb/${params.pfname}
+
+        echo -e "\n-- TransDecoder.LongOrfs... --\n"
+
+        ${params.torf} -t ${sample_id}.combined.okay.fa
+
+        echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
+
+        echo -e "\n-- TransDecoder.Predict... --\n"
+
+        ${params.tpred} -t ${sample_id}.combined.okay.fa
+
+        echo -e "\n-- Done with TransDecoder.Predict --\n"
+
+        echo -e "\n-- Calculating statistics... --\n"
+
+        #Calculate statistics of Transdecoder
+        echo "- Transdecoder stats for "${sample_id} >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
+        echo "Total number of ORFs: "\$orfnum >>${sample_id}.transdecoder.stats
+        echo -e "\t Of these ORFs" >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep ">" | grep -c "|" )
+        echo -e "\t\t with annotations: "\$orfnum >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
+        echo -e "\t\t no annotation: "\$orfnum >>${sample_id}.transdecoder.stats
+        echo >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
+        echo -e "\t ORFs type=complete: "\$orfnum >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
+        echo -e "\t\t with annotations: "\$orfnum >>${sample_id}.transdecoder.stats
+        echo >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+        echo -e "\t ORFs type=5prime_partial: "\$orfnum >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
+        echo -e "\t\t with annotations: "\$orfnum >>${sample_id}.transdecoder.stats
+        echo >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+        echo -e "\t ORFs type=3prime_partial: "\$orfnum >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
+        echo -e "\t\t with annotations: "\$orfnum >>${sample_id}.transdecoder.stats
+        echo >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+        echo -e "\t ORFs type=internal: "\$orfnum >>${sample_id}.transdecoder.stats
+        orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
+        echo -e "\t\t with annotations: "\$orfnum >>${sample_id}.transdecoder.stats
+        orfnum=0
+
+        echo -e "\n-- Done with statistics --\n"
+
+        echo -e "\n-- DONE with TransDecoder --\n"
+
+        cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/${sample_id}.transdecoder.stats_short
+
+        ##
+        cp ${sample_id}.combined.okay.fa.transdecoder.pep ${sample_id}.combined.okay.fa.transdecoder.pep_short
+        """
+
+}
+
+process busco_transdecoder {
+
+    label 'big_cpus'
+
+    tag "${sample_id}"
+
+    // This is a test of publishDir
+    publishDir "${params.mypwd}/busco_transdecoder"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_busco
+        set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep_short") from transdecoder_ch_busco_short
+
+    output:
+        set sample_id, file("run_${sample_id}.transdecoder.bus"), file("run_${sample_id}.transdecoder_short.bus") into busco_ch_transdecoder
+        set sample_id, file("short_summary_${sample_id}.transdecoder.bus.txt"), file("short_summary_${sample_id}.transdecoder_short.bus.txt") into busco_summary_transdecoder
+
+    script:
+        """
+        set +u
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        echo -e "\n-- Starting with BUSCO --\n"
+
+        run_BUSCO.py -i ${sample_id}.combined.okay.fa.transdecoder.pep -o ${sample_id}.transdecoder.bus -l ${params.buscodb} -m prot -c ${task.cpus}
+
+        run_BUSCO.py -i ${sample_id}.combined.okay.fa.transdecoder.pep_short -o ${sample_id}.transdecoder_short.bus -l ${params.buscodb} -m prot -c ${task.cpus}
+
+        echo -e "\n-- DONE with BUSCO --\n"
+
+        cp run_${sample_id}.transdecoder.bus/short_summary_${sample_id}.transdecoder.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.transdecoder.bus.txt
+        cp run_${sample_id}.transdecoder_short.bus/short_summary_${sample_id}.transdecoder_short.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.transdecoder_short.bus.txt
+
+
+        cp run_${sample_id}.transdecoder.bus/short_summary_${sample_id}.transdecoder.bus.txt .
+        cp run_${sample_id}.transdecoder_short.bus/short_summary_${sample_id}.transdecoder_short.bus.txt .
+        """
 }
 
 process swiss_diamond_trinotate {
