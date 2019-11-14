@@ -373,7 +373,11 @@ process evigene {
         set sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
 
     output:
-        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_transdecoder_short, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
+        // for test
+        set sample_id, file("${sample_id}.combined.okay.aa") into ( evigene_ch_diamond_evigene, evigene_ch_diamond_evigene_custom, evigene_ch_hmmer_trinotate_evigene, evigene_ch_signalP_trinotate_evigene, evigene_ch_tmhmm_trinotate_evigene, evigene_ch_trinotate_evigene_aa )
+        set sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_rnammer_trinotate_evigene, evigene_ch_trinotate_evigene )
+        // end test
         set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.aa") into evigene_summary
 
     script:
@@ -426,19 +430,21 @@ process busco_evigene {
 
         run_BUSCO.py -i ${sample_id}.combined.okay.cds -o ${sample_id}.cds.bus -l ${params.buscodb} -m tran -c ${task.cpus}
 
-        ##
+        ## for test
         run_BUSCO.py -i ${sample_id}.combined.okay.aa -o ${sample_id}.aa.bus -l ${params.buscodb} -m prot -c ${task.cpus}
 
         echo -e "\n-- DONE with BUSCO --\n"
 
         cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.fa.bus.txt
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.cds.bus.txt
-        ##
+
+        ## for test
         cp run_${sample_id}.pep.bus/short_summary_${sample_id}.aa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.aa.bus.txt
 
         cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt .
-        ##
+
+        ## for test
         cp run_${sample_id}.pep.bus/short_summary_${sample_id}.aa.bus.txt .
         """
 }
@@ -460,7 +466,7 @@ process transdecoder_long {
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_trinotate
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_diamond_custom
         set sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
-        //
+        // for test
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_busco
 
     script:
@@ -535,6 +541,7 @@ process transdecoder_long {
 
         echo -e "\n-- DONE with TransDecoder --\n"
 
+        ## added _long for test
         cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/${sample_id}.transdecoder.stats_long
         """
 
@@ -556,8 +563,9 @@ process transdecoder_short {
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_tmhmm_short
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_trinotate_short
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into transdecoder_ch_diamond_custom_short
-        set sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_short
-        //
+        // added _short
+        set sample_id, file("${sample_id}.transdecoder.stats_short") into transdecoder_summary_short
+        // for test
         set sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep_short") into transdecoder_ch_busco_short
 
     script:
@@ -618,14 +626,16 @@ process transdecoder_short {
 
         echo -e "\n-- DONE with TransDecoder --\n"
 
+        ## added _short for test
         cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/${sample_id}.transdecoder.stats_short
 
-        ##
+        ## added _short for test
         cp ${sample_id}.combined.okay.fa.transdecoder.pep ${sample_id}.combined.okay.fa.transdecoder.pep_short
         """
 
 }
 
+// busco for test
 process busco_transdecoder {
 
     label 'big_cpus'
@@ -663,6 +673,9 @@ process busco_transdecoder {
 
         cp run_${sample_id}.transdecoder.bus/short_summary_${sample_id}.transdecoder.bus.txt .
         cp run_${sample_id}.transdecoder_short.bus/short_summary_${sample_id}.transdecoder_short.bus.txt .
+
+        cp run_${sample_id}.transdecoder.bus/short_summary_${sample_id}.transdecoder.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.transdecoder.bus.txt
+        cp run_${sample_id}.transdecoder_short.bus/short_summary_${sample_id}.transdecoder_short.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.transdecoder_short.bus.txt
         """
 }
 
@@ -996,6 +1009,62 @@ process summary_evigene_individual {
         """
 }
 
+// for test
+process summary_evigene_cds_aa {
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.cds"), file("${sample_id}.combined.okay.aa") from evigene_summary
+
+    output:
+        set sample_id, file("${sample_id}.sum_EG_cds.txt"), file("${sample_id}.sum_EG_aa.txt") into final_sum_1
+
+    script:
+        """
+        #Summary of total number of transcripts
+        echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
+        echo "- Individual "${sample_id} >>${sample_id}.sum_preEG.txt
+        echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
+        num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+        echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
+        num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+        echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
+        num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+        echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
+        num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+        echo -e "\\t IDBA_tran" >>${sample_id}.sum_preEG.txt
+        num=\$( cat ${sample_id}.combined.fa | grep -c ">IDBA" )
+        echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+
+        #Summary of transcripts after EvidentialGenes
+        echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
+        echo -e "- Individual "${sample_id} >>${sample_id}.sum_EG.txt
+        echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
+        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+        echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
+        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+        echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
+        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+        echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
+        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+        echo -e "\\t IDBA_tran" >>${sample_id}.sum_EG.txt
+        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">IDBA" )
+        echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+
+        cp ${sample_id}.sum_preEG.txt ${params.mypwd}/results/${sample_id}.sum_preEG.txt
+        cp ${sample_id}.sum_EG.txt ${params.mypwd}/results/${sample_id}.sum_EG.txt
+        """
+}
+// end test
+
 process summary_busco_individual {
     tag "${sample_id}"
 
@@ -1013,6 +1082,8 @@ process summary_busco_individual {
         cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco.txt
         echo -e "\n Using CDS" >>${sample_id}.sum_busco.txt
         cat short_summary_${sample_id}.cds.bus.txt >>${sample_id}.sum_busco.txt
+        echo -e "\n Using AA" >>${sample_id}.sum_busco.txt
+        cat short_summary_${sample_id}.aa.bus.txt >>${sample_id}.sum_busco.txt
 
         cp ${sample_id}.sum_busco.txt ${params.mypwd}/results/${sample_id}.sum_busco.txt
         """
@@ -1023,6 +1094,8 @@ process summary_transdecoder_individual {
 
     input:
         set sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary
+        // for test
+        set sample_id, set sample_id, file("${sample_id}.transdecoder.stats_short") from transdecoder_summary_short
 
     output:
         set sample_id, file("${sample_id}.sum_transdecoder.txt") into final_sum_3
@@ -1166,3 +1239,284 @@ process get_run_info {
         cp run_info.txt ${params.mypwd}/results/run_info.txt
         """
 }
+
+
+
+
+// Trinotate test
+
+process swiss_diamond_trinotate_evigene {
+
+    label 'big_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.aa") from evigene_ch_diamond_evigene
+
+    output:
+        set sample_id, file("${sample_id}.evigene.diamond_blastx.outfmt6"), file("${sample_id}.evigene.diamond_blastp.outfmt6") into trinotate_ch_diamond_evigene
+
+    script:
+        """
+        set +u
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        swissdb=${params.mypwd}/diamonddb_swiss/uniprot_sprot.pep
+
+        #Diamond (BLAST) Homologies
+
+        echo -e "\n-- Starting with Diamond (blastx) --\n"
+
+        ${params.diam} blastx -d \$swissdb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.evigene.diamond_blastx.outfmt6
+
+        echo -e "\n-- Done with Diamond (blastx) --\n"
+
+        echo -e "\n-- Starting with Diamond (blastp) --\n"
+
+        ${params.diam} blastp -d \$swissdb -q ${sample_id}.combined.okay.aa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.evigene.diamond_blastp.outfmt6
+
+        echo -e "\n-- Done with Diamond (blastp)  --\n"
+        """
+}
+
+process custom_diamond_trinotate_evigene {
+
+    label 'big_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.aa") from evigene_ch_diamond_evigene_custom
+
+    output:
+        set sample_id, file("${sample_id}.evigene.custom.diamond_blastx.outfmt6"), file("${sample_id}.evigene.custom.diamond_blastp.outfmt6") into trinotate_ch_diamond_custom_evigene
+
+    script:
+        """
+        set +u
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
+
+        #Diamond (BLAST) Homologies
+
+        echo -e "\n-- Starting with Diamond (blastx) --\n"
+
+        ${params.diam} blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.evigene.custom.diamond_blastx.outfmt6
+
+        echo -e "\n-- Done with Diamond (blastx) --\n"
+
+        echo -e "\n-- Starting with Diamond (blastp) --\n"
+
+        ${params.diam} blastp -d \$unidb -q ${sample_id}.combined.okay.aa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.evigene.custom.diamond_blastp.outfmt6
+
+        echo -e "\n-- Done with Diamond (blastp)  --\n"
+        """
+}
+
+process hmmer_trinotate_evigene {
+
+    label 'low_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.aa") from evigene_ch_hmmer_trinotate_evigene
+
+    output:
+        set sample_id, file("${sample_id}.evigene.TrinotatePFAM.out") into trinotate_ch_hmmer_evigene
+
+    script:
+        """
+	    set +u
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        pf=${params.mypwd}/hmmerdb/${params.pfname}
+
+        echo -e "\n-- Starting with HMMER --\n"
+
+        ${params.hmsc} --cpu ${task.cpus} --domtblout ${sample_id}.evigene.TrinotatePFAM.out \$pf ${sample_id}.combined.okay.aa >pfam.log
+
+        echo -e "\n-- Done with HMMER --\n"
+        """
+}
+
+process signalP_trinotate_evigene {
+
+    label 'low_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.aa") from evigene_ch_signalP_trinotate_evigene
+
+    output:
+        set sample_id, file("${sample_id}.evigene.signalp.out") into trinotate_ch_signalp_evigene
+
+    script:
+        """
+        #signalP to predict signal peptides
+
+        echo -e "\n-- Starting with SignalP --\n"
+
+        ${params.signalp} -f short -n ${sample_id}.evigene.signalp.out ${sample_id}.combined.okay.aa
+
+        echo -e "\n-- Done with SignalP --\n"
+        """
+}
+
+process tmhmm_trinotate_evigene {
+
+    label 'low_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.aa") from evigene_ch_tmhmm_trinotate_evigene
+
+    output:
+        set sample_id, file("${sample_id}.evigene.tmhmm.out") into trinotate_ch_tmhmm_evigene
+
+    script:
+        """
+        #tmHMM to predict transmembrane regions
+
+        echo -e "\n-- Starting with tmHMM --\n"
+
+        ${params.tmhmm} --short < ${sample_id}.combined.okay.aa >${sample_id}.evigene.tmhmm.out
+
+        echo -e "\n-- Done with tmHMM --\n"
+        """
+}
+
+process rnammer_trinotate_evigene {
+
+    label 'low_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_rnammer_trinotate_evigene
+
+    output:
+        set sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") into trinotate_ch_rnammer_evigene
+
+    script:
+        """
+        set +ue
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        #RNAMMER to identify rRNA transcripts
+
+        echo -e "\n-- Starting with RNAMMER --\n"
+
+        ${params.rnaTri} --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
+
+        echo -e "\n-- Done with RNAMMER --\n"
+        """
+}
+
+process trinotate_evigene {
+
+    label 'low_cpus'
+
+    tag "${sample_id}"
+
+    input:
+        set sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate_evigene
+        set sample_id, file("${sample_id}.combined.okay.aa") from evigene_ch_trinotate_evigene_aa
+        set sample_id, file("${sample_id}.evigene.diamond_blastx.outfmt6"), file("${sample_id}.evigene.diamond_blastp.outfmt6") from trinotate_ch_diamond_evigene
+        set sample_id, file("${sample_id}.evigene.custom.diamond_blastx.outfmt6"), file("${sample_id}.evigene.custom.diamond_blastp.outfmt6") from trinotate_ch_diamond_custom_evigene
+        set sample_id, file("${sample_id}.evigene.TrinotatePFAM.out") from trinotate_ch_hmmer_evigene
+        set sample_id, file("${sample_id}.evigene.tmhmm.out") from trinotate_ch_tmhmm_evigene
+        set sample_id, file("${sample_id}.evigene.signalp.out") from trinotate_ch_signalp_evigene
+        set sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") from trinotate_ch_rnammer_evigene
+
+    output:
+        set sample_id, file("${sample_id}.evigene.GO.terms.txt"), file("${sample_id}.evigene.trinotate_annotation_report.xls") into trinotate_ch_evigene
+        set sample_id, file("${sample_id}.evigene.GO.terms.txt") into trinotate_summary_evigene
+
+    script:
+        """
+	    set +u
+        source ${params.condash}/etc/profile.d/conda.sh
+        conda activate TransPi
+
+        #Generate gene_trans_map
+        #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
+        cat ${sample_id}.combined.okay.fa | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
+
+        paste a.txt a.txt >${sample_id}.combined.okay.fa.gene_trans_map
+
+        #Get Trinotate.sqlite from folder (original)
+        cp ${params.Tsql} .
+        sqlname=`echo ${params.Tsql} | tr "\\/" "\n" | grep "\\.sqlite"`
+
+        echo -e "\n-- Running Trinotate --\n"
+
+        Trinotate \$sqlname init --gene_trans_map ${sample_id}.combined.okay.fa.gene_trans_map --transcript_fasta ${sample_id}.combined.okay.fa --transdecoder_pep ${sample_id}.combined.okay.aa
+
+        echo -e "\n-- Ending run of Trinotate --\n"
+
+        echo -e "\n-- Loading hits and predictions to sqlite database... --\n"
+
+        #Load protein hits
+        Trinotate \$sqlname LOAD_swissprot_blastp ${sample_id}.evigene.diamond_blastp.outfmt6
+
+        #Load transcript hits
+        Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.evigene.diamond_blastx.outfmt6
+
+        #Load custom protein hits
+        Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.evigene.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${sample_id}_custom_uniprot
+
+        #Load custom transcript hits
+        Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.evigene.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${sample_id}_custom_uniprot
+
+        #Load Pfam domain entries
+        Trinotate \$sqlname LOAD_pfam ${sample_id}.evigene.TrinotatePFAM.out
+
+        #Load transmembrane domains
+        if [ -s ${sample_id}.tmhmm.out ];then
+            Trinotate \$sqlname LOAD_tmhmm ${sample_id}.evigene.tmhmm.out
+        else
+            echo "No transmembrane domains (tmhmm)"
+        fi
+
+        #Load signal peptide predictions
+        if [ -s ${sample_id}.signalp.out ];then
+            Trinotate \$sqlname LOAD_signalp ${sample_id}.evigene.signalp.out
+        else
+            echo "No Signal-P"
+        fi
+
+        echo -e "\n-- Loading finished --\n"
+
+        #Report
+
+        echo -e "\n-- Generating report... --\n"
+
+        Trinotate \$sqlname report >${sample_id}.evigene.trinotate_annotation_report.xls
+
+        echo -e "\n-- Report generated --\n"
+
+        #Extract info from XML file
+
+        echo -e "\n-- Creating GO file from XML... --\n"
+
+        ${params.XMLtoGO} --Trinotate_xls ${sample_id}.evigene.trinotate_annotation_report.xls --trans >${sample_id}.evigene.GO.terms.txt
+
+        echo -e "\n-- Done with the GO --\n"
+
+        cp ${sample_id}.evigene.trinotate_annotation_report.xls ${params.mypwd}/results/${sample_id}.evigene.trinotate_annotation_report.xls
+        cp ${sample_id}.evigene.GO.terms.txt ${params.mypwd}/results/${sample_id}.evigene.GO.terms.txt
+
+        echo -e "\n-- DONE with Trinotate --\n"
+        """
+}
+
+// End trinotate test
