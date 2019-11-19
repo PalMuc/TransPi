@@ -378,7 +378,7 @@ process evigene {
         set sample_id, file("${sample_id}.combined.okay.aa") into ( evigene_ch_diamond_evigene, evigene_ch_diamond_evigene_custom, evigene_ch_hmmer_trinotate_evigene, evigene_ch_signalP_trinotate_evigene, evigene_ch_tmhmm_trinotate_evigene, evigene_ch_trinotate_evigene_aa )
         set sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_rnammer_trinotate_evigene, evigene_ch_trinotate_evigene )
         // end test
-        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.aa") into evigene_summary
+        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into evigene_summary
 
     script:
         def mem_MB=(task.memory.toMega())
@@ -1022,45 +1022,45 @@ process summary_evigene_cds_aa {
     script:
         """
         #Summary of total number of transcripts
-        echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
-        echo "- Individual "${sample_id} >>${sample_id}.sum_preEG.txt
-        echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
-        num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
-        echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
-        num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
-        echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
-        num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
-        echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
-        num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
-        echo -e "\\t IDBA_tran" >>${sample_id}.sum_preEG.txt
-        num=\$( cat ${sample_id}.combined.fa | grep -c ">IDBA" )
-        echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+        echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_EG_cds.txt
+        echo "- Individual "${sample_id} >>${sample_id}.sum_EG_cds.txt
+        echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG_cds.txt
+        num=\$( cat ${sample_id}.combined.cds | grep -c ">" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_cds.txt
+        echo -e "\\t Trinity" >>${sample_id}.sum_EG_cds.txt
+        num=\$( cat ${sample_id}.combined.cds | grep -c ">TRINITY" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_cds.txt
+        echo -e "\\t SOAP" >>${sample_id}.sum_EG_cds.txt
+        num=\$( cat ${sample_id}.combined.cds | grep -c ">SOAP" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_cds.txt
+        echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG_cds.txt
+        num=\$( cat ${sample_id}.combined.cds | grep -c ">Velvet" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_cds.txt
+        echo -e "\\t IDBA_tran" >>${sample_id}.sum_EG_cds.txt
+        num=\$( cat ${sample_id}.combined.cds | grep -c ">IDBA" )
+        echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG_cds.txt
 
         #Summary of transcripts after EvidentialGenes
-        echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
-        echo -e "- Individual "${sample_id} >>${sample_id}.sum_EG.txt
-        echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
-        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
-        echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
-        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
-        echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
-        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
-        echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
-        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
-        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
-        echo -e "\\t IDBA_tran" >>${sample_id}.sum_EG.txt
-        num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">IDBA" )
-        echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+        echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG_aa.txt
+        echo -e "- Individual "${sample_id} >>${sample_id}.sum_EG_aa.txt
+        echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG_aa.txt
+        num=\$( cat ${sample_id}.combined.okay.aa | grep -c ">" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_aa.txt
+        echo -e "\\t Trinity" >>${sample_id}.sum_EG_aa.txt
+        num=\$( cat ${sample_id}.combined.okay.aa | grep -c ">TRINITY" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_aa.txt
+        echo -e "\\t SOAP" >>${sample_id}.sum_EG_aa.txt
+        num=\$( cat ${sample_id}.combined.okay.aa | grep -c ">SOAP" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_aa.txt
+        echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG_aa.txt
+        num=\$( cat ${sample_id}.combined.okay.aa | grep -c ">Velvet" )
+        echo -e "\\t\\t \$num" >>${sample_id}.sum_EG_aa.txt
+        echo -e "\\t IDBA_tran" >>${sample_id}.sum_EG_aa.txt
+        num=\$( cat ${sample_id}.combined.okay.aa | grep -c ">IDBA" )
+        echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG_aa.txt
 
-        cp ${sample_id}.sum_preEG.txt ${params.mypwd}/results/${sample_id}.sum_preEG.txt
-        cp ${sample_id}.sum_EG.txt ${params.mypwd}/results/${sample_id}.sum_EG.txt
+        cp ${sample_id}.sum_EG_cds.txt ${params.mypwd}/results/${sample_id}.sum_EG_cds.txt
+        cp ${sample_id}.sum_EG_aa.txt ${params.mypwd}/results/${sample_id}.sum_EG_aa.txt
         """
 }
 // end test
@@ -1069,7 +1069,7 @@ process summary_busco_individual {
     tag "${sample_id}"
 
     input:
-        set sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt") from busco_summary
+        set sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt"), file("short_summary_${sample_id}.aa.bus.txt")from busco_summary
 
     output:
         set sample_id, file("${sample_id}.sum_busco.txt") into final_sum_2
@@ -1104,7 +1104,10 @@ process summary_transdecoder_individual {
         """
         #Summary of Transdecoder stats
         echo -e "Summary of Transdecoder \n" >>${sample_id}.sum_transdecoder.txt
+        echo -e "- Long run (diamond and hmmer) \n" >>${sample_id}.sum_transdecoder.txt
         cat ${sample_id}.transdecoder.stats >>${sample_id}.sum_transdecoder.txt
+        echo -e "- Short run \n" >>${sample_id}.sum_transdecoder.txt
+        cat ${sample_id}.transdecoder.stats_short >>${sample_id}.sum_transdecoder.txt
         echo -e "##### \n" >>${sample_id}.sum_transdecoder.txt
         """
 }
