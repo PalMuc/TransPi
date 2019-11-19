@@ -1018,7 +1018,7 @@ process summary_evigene_cds_aa {
         set sample_id, file("${sample_id}.combined.cds"), file("${sample_id}.combined.okay.aa") from evigene_summary_cds_aa
 
     output:
-        set sample_id, file("${sample_id}.sum_EG_cds.txt"), file("${sample_id}.sum_EG_aa.txt") into final_sum_1
+        set sample_id, file("${sample_id}.sum_EG_cds.txt"), file("${sample_id}.sum_EG_aa.txt") into final_sum_aa
 
     script:
         """
