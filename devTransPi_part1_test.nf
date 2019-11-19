@@ -378,7 +378,8 @@ process evigene {
         set sample_id, file("${sample_id}.combined.okay.aa") into ( evigene_ch_diamond_evigene, evigene_ch_diamond_evigene_custom, evigene_ch_hmmer_trinotate_evigene, evigene_ch_signalP_trinotate_evigene, evigene_ch_tmhmm_trinotate_evigene, evigene_ch_trinotate_evigene_aa )
         set sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_rnammer_trinotate_evigene, evigene_ch_trinotate_evigene )
         // end test
-        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into evigene_summary
+        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into evigene_summary_ind
+        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into evigene_summary_cds_aa
 
     script:
         def mem_MB=(task.memory.toMega())
@@ -959,7 +960,7 @@ process summary_evigene_individual {
     tag "${sample_id}"
 
     input:
-        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary
+        set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary_ind
 
     output:
         set sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1
@@ -1014,7 +1015,7 @@ process summary_evigene_cds_aa {
     tag "${sample_id}"
 
     input:
-        set sample_id, file("${sample_id}.combined.cds"), file("${sample_id}.combined.okay.aa") from evigene_summary
+        set sample_id, file("${sample_id}.combined.cds"), file("${sample_id}.combined.okay.aa") from evigene_summary_cds_aa
 
     output:
         set sample_id, file("${sample_id}.sum_EG_cds.txt"), file("${sample_id}.sum_EG_aa.txt") into final_sum_1
@@ -1095,7 +1096,7 @@ process summary_transdecoder_individual {
     input:
         set sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary
         // for test
-        set sample_id, set sample_id, file("${sample_id}.transdecoder.stats_short") from transdecoder_summary_short
+        set sample_id, file("${sample_id}.transdecoder.stats_short") from transdecoder_summary_short
 
     output:
         set sample_id, file("${sample_id}.sum_transdecoder.txt") into final_sum_3
