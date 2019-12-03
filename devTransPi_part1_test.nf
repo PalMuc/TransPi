@@ -375,7 +375,7 @@ process evigene {
     output:
         set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_transdecoder_short, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
         // for test
-        set sample_id, file("${sample_id}.combined.okay.aa") into ( evigene_ch_diamond_evigene, evigene_ch_diamond_evigene_custom, evigene_ch_hmmer_trinotate_evigene, evigene_ch_signalP_trinotate_evigene, evigene_ch_tmhmm_trinotate_evigene, evigene_ch_trinotate_evigene_aa )
+        set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.aa") into ( evigene_ch_diamond_evigene, evigene_ch_diamond_evigene_custom, evigene_ch_hmmer_trinotate_evigene, evigene_ch_signalP_trinotate_evigene, evigene_ch_tmhmm_trinotate_evigene, evigene_ch_trinotate_evigene_aa )
         set sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_rnammer_trinotate_evigene, evigene_ch_trinotate_evigene )
         // end test
         set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.cds"), file("${sample_id}.combined.okay.aa") into evigene_summary_ind
