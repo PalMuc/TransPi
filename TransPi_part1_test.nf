@@ -364,7 +364,7 @@ process evigene {
 
     tag "${sample_id}"
 
-    publishDir "${params.mypwd}/evigene"
+    publishDir "${params.mypwd}/evigene", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
@@ -391,6 +391,9 @@ process evigene {
         cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
         cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
 
+        cp ${sample_id}.combined.okay.fa ${params.mypwd}/results/${sample_id}.combined.okay.fa
+        cp ${sample_id}.combined.okay.cds ${params.mypwd}/results/${sample_id}.combined.okay.cds
+
 	    if [ -d tmpfiles/ ];then
 	        rm -rf tmpfiles/
 	    fi
@@ -403,8 +406,7 @@ process busco {
 
     tag "${sample_id}"
 
-    // This is a test of publishDir
-    publishDir "${params.mypwd}/busco"
+    publishDir "${params.mypwd}/busco", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") from evigene_ch_busco
@@ -945,7 +947,7 @@ process summary_trinotate_individual {
 }
 
 process get_combined_sum {
-    publishDir "${params.mypwd}/summaries/"
+    publishDir "${params.mypwd}/results/summaries/", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") from final_sum_1
