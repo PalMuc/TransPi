@@ -439,13 +439,13 @@ process busco_evigene {
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.cds.bus.txt
 
         ## for test
-        cp run_${sample_id}.pep.bus/short_summary_${sample_id}.aa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.aa.bus.txt
+        cp run_${sample_id}.aa.bus/short_summary_${sample_id}.aa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.aa.bus.txt
 
         cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt .
 
         ## for test
-        cp run_${sample_id}.pep.bus/short_summary_${sample_id}.aa.bus.txt .
+        cp run_${sample_id}.aa.bus/short_summary_${sample_id}.aa.bus.txt .
         """
 }
 
