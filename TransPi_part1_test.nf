@@ -364,7 +364,7 @@ process evigene {
 
     tag "${sample_id}"
 
-    publishDir "${params.mypwd}/evigene", mode: "copy", overwrite: true
+    publishDir "${params.mypwd}/results/evigene", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
@@ -391,13 +391,11 @@ process evigene {
         cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
         cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
 
-        cp ${sample_id}.combined.okay.fa ${params.mypwd}/results/${sample_id}.combined.okay.fa
-        cp ${sample_id}.combined.okay.cds ${params.mypwd}/results/${sample_id}.combined.okay.cds
 
-	    if [ -d tmpfiles/ ];then
-	        rm -rf tmpfiles/
-	    fi
-	    """
+	if [ -d tmpfiles/ ];then
+	    rm -rf tmpfiles/
+	fi
+	"""
 }
 
 process busco {
@@ -406,7 +404,7 @@ process busco {
 
     tag "${sample_id}"
 
-    publishDir "${params.mypwd}/busco", mode: "copy", overwrite: true
+    publishDir "${params.mypwd}/results/busco", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") from evigene_ch_busco
@@ -428,9 +426,6 @@ process busco {
         run_BUSCO.py -i ${sample_id}.combined.okay.cds -o ${sample_id}.cds.bus -l ${params.buscodb} -m tran -c ${task.cpus}
 
         echo -e "\n-- DONE with BUSCO --\n"
-
-        cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.fa.bus.txt
-        cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt ${params.mypwd}/results/short_summary_${sample_id}.cds.bus.txt
 
         cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
         cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt .
@@ -732,7 +727,7 @@ process trinotate {
 
     script:
         """
-	    set +u
+	set +u
         source ${params.condash}/etc/profile.d/conda.sh
         conda activate TransPi
 
