@@ -141,6 +141,10 @@ process results_dir {
         cd ${params.mypwd}
         if [ ! -d results/ ];then
             mkdir results
+	    cd results
+	    mkdir assemblies
+	    mkdir trinotate
+	    mkdir stats
         fi
         """
 }
@@ -210,7 +214,7 @@ process trinity_assembly {
 
         mv trinity_out_dir.Trinity.fasta ${sample_id}.Trinity.fa
 
-        cp ${sample_id}.Trinity.fa ${params.mypwd}/results/${sample_id}.Trinity.fa
+        cp ${sample_id}.Trinity.fa ${params.mypwd}/results/assemblies/${sample_id}.Trinity.fa
         """
 }
 
@@ -256,7 +260,7 @@ process soap_assembly {
 
         cat output*.scafSeq >${sample_id}.SOAP.fa
 
-        cp ${sample_id}.SOAP.fa ${params.mypwd}/results/${sample_id}.SOAP.fa
+        cp ${sample_id}.SOAP.fa ${params.mypwd}/results/assemblies/${sample_id}.SOAP.fa
 
         rm -rf output*
         """
@@ -307,7 +311,7 @@ process velvet_oases_assembly {
 
         cat oases.*/contigs.fa >${sample_id}.Velvet.fa
 
-        cp ${sample_id}.Velvet.fa ${params.mypwd}/results/${sample_id}.Velvet.fa
+        cp ${sample_id}.Velvet.fa ${params.mypwd}/results/assemblies/${sample_id}.Velvet.fa
 
         rm -rf oases.*
         """
@@ -350,7 +354,7 @@ process idba_assembly {
 
         cat ${sample_id}_idba_*/contig.fa >${sample_id}.IDBA.fa
 
-        cp ${sample_id}.IDBA.fa ${params.mypwd}/results/${sample_id}.IDBA.fa
+        cp ${sample_id}.IDBA.fa ${params.mypwd}/results/assemblies/${sample_id}.IDBA.fa
 
         rm ${sample_id}_reads.fa
 
@@ -522,7 +526,7 @@ process transdecoder {
 
         echo -e "\n-- DONE with TransDecoder --\n"
 
-        cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/${sample_id}.transdecoder.stats
+        cp ${sample_id}.transdecoder.stats ${params.mypwd}/results/stats/${sample_id}.transdecoder.stats
         """
 
 }
@@ -615,7 +619,7 @@ process hmmer_trinotate {
 
     script:
         """
-	    set +u
+	set +u
         source ${params.condash}/etc/profile.d/conda.sh
         conda activate TransPi
 
@@ -796,8 +800,8 @@ process trinotate {
 
         echo -e "\n-- Done with the GO --\n"
 
-        cp ${sample_id}.trinotate_annotation_report.xls ${params.mypwd}/results/${sample_id}.trinotate_annotation_report.xls
-        cp ${sample_id}.GO.terms.txt ${params.mypwd}/results/${sample_id}.GO.terms.txt
+        cp ${sample_id}.trinotate_annotation_report.xls ${params.mypwd}/results/trinotate/${sample_id}.trinotate_annotation_report.xls
+        cp ${sample_id}.GO.terms.txt ${params.mypwd}/results/trinotate/${sample_id}.GO.terms.txt
 
         echo -e "\n-- DONE with Trinotate --\n"
         """
@@ -805,6 +809,7 @@ process trinotate {
 
 process summary_evigene_individual {
     tag "${sample_id}"
+    publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary
@@ -851,14 +856,12 @@ process summary_evigene_individual {
         echo -e "\\t IDBA_tran" >>${sample_id}.sum_EG.txt
         num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">IDBA" )
         echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-
-        cp ${sample_id}.sum_preEG.txt ${params.mypwd}/results/${sample_id}.sum_preEG.txt
-        cp ${sample_id}.sum_EG.txt ${params.mypwd}/results/${sample_id}.sum_EG.txt
         """
 }
 
 process summary_busco_individual {
     tag "${sample_id}"
+    publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt") from busco_summary
@@ -874,13 +877,12 @@ process summary_busco_individual {
         cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco.txt
         echo -e "\n Using CDS" >>${sample_id}.sum_busco.txt
         cat short_summary_${sample_id}.cds.bus.txt >>${sample_id}.sum_busco.txt
-
-        cp ${sample_id}.sum_busco.txt ${params.mypwd}/results/${sample_id}.sum_busco.txt
         """
 }
 
 process summary_transdecoder_individual {
     tag "${sample_id}"
+    publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary
@@ -899,6 +901,7 @@ process summary_transdecoder_individual {
 
 process summary_trinotate_individual {
     tag "${sample_id}"
+    publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
 
     input:
         set sample_id, file("${sample_id}.GO.terms.txt") from trinotate_summary
