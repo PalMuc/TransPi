@@ -145,7 +145,18 @@ process results_dir {
 	    mkdir assemblies
 	    mkdir trinotate
 	    mkdir stats
-        fi
+        elif [ -d results/ ];then
+	    cd results
+	    if [ ! -d assemblies/ ];then
+	    	mkdir assemblies
+	    fi
+	    if [ ! -d trinotate/ ];then
+	    	mkdir trinotate
+	    fi
+	    if [ ! -d stats/ ];then
+	    	mkdir stats
+	    fi
+	fi
         """
 }
 
