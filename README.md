@@ -11,7 +11,7 @@
 
 
 ## STEPS before running the pipeline    
-1- After the requirentments are satisfied you can now run the precheck. Precheck run needs a PATH as an argument for running and installing (locally) all the databases and programs the pipieline needs.   
+1- After the requirements are satisfied you can now run the precheck. Precheck run needs a PATH as an argument for running and installing (locally) all the databases and programs the pipeline needs.   
 
 ```
 bash precheck_TransPi.sh /home/ubuntu/TransPi
