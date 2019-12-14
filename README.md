@@ -17,7 +17,7 @@
 bash precheck_TransPi.sh /home/ubuntu/TransPi
 ```  
 
-2- If the precheck run was succesful, a file called `nextflow.config` will be created. Modify in the `nextflow.config` the kmer list for your reads and read lengths. Example:    
+2- If the precheck run was successful, a file called `nextflow.config` will be created. Modify in the `nextflow.config` the kmer list for your reads and read lengths. Example:    
 
 ```  
     // kmers list (depends on read length!)
