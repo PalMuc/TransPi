@@ -90,7 +90,7 @@ process {
 
 ```
 
-In this case, the processes using the label `big_cpus` will use 30 CPUs. If your system only has 20 please modify this values accordingly to avoid errors. Also, you will notice that we are using `SLURM` as our job manager in our server. If you do not need this specification just simply get rid of the followiing lines that are custom for our system.    
+In this case, the processes using the label `big_cpus` will use 30 CPUs. If your system only has 20 please modify this values accordingly to avoid errors. Also, you will notice that we are using `SLURM` as our job manager in our server. If you do not need this specification just simply erase of the following lines that are custom for our system.    
 
 ```
 	//erase this lines
