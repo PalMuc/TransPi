@@ -29,6 +29,25 @@ read_c() {
         rm .readlist.txt
     fi
 }
+os_c() {
+    if [ `which sw_vers | wc -l` -eq 1 ];then
+        echo -e "\n\t -- Downloading MacOS Anaconda3 installation -- \n"
+        curl -o Anaconda3-2019.10-MacOSX-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-MacOSX-x86_64.sh
+    elif [ `which sw_vers | wc -l` -eq 1 ];then
+        echo -e "\n\t -- Downloading MacOS Anaconda3 installation -- \n"
+        curl -o Anaconda3-2019.10-MacOSX-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-MacOSX-x86_64.sh
+    elif [ -f /etc/os-release ];then
+        echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
+        curl -o Anaconda3-2019.10-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+    fi
+}
+source_c() {
+    if [ -f ~/bash_profile ];then
+        source ~/bash_profile
+    elif [ -f ~/bashrc ];then
+        source ~/bashrc
+    fi
+}
 conda_c() {
     #Check conda and environment
     check_conda=$( command -v conda )
@@ -55,13 +74,12 @@ conda_c() {
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
-                echo -e "\n\t -- Downloading Anaconda ... -- \n"
-                wget https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+                os_c
                 echo -e "\n\t -- Starting anaconda installation -- \n"
-                bash Anaconda3-2019.10-Linux-x86_64.sh
+                bash Anaconda3-2019.10*.sh
                 echo -e "\n\t -- Installation done -- \n"
-                rm Anaconda3-2019.10-Linux-x86_64.sh
-                source ~/.bashrc
+                rm Anaconda3-2019.10*.sh
+                source_c
                 if [ -f transpi_env.yml ];then
                     echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
                     conda env create -f transpi_env.yml
@@ -296,7 +314,6 @@ bus_c () {
     else
         echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"buslist.txt\" is available. Please check requirements and rerun the pre-check --\e[39m\n\n"
 	#
-	#
 	# Try to get it automatically from GitHub  ############################################################################################################
 	#
 	exit 0
@@ -348,11 +365,29 @@ uniprot_c () {
         mkdir uniprot_db
         cd uniprot_db/
         myuni=$( pwd )
-        echo -e "\n\t -- Before running TransPi, please download the desire UNIPROT database to compare and annotate your transcriptome -- \n"
-        echo -e "\n\t -- PATH for UNIPROT database at: $myuni -- \n"
-        echo -e "\n\t -- Example: \"uniprot-taxonomy_metazoaA33208.fasta\" -- \n"
-        echo -e "\n\t\e[31m -- ERROR: Download UNIPROT database at \"$myuni\" and rerun the pre-check --\e[39m\n\n"
-        exit 0
+        echo -e "\n\t -- TransPi uses customs protein databases from UNIPROT for the annotation -- \n"
+        echo -e -n "\n\t    Do you want me download the current metazoan proteins from UNIPROT for you? (y,n,exit): "
+        read ans
+        case $ans in
+            [yY] | [yY][eE][sS])
+                echo -e "\n\n\t -- Downloading metazoa protein dataset from UNIPROT ... -- \n"
+                curl -o uniprot_metazoa_33208.fasta.gz "https://www.uniprot.org/uniprot/?query=taxonomy:33208&format=fasta&compress=yes&include=no"
+                gunzip uniprot_metazoa_33208.fasta.gz
+                uni_c
+            ;;
+            [nN] | [nN][oO])
+                echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". Rerun the pre-check again --\e[39m\n"
+                exit 0
+            ;;
+            exit)
+                echo -e "\n\t -- Exiting -- \n"
+                exit 0
+            ;;
+            *)
+                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+                uniprot_c
+            ;;
+        esac
     elif [ -d uniprot_db/ ];then
         cd uniprot_db/
         myuni=$( pwd )
@@ -422,14 +457,30 @@ nextflow_c () {
     fi
 }
 evi_bash () {
-    if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
-        echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
-        echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
-        echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
-        echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
-        source ~/.bashrc
-    else
-        source ~/.bashrc
+    if [ -f ~/.bashrc ];then
+        if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
+            echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
+            echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
+            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
+            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
+            rm .varfile.sh
+            source_c
+        else
+            rm .varfile.sh
+            source_c
+        fi
+    elif [ -f ~/.bash_profile ];then
+        if [ `cat ~/.bash_profile | grep -c "evigene"` -eq 0 ];then
+            echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
+            echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
+            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
+            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
+            rm .varfile.sh
+            source_c
+        else
+            rm .varfile.sh
+            source_c
+        fi
     fi
 }
 evi_c () {
@@ -471,8 +522,16 @@ trisql_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-                source ~/anaconda3/etc/profile.d/conda.sh
-                conda activate TransPi
+                check_tranpi=$( conda env list | grep -c TransPi )
+                if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
+                    echo -e -n "\n\t    Provide the full PATH of your Anaconda installation (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
+                    read ans
+                    source ${ans}/etc/profile.d/conda.sh
+                    conda activate TransPi
+                elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
+                    source ~/anaconda3/etc/profile.d/conda.sh
+                    conda activate TransPi
+                fi
                 check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
                 if [ $check_sql -eq 0 ];then
                     echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
@@ -493,7 +552,7 @@ trisql_c () {
             ;;
         esac
     else
-        echo -e "\n\t -- Custom sqlite databe for Trinotate found at "${mypwd}/sqlite_db" -- \n"
+        echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/sqlite_db" -- \n"
     fi
 }
 buildsql_c () {
