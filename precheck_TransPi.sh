@@ -51,22 +51,24 @@ source_c() {
 conda_c() {
     #Check conda and environment
     check_conda=$( command -v conda )
-    ver=$( conda -V | cut -f 2 -d " " | cut -f 1,2 -d "." | tr -d "." )
-    if [ -f "$check_conda" ] && [ "$ver" -gt "45" ];then
-        echo -e "\n\t -- Conda is intalled (v4.5 or higher). Checking environment... --\n"
-        #Check environment
-        check_env=$( conda env list | grep -c "TransPi" )
-        if [ "$check_env" -eq 0 ];then
-            echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
-            if [ -f transpi_env.yml ];then
-                echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
-                conda env create -f transpi_env.yml
-            else
-                echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found \(transpi_env.yml\). Please check requirements and rerun the pre-check --\e[39m\n"
-                exit 0
+    if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
+        ver=$( conda -V | cut -f 2 -d " " | cut -f 1,2 -d "." | tr -d "." )
+        if [ "$ver" -gt 45 ];then
+            echo -e "\n\t -- Conda is installed (v4.5 or higher). Checking environment... --\n"
+            #Check environment
+            check_env=$( conda env list | grep -c "TransPi" )
+            if [ "$check_env" -eq 0 ];then
+                echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
+                if [ -f transpi_env.yml ];then
+                    echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
+                    conda env create -f transpi_env.yml
+                else
+                    echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found \(transpi_env.yml\). Please check requirements and rerun the pre-check --\e[39m\n"
+                    exit 0
+                fi
+            elif [ "$check_env" -eq 1 ];then
+                echo -e "\n\t -- TransPi environment is installed and ready to be used --\n"
             fi
-        elif [ "$check_env" -eq 1 ];then
-            echo -e "\n\t -- TransPi environment is installed and ready to be used --\n"
         fi
     else
         echo -e "\n\t -- Conda is not intalled. Please install Anaconda or Miniconda (https://www.anaconda.com) and rerun this script --\n"
@@ -76,7 +78,7 @@ conda_c() {
             [yY] | [yY][eE][sS])
                 os_c
                 echo -e "\n\t -- Starting anaconda installation -- \n"
-                bash Anaconda3-2019.10*.sh
+                bash Anaconda3-2019.10*.sh 
                 echo -e "\n\t -- Installation done -- \n"
                 rm Anaconda3-2019.10*.sh
                 source_c
@@ -515,6 +517,11 @@ evi_c () {
     fi
 }
 trisql_c () {
+    check_conda=$( command -v conda )
+    if [ "$check_conda" == "" ];then
+        echo -e "\n\t -- Looks like conda is not installed -- \n"
+
+    fi
     if [ ! -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
         echo -e -n "\n\t    Do you want me to try to install the custom sqlite database for you? (y or n): "
@@ -522,24 +529,32 @@ trisql_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-                check_tranpi=$( conda env list | grep -c TransPi )
                 if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
                     echo -e -n "\n\t    Provide the full PATH of your Anaconda installation (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
                     read ans
                     source ${ans}/etc/profile.d/conda.sh
                     conda activate TransPi
+                    check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+                    if [ $check_sql -eq 0 ];then
+                        echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
+                        echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                        exit 0
+                    elif [ $check_sql -eq 1 ];then
+                        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                        rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                    fi
                 elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
                     source ~/anaconda3/etc/profile.d/conda.sh
                     conda activate TransPi
-                fi
-                check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-                if [ $check_sql -eq 0 ];then
-                    echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-                    echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-                    exit 0
-                elif [ $check_sql -eq 1 ];then
-                    Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                    rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                    check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+                    if [ $check_sql -eq 0 ];then
+                        echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
+                        echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                        exit 0
+                    elif [ $check_sql -eq 1 ];then
+                        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                        rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                    fi
                 fi
             ;;
             [nN] | [nN][oO])
