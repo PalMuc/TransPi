@@ -149,7 +149,7 @@ nextflow TransPi_short.nf
 ## OPTIONAL   
 Make an account with your email at [Nextflow Tower](https://tower.nf/login) for monitoring the pipeline on any internet browser without connecting to the server.  
 
-The run the pipeline adding the `-with-tower` option.
+Then run the pipeline adding the `-with-tower` option.
 
 ```
 
