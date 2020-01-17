@@ -40,7 +40,7 @@ os_c() {
 }
 source_c() {
     if [ -f ~/bash_profile ];then
-        source ~/bash_profile
+        source ~/.bash_profile
     elif [ -f ~/bashrc ];then
         source ~/.bashrc
     fi
