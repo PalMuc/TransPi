@@ -33,9 +33,6 @@ os_c() {
     if [ `which sw_vers | wc -l` -eq 1 ];then
         echo -e "\n\t -- Downloading MacOS Anaconda3 installation -- \n"
         curl -o Anaconda3-2019.10-MacOSX-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-MacOSX-x86_64.sh
-    elif [ `which sw_vers | wc -l` -eq 1 ];then
-        echo -e "\n\t -- Downloading MacOS Anaconda3 installation -- \n"
-        curl -o Anaconda3-2019.10-MacOSX-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-MacOSX-x86_64.sh
     elif [ -f /etc/os-release ];then
         echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
         curl -o Anaconda3-2019.10-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
@@ -45,7 +42,7 @@ source_c() {
     if [ -f ~/bash_profile ];then
         source ~/bash_profile
     elif [ -f ~/bashrc ];then
-        source ~/bashrc
+        source ~/.bashrc
     fi
 }
 conda_c() {
