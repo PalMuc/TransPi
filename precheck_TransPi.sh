@@ -136,68 +136,43 @@ bus_dow () {
         echo -e "\n\t -- Creating directory for the BUSCO database --\n"
         mkdir busco_db
         cd busco_db
-        if [ `echo $name | cut -f 1 -d "/"` != "prerelease" ];then
+        bname=$( echo $name | cut -f 1 -d "_" )
+        if [ `cat ../buslist.txt | grep "${bname};" | wc -l` -eq 1 ];then
             echo -e "\n\t -- Downloading BUSCO \"$name\" database --\n";wait
-            wname=$( echo "https://busco.ezlab.org/datasets/${name}.tar.gz" )
+            wname=$( cat ../buslist.txt | grep "${bname};" | cut -f 2 -d ";" )
             wget $wname
             echo -e "\n\t -- Preparing files ... --\n";wait
-            tar -xvf ${name}.tar.gz
-            rm ${name}.tar.gz
+            tname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            tar -xvf ${tname}*.tar.gz
+            rm ${tname}*.tar.gz
             echo -e "\n\t -- DONE with BUSCO database --\n";wait
-            if [ -d ${name} ];then
-                export busna=${name}
-                echo $busna
-            fi
-        elif [ `echo $name | cut -f 1 -d "/"` == "prerelease" ];then
-            echo -e "\n\t -- BUSCO \"$name\" database not found -- \n"
-            echo -e "\n\t -- Downloading BUSCO \"$name\" database --\n";wait
-            wname=$( echo "https://busco.ezlab.org/datasets/${name}.tar.gz" )
-            wget $wname
-            echo -e "\n\t -- Preparing files ... --\n";wait
-            name2=$( echo $name | cut -f 2 -d "/" )
-            tar -xvf ${name2}.tar.gz
-            rm ${name2}.tar.gz
-            echo -e "\n\t -- DONE with BUSCO database --\n";wait
-            if [ -d ${name} ];then
-                export busna=${name2}
-            fi
+        fi
+        dname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        if [ -d ${dname}_odb10 ];then
+            export busna=${dname}_odb10
         fi
     elif [ -d busco_db/ ];then
         cd busco_db
-        if [ `echo $name | cut -f 1 -d "/"` != "prerelease" ];then
-            if [ -d ${name} ];then
-                echo -e "\n\t -- BUSCO \"$name\" database found -- \n"
-                export busna=${name}
-            else
-                echo -e "\n\t -- BUSCO \"$name\" database not found -- \n"
+        bname=$( echo $name | cut -f 1 -d "_" )
+        dname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        if [ -d ${dname}_odb10 ];then
+            echo -e "\n\t -- BUSCO \"$name\" database found -- \n"
+            export busna=${dname}_odb10
+        else
+            bname=$( echo $name | cut -f 1 -d "_" )
+            if [ `cat ../buslist.txt | grep "${bname};" | wc -l` -eq 1 ];then
                 echo -e "\n\t -- Downloading BUSCO \"$name\" database --\n";wait
-                wname=$( echo "https://busco.ezlab.org/datasets/${name}.tar.gz" )
+                wname=$( cat ../buslist.txt | grep "${bname};" | cut -f 2 -d ";" )
                 wget $wname
                 echo -e "\n\t -- Preparing files ... --\n";wait
-                tar -xvf ${name}.tar.gz
-                rm ${name}.tar.gz
+                tname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+                tar -xvf ${tname}*.tar.gz
+                rm ${tname}*.tar.gz
                 echo -e "\n\t -- DONE with BUSCO database --\n";wait
-                if [ -d ${name} ];then
-                    export busna=${name}
-                fi
             fi
-        elif [ `echo $name | cut -f 1 -d "/"` == "prerelease" ];then
-            name2=$( echo $name | cut -f 2 -d "/" )
-            if [ -d ${name2} ];then
-                echo -e "\n\t -- BUSCO \"$name\" database found -- \n"
-                export busna=${name2}
-            else
-                echo -e "\n\t -- BUSCO \"$name\" database not found -- \n"
-                echo -e "\n\t -- Downloading BUSCO \"$name\" database --\n";wait
-                wname=$( echo "https://busco.ezlab.org/datasets/${name}.tar.gz" )
-                wget $wname
-                echo -e "\n\t -- Preparing files ... --\n";wait
-                tar -xvf ${name2}.tar.gz
-                rm ${name2}.tar.gz
-                echo -e "\n\t -- DONE with BUSCO database --\n";wait
-                if [ -d ${name2} ];then
-                    export busna=${name2}
-                fi
+            dname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            if [ -d ${dname}_odb10 ];then
+                export busna=${dname}_odb10
             fi
         fi
     fi
@@ -208,13 +183,13 @@ bus_c () {
     PS3="
     Please select one (1-5): "
     if [ -f buslist.txt ];then
-    select var in `cat buslist.txt | grep "##" | tr -d "#"`;do
+    select var in `cat buslist.txt | grep "###" | tr -d "#"`;do
     case $var in
         BACTERIA)
             echo -e "\n\t You selected BACTERIA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##BACTERIA/,/#/p" | grep -v "##" | tr -d "#" | cut -f 5- -d "/" | cut -f 1 -d "."`;do
+            select var1 in `cat buslist.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
     	    case $var1 in
     	        MAIN_MENU)
                     bus_c
@@ -237,11 +212,106 @@ bus_c () {
             echo -e "\n\tYou selected EUKARYOTA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##EUKARYOTA/,/#/p" | grep -v "##" | tr -d "#" | cut -f 5- -d "/" | cut -f 1 -d "."`;do
+            select var1 in `cat buslist.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
         	case $var1 in
         	    MAIN_MENU)
                     bus_c
                 ;;
+                Arthropoda_\(Phylum\))
+                    select var2 in `cat buslist.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    case $var2 in
+                    MAIN_MENU)
+                        bus_c
+                    ;;
+                    *)
+                    if [ "$var2" != "" ];then
+                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                            bus_dow $var2
+                        fi
+                    else
+                        echo -e "\n\t Wrong option. Try again \n"
+                        bus_c
+                    fi
+                    esac
+                    break
+                    done
+                ;;
+                Fungi_\(Kingdom\))
+                    select var2 in `cat buslist.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    case $var2 in
+                    MAIN_MENU)
+                        bus_c
+                    ;;
+                    *)
+                    if [ "$var2" != "" ];then
+                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                            bus_dow $var2
+                        fi
+                    else
+                        echo -e "\n\t Wrong option. Try again \n"
+                        bus_c
+                    fi
+                    esac
+                    break
+                    done
+                ;;
+                Plants_\(Kingdom\))
+                    select var2 in `cat buslist.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    case $var2 in
+                    MAIN_MENU)
+                        bus_c
+                    ;;
+                    *)
+                    if [ "$var2" != "" ];then
+                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                            bus_dow $var2
+                        fi
+                    else
+                        echo -e "\n\t Wrong option. Try again \n"
+                        bus_c
+                    fi
+                    esac
+                    break
+                    done
+                ;;
+                Protists_\(Clade\))
+                    select var2 in `cat buslist.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    case $var2 in
+                    MAIN_MENU)
+                        bus_c
+                    ;;
+                    *)
+                    if [ "$var2" != "" ];then
+                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                            bus_dow $var2
+                        fi
+                    else
+                        echo -e "\n\t Wrong option. Try again \n"
+                        bus_c
+                    fi
+                    esac
+                    break
+                    done
+                ;;
+                Vertebrata_\(Sub_phylum\))
+                    select var2 in `cat buslist.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    case $var2 in
+                    MAIN_MENU)
+                        bus_c
+                    ;;
+                    *)
+                    if [ "$var2" != "" ];then
+                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                            bus_dow $var2
+                        fi
+                    else
+                        echo -e "\n\t Wrong option. Try again \n"
+                        bus_c
+                    fi
+                    esac
+                    break
+                    done
+                ;;
                 *)
                 if [ "$var1" != "" ];then
                     if [ `cat buslist.txt | grep -c "$var1"` -ge 1 ];then
@@ -256,36 +326,13 @@ bus_c () {
             break
             done
         ;;
-        FUNGI)
-            echo -e "\n\tYou selected FUNGI. Which specific database? \n"
+        ARCHAEA)
+            echo -e "\n\tYou selected ARCHAEA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##FUNGI/,/#/p" | grep -v "##" | tr -d "#" | cut -f 5- -d "/" | cut -f 1 -d "."`;do
+            select var1 in `cat buslist.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
             case $var1 in
             	MAIN_MENU)
-                    bus_c
-                ;;
-                *)
-                if [ "$var1" != "" ];then
-                    if [ `cat buslist.txt | grep -c "$var1"` -ge 1 ];then
-                        bus_dow $var1
-                    fi
-                else
-                    echo -e "\n\t Wrong option. Try again \n"
-                    bus_c
-                fi
-                ;;
-            esac
-            break
-            done
-        ;;
-        PLANTS)
-            echo -e "\n\tYou selected PLANTS. Which specific database? \n"
-            PS3="
-	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##PLANTS/,/#/p" | grep -v "##" | tr -d "#" | cut -f 5- -d "/" | cut -f 1 -d "."`;do
-            case $var1 in
-                MAIN_MENU)
                     bus_c
                 ;;
                 *)
