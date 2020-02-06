@@ -110,7 +110,6 @@ To run the full pipeline, starting with assemblies down to ontology analysis. Ot
 Indicates the installation of TransPi to the pipeline  
 
 
-2-    
 
 
 ## NOTES
