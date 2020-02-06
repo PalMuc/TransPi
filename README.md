@@ -110,7 +110,7 @@ Example for read lengths of 100bp:
 
 Example: Combining reads of 100bp with 125bp  
 
-2- There is other values you can modify as well such as insert size and minimum aligned length. If not sure leave the values as it is.  
+2- There are other values you can modify such as insert size and minimum aligned length. If not sure leave the values as it is.   
 
 
 ## RUNNING TransPi   
