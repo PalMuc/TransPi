@@ -126,10 +126,10 @@ To run the pipeline
 **Mandatory arguments**  
 
 - `--all`   
-To run the full pipeline, starting with assemblies down to ontology analysis. Other options still in development  
+To run the full pipeline, starting with assemblies down to ontology analysis. Other options still in development.    
 
 - `-with-conda`  
-Indicates the installation of TransPi to the pipeline  
+Indicates the installation of the conda installed programs to TransPi.     
 
 </br>
 </br>
