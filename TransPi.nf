@@ -1067,7 +1067,7 @@ if (params.all) {
 
         script:
             """
-            tuple +e
+            set +e
             #RNAMMER to identify rRNA transcripts
 
             echo -e "\n-- Starting with RNAMMER --\n"
