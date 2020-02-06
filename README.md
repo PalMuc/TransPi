@@ -50,18 +50,40 @@ Installing all these programs can be confusing and time consuming. Thus, apart f
 # How to use TransPi
 
 ## REQUIREMENTS   
+
 Current version of TransPi only has two major requirements:  
 - Linux machine
-- Directory with the reads to assemmble  
+- Directory with the reads to analyze  
 
 Directories **before** the precheck is run  
 
   reads = with paired-end reads (e.g. IndA_R1.fastq.gz, IndA_R2.fastq.gz).    
   		**Make sure reads end with _R1.fastq.gz and _R2.fastq.gz**  
 
-    **Multiple individuals can be added to the same directory.**
+    **Multiple individuals can be added to the same directory.**  
+    
+ 
+## DOWNLOADING TransPi   
 
-## STEPS before running the pipeline    
+1- Clone the repository   
+
+```
+
+git clone https://github.com/rivera10/TransPi.git  
+
+```  
+
+2- Move to the TransPi directory  
+
+```
+
+cd TransPi
+
+```  
+
+
+## INSTALLATION AND CONFIGURATION  
+
 1- After the requirements are satisfied you can run the precheck script. The precheck run needs a PATH as an argument for running and installing (locally) all the databases and programs the pipeline needs.   
 
 ```
@@ -91,7 +113,7 @@ Example: Combining reads of 100bp with 125bp
 2- There is other values you can modify as well such as insert size and minimum aligned length. If not sure leave the values as it is.  
 
 
-## RUNNING the pipeline  
+## RUNNING TransPi   
 
 To run the pipeline  
 ```
@@ -109,8 +131,8 @@ To run the full pipeline, starting with assemblies down to ontology analysis. Ot
 - `-with-conda`  
 Indicates the installation of TransPi to the pipeline  
 
-
-
+</br>
+</br>
 
 ## NOTES
 
