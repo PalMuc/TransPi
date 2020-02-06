@@ -638,6 +638,11 @@ cbs_dtu_c () {
         exit 0
     fi
 }
+util_c () {
+    source ~/.bashrc
+    cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
+    sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
+}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -687,6 +692,7 @@ elif [ -d "$mypwd" ];then
     evi_c
     buildsql_c
     cbs_dtu_c
+    util_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
