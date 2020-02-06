@@ -668,7 +668,7 @@ get_var () {
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|buscodb|buscodb=\"${buscodb}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}|" -e "s|tmhmm|tmhmm=\"${tmhmm}|" -e "s|signalp|signalp=\"${signalp}|" >nextflow.config
+        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" >nextflow.config
 #    evi_bash_c
     #Temporary rm of .varfile.sh
     rm .varfile.sh
