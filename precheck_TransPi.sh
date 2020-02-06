@@ -88,7 +88,7 @@ conda_c() {
                 fi
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Download and Install Anaconda. Then Rerun the pre-check  --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Download and Install Anaconda. Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             exit)
@@ -387,7 +387,7 @@ unicomp_c () {
             gunzip *fasta.gz
         ;;
         [nN] | [nN][oO])
-            echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and Rerun the pre-check  --\e[39m\n"
+            echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and rerun the pre-check  --\e[39m\n"
             exit 0
         ;;
         exit)
@@ -420,7 +420,7 @@ uniprot_c () {
                 uni_c
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". Rerun the pre-check  --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             exit)
@@ -485,7 +485,7 @@ nextflow_c () {
 		    		echo -e "\n\t -- Nextflow is now installed on $mypwd (local installation) -- \n"
                 ;;
                 [nN] | [nN][oO])
-                    echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then Rerun the pre-check  --\e[39m\n"
+                    echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check  --\e[39m\n"
                     exit 0
                 ;;
                 *)
@@ -527,7 +527,7 @@ evi_c () {
                 rm evigene19jan01.tar
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then Rerun the pre-check  --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             *)
@@ -585,7 +585,7 @@ trisql_c () {
                 fi
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/sqlite_db". Then Rerun the pre-check  --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/sqlite_db". Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             *)
@@ -608,6 +608,36 @@ buildsql_c () {
         trisql_c
     fi
 }
+cbs_dtu_c () {
+    if [ -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
+        echo -e "\n\t -- Preparing scripts of CBS-DTU -- \n"
+        echo -e "\n\t -- Uncompressing files -- \n"
+        tar -xvf cbs-dtu-tools.tar.gz
+        #rnammer
+        cd cbs-dtu-tools/rnammer/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
+        cd ..
+        #signalP
+        cd signalp-4.1/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
+        cd ..
+    elif [ -f cbs-dtu-tools.tar.gz ] && [ -d cbs-dtu-tools/ ];then
+        cd cbs-dtu-tools/rnammer/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
+        cd ..
+        #signalP
+        cd signalp-4.1/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
+        cd ..
+    elif [ ! -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
+        echo -e "\n\t\e[31m -- ERROR: Please make sure the cbs-dtu-tools.tar.gz is available. Then rerun the pre-check  --\e[39m\n"
+        exit 0
+    fi
+}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -618,6 +648,9 @@ get_var () {
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
     echo "Tsql=$mypwd/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
+    echo "rnam=$mypwd/cbs-dtu-tools/rnammer/rnammer" >>${mypwd}/.varfile.sh
+    echo "tmhmm=$mypwd/cbs-dtu-tools/tmhmm-2.0c/bin/tmhmm" >>${mypwd}/.varfile.sh
+    echo "signalp=$mypwd/cbs-dtu-tools/signalp-4.1/signalp" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
@@ -629,7 +662,7 @@ get_var () {
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|buscodb|buscodb=\"${buscodb}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|reads=|reads=\"${mypwd}|" >nextflow.config
+        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}|" -e "s|tmhmm|tmhmm=\"${tmhmm}|" -e "s|signalp|signalp=\"${signalp}|" >nextflow.config
 #    evi_bash_c
     #Temporary rm of .varfile.sh
     rm .varfile.sh
@@ -653,6 +686,7 @@ elif [ -d "$mypwd" ];then
     nextflow_c
     evi_c
     buildsql_c
+    cbs_dtu_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
