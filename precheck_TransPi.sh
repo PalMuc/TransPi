@@ -609,6 +609,7 @@ buildsql_c () {
     fi
 }
 cbs_dtu_c () {
+    cd $mypwd
     if [ -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
         echo -e "\n\t -- Preparing scripts of CBS-DTU -- \n"
         echo -e "\n\t -- Uncompressing files -- \n"
