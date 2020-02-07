@@ -136,6 +136,22 @@ log.info """\
         Busco DB:           ${params.buscodb}
         """.stripIndent()
 
+def execute(command) {
+    def proc = command.execute()
+    def out = new StringBuffer()
+    def err = new StringBuffer()
+    proc.consumeProcessOutput(out, err)
+    proc.waitFor()
+    if( out.size() > 0 ) println out
+    if( err.size() > 0 ) println err
+    return [ 'out':out.toString(), 'err':err.toString() ]
+}
+directoryName = "reads_test"
+File directory = new File(directoryName);
+if (! directory.exists()){
+    directory.mkdir();
+}
+
 if (params.onlyAss) {
 
     //##### To test
@@ -562,21 +578,12 @@ if (params.all) {
 
     if (workflow.profile == 'test') {
         println("\n\tRunning TransPi analysis with test dataset\n")
-        process test_down {
-            script:
-                """
-                cd ${params.mypwd}
-                mkdir reads_test
-                cd reads_test
-                curl -o SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download
-                curl -o SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download
-                """
-        }
-        reads_ch=Channel.fromFilePairs("${params.mypwd}/reads_test/*_R{1,2}.fastq.gz", checkIfExists: true)
+        execute("curl -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
+        execute("curl -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
     }else {
         println("\n\tRunning TransPi analysis with your desire dataset\n")
         reads_ch=Channel.fromFilePairs("${params.reads}", checkIfExists: true)
-    } 
+    }
 
     process normalize_reads {
 
