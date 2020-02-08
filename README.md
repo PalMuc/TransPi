@@ -1,4 +1,4 @@
-# TransPi - TRanscriptome ANalysiS PIpeline
+# TransPi - TRanscriptome ANalysiS PIpeline (DEV)
 
 # General info
 TransPi is TRanscriptome ANalysiS PIpeline based on the scientific workflow manager [Nextflow](https://www.nextflow.io). It is designed to help researchers get the best reference transcriptome assembly for their organisms of interest by performing multiple assemblies with different parameters to then get the best non-redundant consensus assembly. It also performs other valuable analyses such as quality assessment of the assembly, BUSCO scores, Transdecoder (ORFs), and gene ontologies (Trinotate). All these with minimum input from the user but without losing the potential of an comprehensive analysis.
@@ -35,6 +35,9 @@ List of programs use by TransPi:
 - Exonerate  
 - Blast  
 - Bowtie2  
+- rnammer
+- tmhmm
+- signalP
 - R  
 - Python  
 - Java  
@@ -46,6 +49,9 @@ Databases used by TransPi:
 
 Installing all these programs can be confusing and time consuming. Thus, apart from the automatization for the transcriptome analysis by TransPi, we also developed a script to install all dependencies and databases needed for the pipeline. Also, it will create all the necessary config files needed to run the analysis. More info on the "How to use TransPi" section below.  
 
+
+**NOTE**  
+Rnammer, tmhmm and signalP are for academic users; other users are requested to contact CBS Software Package Manager at software@cbs.dtu.dk.  
 
 # How to use TransPi
 
