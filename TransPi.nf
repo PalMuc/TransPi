@@ -17,7 +17,7 @@ def helpMessage() {
     ==========================================
 
         Steps:
-            1- Run the `precheck_TransPi.sh` to tuple up the databases and directories for TransPi
+            1- Run the `precheck_TransPi.sh` to set up the databases and directories for TransPi
 
             2- Run TransPi
 
@@ -59,7 +59,7 @@ def fullHelpMessage() {
 
         I. Steps for running on a local cluster and local installation of TransPi
 
-            1- Run the `precheck_TransPi.sh` to tuple up the databases and directories for TransPi
+            1- Run the `precheck_TransPi.sh` to set up the databases and directories for TransPi
 
             2- Run TransPi
 
@@ -79,7 +79,7 @@ def fullHelpMessage() {
 
         II. Steps for running on a local cluster and conda installation by nextflow
 
-            1- Run the `precheck_TransPi.sh` to tuple up the databases and directories for TransPi
+            1- Run the `precheck_TransPi.sh` to set up the databases and directories for TransPi
 
             2- Run TransPi
 
