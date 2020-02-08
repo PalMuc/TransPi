@@ -146,11 +146,6 @@ def execute(command) {
     if( err.size() > 0 ) println err
     return [ 'out':out.toString(), 'err':err.toString() ]
 }
-directoryName = "reads_test"
-File directory = new File(directoryName);
-if (! directory.exists()){
-    directory.mkdir();
-}
 
 if (params.onlyAss) {
 
@@ -578,6 +573,11 @@ if (params.all) {
 
     if (workflow.profile == 'test') {
         println("\n\tRunning TransPi analysis with test dataset\n")
+        directoryName = "reads_test"
+        File directory = new File(directoryName);
+        if (! directory.exists()){
+            directory.mkdir();
+        }
         execute("curl -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
         execute("curl -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
     }else {
@@ -604,7 +604,7 @@ if (params.all) {
             echo ${sample_id}
             zcat ${input_read[0]} >left-${sample_id}.fq &
             zcat ${input_read[1]} >right-${sample_id}.fq
-
+						
             echo -e "\n-- Starting Normalization --\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
