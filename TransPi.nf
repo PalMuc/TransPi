@@ -578,8 +578,9 @@ if (params.all) {
         if (! directory.exists()){
             directory.mkdir();
         }
-        execute("curl -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
-        execute("curl -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
+        execute("curl -s -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
+        execute("curl -s -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
+	reads_ch=Channel.fromFilePairs("${params.mypwd}/reads_test/*_R{1,2}.fastq.gz", checkIfExists: true)
     }else {
         println("\n\tRunning TransPi analysis with your desire dataset\n")
         reads_ch=Channel.fromFilePairs("${params.reads}", checkIfExists: true)
