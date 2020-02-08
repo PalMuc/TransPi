@@ -69,7 +69,7 @@ conda_c() {
         fi
     else
         echo -e "\n\t -- Conda is not intalled. Please install Anaconda (https://www.anaconda.com) and rerun this script --\n"
-        echo -e -n "\n\t    Do you want me to try to install Anaconda for you? (y,n,exit): "
+        echo -e -n "\n\t    Do you want to install Anaconda? (y,n,exit): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
@@ -379,7 +379,7 @@ uni_c () {
     done
 }
 unicomp_c () {
-    echo -e -n "\n\t    Do you want me to uncompress the file(s)? (y,n,exit): "
+    echo -e -n "\n\t    Do you want to uncompress the file(s)? (y,n,exit): "
     read ans
     case $ans in
         [yY] | [yY][eE][sS])
@@ -409,7 +409,7 @@ uniprot_c () {
         cd uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- TransPi uses customs protein databases from UNIPROT for the annotation -- \n"
-        echo -e -n "\n\t    Do you want me download the current metazoan proteins from UNIPROT for you? (y,n,exit): "
+        echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
@@ -476,7 +476,7 @@ nextflow_c () {
         if [ $check_next -eq 1 ];then
             echo -e "\n\t -- Nextflow is installed -- \n"
 	    else
-            echo -e -n "\n\t    Do you want me to try to install Nextflow for you? (y or n): "
+            echo -e -n "\n\t    Do you want to install Nextflow? (y or n): "
             read ans
             case $ans in
                 [yY] | [yY][eE][sS])
@@ -516,7 +516,7 @@ evi_c () {
     if [ $check_evi -eq 0 ];then
         if [ ! -d evigene/ ];then
         echo -e "\n\t -- EvidentialGene is not installed -- \n"
-        echo -e -n "\n\t    Do you want me to try to install EvidentialGene for you? (y or n): "
+        echo -e -n "\n\t    Do you want to install EvidentialGene? (y or n): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
@@ -551,7 +551,7 @@ trisql_c () {
     fi
     if [ ! -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
-        echo -e -n "\n\t    Do you want me to try to install the custom sqlite database for you? (y or n): "
+        echo -e -n "\n\t    Do you want to install the custom sqlite database? (y or n): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
