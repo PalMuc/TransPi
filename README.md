@@ -6,7 +6,7 @@ TransPi is TRanscriptome ANalysiS PIpeline based on the scientific workflow mana
 # Detailed description
 TransPi uses a vast amount of programs to generate the best consensus assembly. For a detailed view of the steps see **Figure 1**. After the precheck and reads info is set, reads enter the pipeline with a normalization process. Then multiple assemblies are going to be made using the info provided by the user (i.e. kmers). All these assemblies are concatenated together and use as input for the creation of a non-redundant reference assembly generated using EvidentialGene (more info here = **LINK**). This reference assembly is used for all downstream analyses routinely made to transcriptomes. Quality assessment, BUSCO, gene ontologies, and some basic stats are outputted by TransPi. This can be used by the user to assess the assembly and compared to other common methods for the creation of transcriptomes (e.g. Trinity only assembly).
 
-![TransPi flowchart](https://sync.palmuc.org/index.php/s/xiQbf4Q4SyLfmZk/preview)
+![TransPi flowchart](https://sync.palmuc.org/index.php/s/B9D6fBST9prBF5X/preview)
 
 Figure 1. TransPi flowchart  
 
