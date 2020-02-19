@@ -211,7 +211,7 @@ clusterOptions='--get-user-env --clusters=inter --partition=teramem_inter --mail
 
 ```
 
-nextflow TransPi.nf
+nextflow run TransPi.nf
 
 ```    
 
