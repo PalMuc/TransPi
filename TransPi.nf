@@ -127,7 +127,7 @@ log.info """\
         TransPi - Transcriptome Analysis Pipeline
         =========================================
         Reads Length:	    ${params.max_rd_len}
-	    Kmers:              ${params.k}
+	Kmers:              ${params.k}
         Working directory:  ${params.mypwd}
         Uniprot DB:         ${params.uniprot}
         Busco DB:           ${params.buscodb}
@@ -1276,7 +1276,6 @@ if (params.all) {
 
         output:
             tuple sample_id, file("${sample_id}.sum_GO.txt") into final_sum_4
-            tuple sample_id, file("${sample_id}.sum_GO.txt") into final_sum_4
 
         script:
             """
@@ -1345,7 +1344,7 @@ if (params.all) {
         publishDir "${params.mypwd}/results/figures/GO", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") into trinotate_ch
+            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch
 
         script:
             """
