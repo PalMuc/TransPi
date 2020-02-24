@@ -31,7 +31,6 @@ def helpMessage() {
                                 Available: conda (ready), docker (in development), singularity (in development), and test (in development).
 
                 --all           Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.) (testing)
-                --onlyAss       Run only the transcriptomes assemblies (to test)
                 --onlyEvi       Run only the EvidentialGene analysis (in development)
 
 
@@ -70,7 +69,6 @@ def fullHelpMessage() {
             Mandatory arguments:
 
                 --all           Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.) (testing)
-                --onlyAss       Run only the transcriptomes assemblies (to test)
                 --onlyEvi       Run only the EvidentialGene analysis (in development)
 
 
@@ -90,7 +88,6 @@ def fullHelpMessage() {
             Mandatory arguments:
 
                 --all           Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.) (testing)
-                --onlyAss       Run only the transcriptomes assemblies (to test)
                 --onlyEvi       Run only the EvidentialGene analysis (in development)
 
 
@@ -108,7 +105,6 @@ def fullHelpMessage() {
             Mandatory arguments:
 
                 --all           Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.) (testing)
-                --onlyAss       Run only the transcriptomes assemblies (to test)
                 --onlyEvi       Run only the EvidentialGene analysis (in development)
 
 
@@ -131,7 +127,7 @@ log.info """\
         TransPi - Transcriptome Analysis Pipeline
         =========================================
         Reads Length:	    ${params.max_rd_len}
-	Kmers:              ${params.k}
+	    Kmers:              ${params.k}
         Working directory:  ${params.mypwd}
         Uniprot DB:         ${params.uniprot}
         Busco DB:           ${params.buscodb}
@@ -148,11 +144,11 @@ def execute(command) {
     return [ 'out':out.toString(), 'err':err.toString() ]
 }
 
-if (params.onlyAss) {
+if (params.onlyEvi) {
 
-    //##### To test
+    //##### In development
 
-    println("\n\tPerforming only assemblies of transcriptomes\n")
+    println("\n\tPerforming only assemblies and EvidentialGene analysis\n")
 
     reads_ch_OA=Channel.fromFilePairs("${params.reads}", checkIfExists: true)
 
@@ -347,48 +343,6 @@ if (params.onlyAss) {
             """
     }
 
-    process get_assemblies {
-
-        tag "${sample_id}"
-
-        publishDir "${params.mypwd}/onlyAssemblies", mode: "copy", overwrite: true
-
-        input:
-            tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity_OA
-            tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap_OA
-            tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet_OA
-            tuple sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba_OA
-
-        script:
-            """
-            cp ${sample_id}.Trinity.fa .
-            cp ${sample_id}.SOAP.fa .
-            cp ${sample_id}.Velvet.fa .
-            cp ${sample_id}.IDBA.fa .
-            """
-
-        }
-}
-
-if (params.onlyEvi) {
-
-    //##### In development
-
-    println("\n\tPerforming only EvidentialGene analysis\n")
-
-    process evi_only {
-        echo true
-        script:
-            '''
-            echo "EVIDENTIAL"
-            '''
-
-    }
-
-    println("\n\tPerforming only EvidentialGene analysis\n")
-
-    ass_ch = Channel.fromPath( "${params.mypwd}/assemblies/*.fa", checkIfExists: true).buffer(size:4)
-
     process evigene_OE {
 
         label 'med_mem'
@@ -398,11 +352,10 @@ if (params.onlyEvi) {
         publishDir "${params.mypwd}/results/evigene", mode: "copy", overwrite: true
 
         input:
-            file seq from ass_ch
-            //tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
-            //tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap
-            //tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet
-            //tuple sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
+            tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity_OA
+            tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap_OA
+            tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet_OA
+            tuple sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba_OA
 
         output:
             tuple  file("*.combined.okay.fa"), file("*.combined.okay.cds") into ( evigene_ch_OE )
@@ -413,20 +366,18 @@ if (params.onlyEvi) {
             """
             echo -e "\n-- Starting EviGene --\n"
 
-            cat $seq >combined.fa
+            cat *.fa >${sample_id}.combined.fa
 
             $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
             echo -e "\n-- DONE with EviGene --\n"
 
             cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
-            cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
 
-
-    	if [ -d tmpfiles/ ];then
-    	    rm -rf tmpfiles/
-    	fi
-    	"""
+            if [ -d tmpfiles/ ];then
+                rm -rf tmpfiles/
+            fi
+            """
     }
 }
 
@@ -581,7 +532,7 @@ if (params.all) {
         }
         execute("curl -s -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
         execute("curl -s -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
-	reads_ch=Channel.fromFilePairs("${params.mypwd}/reads_test/*_R{1,2}.fastq.gz", checkIfExists: true)
+	    reads_ch=Channel.fromFilePairs("${params.mypwd}/reads_test/*_R{1,2}.fastq.gz", checkIfExists: true)
     }else {
         println("\n\tRunning TransPi analysis with your desire dataset\n")
         reads_ch=Channel.fromFilePairs("${params.reads}", checkIfExists: true)
@@ -606,7 +557,7 @@ if (params.all) {
             echo ${sample_id}
             zcat ${input_read[0]} >left-${sample_id}.fq &
             zcat ${input_read[1]} >right-${sample_id}.fq
-						
+
             echo -e "\n-- Starting Normalization --\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
@@ -633,6 +584,7 @@ if (params.all) {
 
         output:
             tuple sample_id, file("${sample_id}.Trinity.fa") into assemblies_ch_trinity
+            tuple sample_id, file("${sample_id}.Trinity.fa") into busco_ch_trinity
 
         script:
             """
@@ -812,10 +764,10 @@ if (params.all) {
             cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
 
 
-    	if [ -d tmpfiles/ ];then
-    	    rm -rf tmpfiles/
-    	fi
-    	"""
+        	if [ -d tmpfiles/ ];then
+        	    rm -rf tmpfiles/
+        	fi
+        	"""
     }
 
     process busco {
@@ -830,8 +782,9 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") from evigene_ch_busco
 
         output:
-            tuple sample_id, file("run_${sample_id}.fa.bus"), file("run_${sample_id}.cds.bus") into busco_ch
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt") into busco_summary
+            tuple sample_id, file("run_${sample_id}.fa.bus") into busco_ch
+            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") into busco_summary
+            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") into busco_comp_1
 
         script:
             """
@@ -839,12 +792,36 @@ if (params.all) {
 
             run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.cds -o ${sample_id}.cds.bus -l ${params.buscodb} -m tran -c ${task.cpus}
-
             echo -e "\n-- DONE with BUSCO --\n"
 
             cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
-            cp run_${sample_id}.cds.bus/short_summary_${sample_id}.cds.bus.txt .
+            """
+    }
+
+    process busco_tri {
+
+        label 'big_cpus'
+
+        tag "${sample_id}"
+
+        publishDir "${params.mypwd}/results/busco", mode: "copy", overwrite: true
+
+        input:
+            tuple sample_id, file("${sample_id}.Trinity.fa") from busco_ch_trinity
+
+        output:
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into busco_ch_trinity_sum
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into busco_comp_2
+
+        script:
+            """
+            echo -e "\n-- Starting with BUSCO --\n"
+
+            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
+
+            echo -e "\n-- DONE with BUSCO --\n"
+
+            cp run_${sample_id}.Trinity.fa.bus/short_summary_${sample_id}.Trinity.fa.bus.txt .
             """
     }
 
@@ -1120,8 +1097,8 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") from trinotate_ch_rnammer
 
         output:
-            tuple sample_id, file("${sample_id}.GO.terms.txt"), file("${sample_id}.trinotate_annotation_report.xls") into trinotate_ch
             tuple sample_id, file("${sample_id}.GO.terms.txt") into trinotate_summary
+            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") into trinotate_ch
 
         script:
             """
@@ -1254,7 +1231,8 @@ if (params.all) {
         publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt"), file("short_summary_${sample_id}.cds.bus.txt") from busco_summary
+            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco_summary
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco_ch_trinity_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco.txt") into final_sum_2
@@ -1263,10 +1241,10 @@ if (params.all) {
             """
             #Summary of BUSCO scores for all the final_assemblies
             echo -e "Summary of BUSCO \n" >>${sample_id}.sum_busco.txt
-            echo "Using transcript" >>${sample_id}.sum_busco.txt
+            echo "-- TransPi BUSCO scores -- " >>${sample_id}.sum_busco.txt
             cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco.txt
-            echo -e "\n Using CDS" >>${sample_id}.sum_busco.txt
-            cat short_summary_${sample_id}.cds.bus.txt >>${sample_id}.sum_busco.txt
+            echo -e "\n-- Trinity BUSCO scores --" >>${sample_id}.sum_busco.txt
+            cat short_summary_${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco.txt
             """
     }
 
@@ -1297,6 +1275,7 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.GO.terms.txt") from trinotate_summary
 
         output:
+            tuple sample_id, file("${sample_id}.sum_GO.txt") into final_sum_4
             tuple sample_id, file("${sample_id}.sum_GO.txt") into final_sum_4
 
         script:
@@ -1334,25 +1313,56 @@ if (params.all) {
             """
     }
 
-    process get_combined_sum {
-        publishDir "${params.mypwd}/results/summaries/", mode: "copy", overwrite: true
+    process get_busco_comparison {
+        publishDir "${params.mypwd}/results/figures/BUSCO", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") from final_sum_1
-            tuple sample_id, file("${sample_id}.sum_busco.txt") from final_sum_2
-            tuple sample_id, file("${sample_id}.sum_transdecoder.txt") from final_sum_3
-            tuple sample_id, file("${sample_id}.sum_GO.txt") from final_sum_4
+            //tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") from final_sum_1
+            //tuple sample_id, file("${sample_id}.sum_busco.txt") from final_sum_2
+            //tuple sample_id, file("${sample_id}.sum_transdecoder.txt") from final_sum_3
+            //tuple sample_id, file("${sample_id}.sum_GO.txt") from final_sum_4
+            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco_comp_1
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco_comp_2
 
         output:
-            tuple sample_id, file("all_sum_preEG.txt"), file("all_sum_EG.txt"), file("all_sum_busco.txt"), file("all_sum_transdecoder.txt"), file("all_sum_GO.txt") into all_sum
+            tuple sample_id, file("${sample_id}_combined_busco_figure.png") into busco_fig
 
         script:
             """
-            cat *.sum_preEG.txt >all_sum_preEG.txt
-            cat *.sum_EG.txt >all_sum_EG.txt
-            cat *.sum_busco.txt >all_sum_busco.txt
-            cat *.sum_transdecoder.txt >all_sum_transdecoder.txt
-            cat *.sum_GO.txt >all_sum_GO.txt
+            get_busco_val.sh short_summary_${sample_id}.Trinity.fa.bus.txt short_summary_${sample_id}.fa.bus.txt
+            cp ${params.mypwd}/bin/busco_comparison.R .
+            a=\$( cat final_spec )
+            sed -i "s/MYSPEC/\${a}/" busco_comparison.R
+            b=\$( cat final_perc )
+            sed -i "s/MYPERC/\${b}/" busco_comparison.R
+            c=\$( cat final_num )
+            sed -i "s/MYVAL/\${c}/" busco_comparison.R
+            Rscript busco_comparison.R ${sample_id}
+            """
+    }
+
+    process get_GO_comparison {
+        publishDir "${params.mypwd}/results/figures/GO", mode: "copy", overwrite: true
+
+        input:
+            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") into trinotate_ch
+
+        script:
+            """
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 14 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 20 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | sed 's/ #/\t/g' >GO_cellular.txt
+
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 14 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 20 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | sed 's/ #/\t/g' >GO_biological.txt
+
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 14 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 20 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | sed 's/ #/\t/g' >GO_molecular.txt
+
+            Rscript GO_plots.R ${sample_id}
+
+            mv GO_cellular.txt ${sample_id}_GO_cellular.txt
+            mv GO_biological.txt ${sample_id}_GO_biological.txt
+            mv GO_molecular.txt ${sample_id}_GO_molecular.txt
             """
     }
 
