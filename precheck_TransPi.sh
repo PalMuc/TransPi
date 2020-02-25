@@ -512,6 +512,7 @@ nextflow_c () {
 #    fi
 #}
 evi_c () {
+	cd $mypwd
     check_evi=$( command -v tr2aacds.pl | wc -l )
     if [ $check_evi -eq 0 ];then
         if [ ! -d evigene/ ];then
