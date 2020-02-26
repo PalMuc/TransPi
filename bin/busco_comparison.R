@@ -17,7 +17,7 @@ sample_name=args[1]
 
 # Load the required libraries
 library(ggplot2)
-library("grid")
+library(grid)
 # !!! CONFIGURE YOUR PLOT HERE !!!
 # Output
 #my_output <- paste("./","combined_busco_figure.png",sep="/")
