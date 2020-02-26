@@ -20,3 +20,4 @@ dependencies:
   - exonerate=2.4
   - cd-hit=4.8.1
   - perl-xml-simple=2.25
+  - r-svglite=1.2.3
