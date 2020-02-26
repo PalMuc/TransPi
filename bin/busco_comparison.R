@@ -1,6 +1,6 @@
 ######################################
 
-# Edit fo the orginal BUSCO plot script
+# Edit from the orginal BUSCO plot script
 
 ######################################
 # 
