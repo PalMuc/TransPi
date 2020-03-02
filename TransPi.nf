@@ -1348,13 +1348,13 @@ if (params.all) {
 
         script:
             """
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 14 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 16 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
             | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 20 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | sed 's/ #/\t/g' >GO_cellular.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 14 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 16 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
             | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 20 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | sed 's/ #/\t/g' >GO_biological.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 14 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 16 | tr "\\`" "\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
             | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 20 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | sed 's/ #/\t/g' >GO_molecular.txt
 
             Rscript GO_plots.R ${sample_id}
