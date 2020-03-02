@@ -17,8 +17,8 @@ p1<-ggplot(data=dataCC, aes(x=reorder(dataCC$V2,dataCC$V1), y=dataCC$V1))+
   theme(axis.text=element_text(size=10))+ylim(0,nlim)+theme(text = element_text(size = 15))+
   theme(axis.text.x=element_text(size=12,angle=0))+theme(axis.title=element_text(size=15,face="bold"))
 
-ggsave(filename = paste(sample_name,"Cellular_Component.svg",sep=""),width = 15 ,height = 7)
-ggsave(filename = paste(sample_name,"Cellular_Component.pdf",sep=""),width = 15 ,height = 7)
+ggsave(filename = paste(sample_name,"_Cellular_Component.svg",sep=""),width = 15 ,height = 7)
+ggsave(filename = paste(sample_name,"_Cellular_Component.pdf",sep=""),width = 15 ,height = 7)
 
 #MF
 nlim=round((head(dataMF$V1,n = 1)+150),digits = -2)
@@ -29,8 +29,8 @@ p2 <-ggplot(data=dataMF, aes(x=reorder(dataMF$V2,dataMF$V1), y=dataMF$V1))+
   theme(axis.text=element_text(size=10))+ylim(0,nlim)+theme(text = element_text(size = 15))+
   theme(axis.text.x=element_text(size=12,angle=0))+theme(axis.title=element_text(size=15,face="bold"))
 
-ggsave(filename = paste(sample_name,"Molecular_Function.svg",sep=""),width = 15 ,height = 7)
-ggsave(filename = paste(sample_name,"Molecular_Function.pdf",sep=""),width = 15 ,height = 7)
+ggsave(filename = paste(sample_name,"_Molecular_Function.svg",sep=""),width = 15 ,height = 7)
+ggsave(filename = paste(sample_name,"_Molecular_Function.pdf",sep=""),width = 15 ,height = 7)
 
 #BP
 nlim=round((head(dataBP$V1,n = 1)+150),digits = -2)
