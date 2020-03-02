@@ -127,7 +127,7 @@ log.info """\
         TransPi - Transcriptome Analysis Pipeline
         =========================================
         Reads Length:	    ${params.max_rd_len}
-	Kmers:              ${params.k}
+        Kmers:              ${params.k}
         Working directory:  ${params.mypwd}
         Uniprot DB:         ${params.uniprot}
         Busco DB:           ${params.buscodb}
