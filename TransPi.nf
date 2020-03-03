@@ -1165,7 +1165,7 @@ if (params.all) {
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,10 | grep "PF" | tr "\\`" ";" | sed 's/^/#/g' | sed 's/;PF/\n;PF/g' | cut -f 1 -d "^" | tr -d "\n" | tr "#" "\n" | grep "PF" | tr ";" "," >${sample_id}.PFAM.terms.txt
 
-            echo -e "\n-- Done with the PFAM l--\n"
+            echo -e "\n-- Done with the PFAM --\n"
 
             echo -e "\n-- DONE with Trinotate --\n"
             """
