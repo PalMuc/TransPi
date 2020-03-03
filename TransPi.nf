@@ -1159,7 +1159,7 @@ if (params.all) {
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,13 | grep "OG" | tr "\\`" ";" | sed 's/^/#/g' | sed 's/;/\n;/g' | cut -f 1 -d "^" | tr -d "\n" | tr "#" "\n" | grep "OG" >${sample_id}.eggNOG_COG.terms.txt
 
-            echo -e "\n-- Done with the eggNOG l--\n"
+            echo -e "\n-- Done with the eggNOG --\n"
 
             echo -e "\n-- Creating PFAM file from XLS... --\n"
 
