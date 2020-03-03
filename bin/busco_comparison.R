@@ -14,7 +14,7 @@
 ######################################
 args = commandArgs(trailingOnly=TRUE)
 sample_name=args[1]
-
+options(warn=-1)
 # Load the required libraries
 library(ggplot2)
 library(grid)
