@@ -1332,7 +1332,7 @@ if (params.all) {
 
         script:
             """
-	        set +e
+	    set +e
             bash get_busco_val.sh short_summary_${sample_id}.Trinity.fa.bus.txt short_summary_${sample_id}.fa.bus.txt
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
@@ -1359,6 +1359,8 @@ if (params.all) {
 
         script:
             """
+	    cp ${params.mypwd}/bin/GO_plots.R .
+	    
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
             | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_cellular.txt
 
