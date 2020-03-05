@@ -1143,7 +1143,7 @@ if (params.all) {
 
             #Extract info from XLS file
 
-            echo -e "\n-- Creating GO file from XML... --\n"
+            echo -e "\n-- Creating GO file from XLS... --\n"
 
             ${params.XLStoGO} --Trinotate_xls ${sample_id}.trinotate_annotation_report.xls --trans >${sample_id}.GO.terms.txt
 
