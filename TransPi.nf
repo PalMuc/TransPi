@@ -1092,7 +1092,7 @@ if (params.all) {
 
             #Get Trinotate.sqlite from folder (original)
             cp ${params.Tsql} .
-            sqlname=`echo ${params.Tsql} | tr "\\/" "\n" | grep "\\.sqlite"`
+            sqlname=`echo ${params.Tsql} | tr "\\/" "\\n" | grep "\\.sqlite"`
 
             echo -e "\n-- Running Trinotate --\n"
 
@@ -1445,5 +1445,5 @@ if (params.all) {
 }
 
 workflow.onComplete {
-    log.info ( workflow.success ? "\nDone! Open the following report in your browser --> ${params.tracedir}/transpi_report.html\n" : "Oops .. something went wrong" )
+    log.info ( workflow.success ? "\n\nDone! Open the following report in your browser --> ${params.tracedir}/transpi_report.html\n" : "Oops .. something went wrong" )
 }
