@@ -732,7 +732,7 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
         script:
@@ -766,7 +766,7 @@ if (params.all) {
         publishDir "${params.mypwd}/results/busco", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa"), file("${sample_id}.combined.okay.cds") from evigene_ch_busco
+            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco
 
         output:
             tuple sample_id, file("run_${sample_id}.fa.bus") into busco_ch
