@@ -1427,7 +1427,7 @@ if (params.all) {
             v=\$( run_BUSCO.py -v | cut -f 2 -d " " )
             echo "BUSCO:"\$v >>run_info.txt
 
-            v=\$( echo ${params.buscodb} | tr "/" "\n" | tail -n 1 )
+            v=\$( echo ${params.buscodb} | tr "/" "\\n" | tail -n 1 )
             echo "BUSCO_DB:"\$v >>run_info.txt
 
             v=\$( echo "TRI" )
