@@ -6,5 +6,12 @@ pipeline_info/
 reads/
 uniprot_db/
 work/
+cbs-dtu-tools/
+diamonddb_custom/
+diamonddb_swiss/
+evigene/
+nextflow.config
+results/
+sqlite_db/
 .varfile.sh
 .nextflow*
