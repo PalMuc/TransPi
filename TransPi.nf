@@ -1379,6 +1379,12 @@ if (params.all) {
     }
 
     process get_run_info {
+    
+        publishDir "${params.mypwd}/results/", mode: "copy", overwrite: true
+	
+	output:
+	    file("run_info.txt") into run_info
+    
         script:
             """
             echo -e "-- Kmers used --" >>run_info.txt
@@ -1438,8 +1444,6 @@ if (params.all) {
 
             v=\$( echo "2.0" )
             echo "tmhmm:"\$v >>run_info.txt
-
-            cp run_info.txt ${params.mypwd}/results/run_info.txt
             """
     }
 }
