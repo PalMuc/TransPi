@@ -133,38 +133,23 @@ log.info """\
         Busco DB:           ${params.buscodb}
         """.stripIndent()
 
-def execute(command) {
-    def proc = command.execute()
-    def out = new StringBuffer()
-    def err = new StringBuffer()
-    proc.consumeProcessOutput(out, err)
-    proc.waitFor()
-    if( out.size() > 0 ) println out
-    if( err.size() > 0 ) println err
-    return [ 'out':out.toString(), 'err':err.toString() ]
+if (params.readsTest) {
+    println("\n\tRunning TransPi with TEST dataset\n")
+    Channel
+        .from(params.readsTest)
+        .map { row -> [ row[0], [ file(row[1][0],checkIfExists: true),file(row[2][0],checkIfExists: true) ] ] }
+        .ifEmpty { exit 1, "params.readsTest was empty - no input files supplied" }
+        .set{ reads_ch }
+} else {
+    println("\n\tRunning TransPi with your dataset\n")
+    Channel
+        .fromFilePairs("${params.reads}", checkIfExists: true)
+        .set{ reads_ch }
 }
 
 if (params.onlyEvi) {
 
     //##### In development
-
-    println("\n\tPerforming only assemblies and EvidentialGene analysis\n")
-
-    if (workflow.profile == 'test') {
-        println("\n\tRunning TransPi analysis with test dataset\n")
-        directoryName = "reads_test"
-        File directory = new File(directoryName);
-        if (! directory.exists()){
-            directory.mkdir();
-        }
-        execute("curl -s -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
-        execute("curl -s -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
-        reads_ch_OA=Channel.fromFilePairs("${params.mypwd}/reads_test/*_R{1,2}.fastq.gz", checkIfExists: true)
-    }else {
-        println("\n\tRunning TransPi analysis with your desire dataset\n")
-        reads_ch_OA=Channel.fromFilePairs("${params.reads}", checkIfExists: true)
-    }
-
     process normalize_reads_OA {
 
         label 'med_mem'
@@ -172,7 +157,7 @@ if (params.onlyEvi) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, input_read from reads_ch_OA
+            tuple sample_id, file(reads) from reads_ch
 
         output:
             tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OA, norm_reads_velvet_OA, norm_reads_trinity_OA, norm_reads_idba_OA )
@@ -182,8 +167,10 @@ if (params.onlyEvi) {
             //def mem_MB=(task.memory.toMega())
             """
             echo ${sample_id}
-            zcat ${input_read[0]} >left-${sample_id}.fq &
-            zcat ${input_read[1]} >right-${sample_id}.fq
+            r1=\$( echo $reads | awk '{print \$1}' )
+            r2=\$( echo $reads | awk '{print \$2}' )
+            zcat \$r1 >left-${sample_id}.fq &
+            zcat \$r2 >right-${sample_id}.fq
 
             echo -e "\n-- Starting Normalization --\n"
 
@@ -511,21 +498,6 @@ if (params.all) {
             """
     }
 
-    if (workflow.profile == 'test') {
-        println("\n\tRunning TransPi analysis with test dataset\n")
-        directoryName = "reads_test"
-        File directory = new File(directoryName);
-        if (! directory.exists()){
-            directory.mkdir();
-        }
-        execute("curl -s -o reads_test/SZ1_test_R1.fastq.gz https://sync.palmuc.org/index.php/s/Xq8rPSLxoqWLcD7/download")
-        execute("curl -s -o reads_test/SZ1_test_R2.fastq.gz https://sync.palmuc.org/index.php/s/eQ4s6mTZjdTxTKQ/download")
-	    reads_ch=Channel.fromFilePairs("${params.mypwd}/reads_test/*_R{1,2}.fastq.gz", checkIfExists: true)
-    }else {
-        println("\n\tRunning TransPi analysis with your desire dataset\n")
-        reads_ch=Channel.fromFilePairs("${params.reads}", checkIfExists: true)
-    }
-
     process normalize_reads {
 
         label 'med_mem'
@@ -533,7 +505,7 @@ if (params.all) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, input_read from reads_ch
+            tuple sample_id, file(reads) from reads_ch
 
         output:
             tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_idba )
@@ -543,8 +515,10 @@ if (params.all) {
             //def mem_MB=(task.memory.toMega())
             """
             echo ${sample_id}
-            zcat ${input_read[0]} >left-${sample_id}.fq &
-            zcat ${input_read[1]} >right-${sample_id}.fq
+            r1=\$( echo $reads | awk '{print \$1}' )
+            r2=\$( echo $reads | awk '{print \$2}' )
+            zcat \$r1 >left-${sample_id}.fq &
+            zcat \$r2 >right-${sample_id}.fq
 
             echo -e "\n-- Starting Normalization --\n"
 
@@ -1360,7 +1334,7 @@ if (params.all) {
         script:
             """
 	    cp ${params.mypwd}/bin/GO_plots.R .
-	    
+
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
             | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_cellular.txt
 
@@ -1379,12 +1353,12 @@ if (params.all) {
     }
 
     process get_run_info {
-    
+
         publishDir "${params.mypwd}/results/", mode: "copy", overwrite: true
-	
+
 	output:
 	    file("run_info.txt") into run_info
-    
+
         script:
             """
             echo -e "-- Kmers used --" >>run_info.txt
