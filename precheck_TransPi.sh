@@ -522,10 +522,10 @@ evi_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
-                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19jan01.tar
-                tar -xf evigene19jan01.tar
-                mv evigene19jan01/ evigene/
-                rm evigene19jan01.tar
+                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar 
+                tar -xf evigene19may14.tar
+                mv evigene19may14/ evigene/
+                rm evigene19may14.tar
             ;;
             [nN] | [nN][oO])
                 echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check  --\e[39m\n"
