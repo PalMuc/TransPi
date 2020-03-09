@@ -1389,7 +1389,7 @@ if (params.all) {
             v=\$( hmmsearch -h | head -n 2 | cut -f 3 -d " " | grep [0-9] )
             echo "HMMER:"\$v >>run_info.txt
 
-            v=\$( echo "2019.01.01" )
+            v=\$( echo "2019.05.14" )
             echo "EvidentialGene:"\$v >>run_info.txt
 
             v=\$( echo "1.2" )
