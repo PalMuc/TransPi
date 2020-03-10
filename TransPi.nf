@@ -160,7 +160,7 @@ if (params.onlyEvi) {
             tuple sample_id, file(reads) from reads_ch
 
         output:
-            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OA, norm_reads_velvet_OA, norm_reads_trinity_OA, norm_reads_idba_OA )
+            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OA, norm_reads_velvet_OA, norm_reads_trinity_OA, norm_reads_spades_OA, norm_reads_transabyss_OA )
 
         script:
             //def mem=(task.memory)
@@ -302,7 +302,7 @@ if (params.onlyEvi) {
             """
     }
 
-    process idba_assembly_OA {
+    process rna-spades_assembly_OA {
 
         label 'med_mem'
 
@@ -312,34 +312,67 @@ if (params.onlyEvi) {
 
         input:
             val k from "${params.k}"
-            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_idba_OA
+            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_spades_OA
 
         output:
-            tuple sample_id, file("${sample_id}.IDBA.fa") into assemblies_ch_idba_OA
+            tuple sample_id, file("${sample_id}.SPADES.fa") into assemblies_ch_spades_OA
 
         script:
             """
-            echo -e "\n-- Starting IDBA assemblies --\n"
-
-            echo -e "\n-- Converting reads for IDBA --\n"
-            fq2fa --merge left-${sample_id}.norm.fq right-${sample_id}.norm.fq ${sample_id}_reads.fa
+            echo -e "\n-- Starting rnaSPADES assemblies --\n"
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- IDBA k\${x} --\n"
-                idba_tran --out ${sample_id}_idba_\${x} --read ${sample_id}_reads.fa --num_threads ${task.cpus} --mink \${x} --maxk \${x}
+                echo -e "\n-- rnaSPADES k\${x} --\n"
+
+                ${params.sp} -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
+
             done
 
             echo -e "\n-- Finished with the assemblies --\n"
 
             for x in `echo $k | tr "," " "`;do
-                sed -i "s/>/>IDBA.k/g" ${sample_id}_idba_\${x}/contig.fa && sed -i "s/contig-//g" ${sample_id}_idba_\${x}/contig.fa
+                sed -i "s/>/>SPADES.k\${x}./g" ${sample_id}_spades_\${x}/transcripts.fasta
             done
 
-            cat ${sample_id}_idba_*/contig.fa >${sample_id}.IDBA.fa
+            cat ${sample_id}_spades_*/transcripts.fasta >${sample_id}.SPADES.fa
 
-            rm ${sample_id}_reads.fa
+            rm -rf ${sample_id}_spades_*
+            """
+    }
 
-            rm -rf ${sample_id}_idba_*
+    process trans-abyss_assembly_OA {
+
+        label 'med_mem'
+
+        tag "${sample_id}"
+
+        publishDir "${params.mypwd}/results/assemblies", mode: "copy", overwrite: true
+
+        input:
+            val k from "${params.k}"
+            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_transabyss_OA
+
+        output:
+            tuple sample_id, file("${sample_id}.TransABySS.fa") into assemblies_ch_transabyss_OA
+
+        script:
+            """
+            echo -e "\n-- Starting Trans-ABySS assemblies --\n"
+
+            for x in `echo $k | tr "," " "`;do
+                echo -e "\n-- Trans-ABySS k\${x} --\n"
+
+                $trans/transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+
+            done
+
+            echo -e "\n-- Finished with the assemblies --\n"
+
+            for x in `echo $k | tr "," " "`;do
+                sed -i "s/>/>TransABySS.k\${x}./g" ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa
+            done
+
+            cat ${sample_id}_transabyss_*/k*.transabyss.fa-final.fa >${sample_id}.TransABySS.fa
             """
     }
 
@@ -355,7 +388,8 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity_OA
             tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap_OA
             tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet_OA
-            tuple sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba_OA
+            tuple sample_id, file("${sample_id}.SPADES.fa") from assemblies_ch_spades_OA
+            tuple sample_id, file("${sample_id}.TransABySS.fa") from assemblies_ch_transabyss_OA
 
         output:
             tuple  file("*.combined.okay.fa"), file("*.combined.okay.cds") into evigene_ch_OE
@@ -421,16 +455,16 @@ if (params.all) {
             cd ${params.mypwd}
             echo -e "-- Checking if HMMER database folder is present --\n"
             if [ -d hmmerdb/ ];then
-        	    echo -e "-- Folder is present. Checking if HMMER database is built --\n"
-        		cd hmmerdb
-        		if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
+                echo -e "-- Folder is present. Checking if HMMER database is built --\n"
+                cd hmmerdb
+                if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
                     echo -e "-- HMMER database not present, creating one --\n"
-            	    hmmpress ${params.pfname}
-            	    export pf=`pwd`/${params.pfname}
-        	    elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
+                    hmmpress ${params.pfname}
+                    export pf=`pwd`/${params.pfname}
+                    elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
                     echo -e "-- HMMER database already created --\n"
-            	    export pf=`pwd`/${params.pfname}
-        	    fi
+                    export pf=`pwd`/${params.pfname}
+                fi
                 cd ../
             fi
             """
@@ -508,7 +542,7 @@ if (params.all) {
             tuple sample_id, file(reads) from reads_ch
 
         output:
-            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_idba )
+            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss )
 
         script:
             //def mem=(task.memory)
@@ -650,7 +684,7 @@ if (params.all) {
             """
     }
 
-    process idba_assembly {
+    process rna-spades_assembly {
 
         label 'med_mem'
 
@@ -660,34 +694,67 @@ if (params.all) {
 
         input:
             val k from "${params.k}"
-            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_idba
+            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_spades
 
         output:
-            tuple sample_id, file("${sample_id}.IDBA.fa") into assemblies_ch_idba
+            tuple sample_id, file("${sample_id}.SPADES.fa") into assemblies_ch_spades
 
         script:
             """
-            echo -e "\n-- Starting IDBA assemblies --\n"
-
-            echo -e "\n-- Converting reads for IDBA --\n"
-            fq2fa --merge left-${sample_id}.norm.fq right-${sample_id}.norm.fq ${sample_id}_reads.fa
+            echo -e "\n-- Starting rnaSPADES assemblies --\n"
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- IDBA k\${x} --\n"
-                idba_tran --out ${sample_id}_idba_\${x} --read ${sample_id}_reads.fa --num_threads ${task.cpus} --mink \${x} --maxk \${x}
+                echo -e "\n-- rnaSPADES k\${x} --\n"
+
+                ${params.sp} -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
+
             done
 
             echo -e "\n-- Finished with the assemblies --\n"
 
             for x in `echo $k | tr "," " "`;do
-                sed -i "s/>/>IDBA.k/g" ${sample_id}_idba_\${x}/contig.fa && sed -i "s/contig-//g" ${sample_id}_idba_\${x}/contig.fa
+                sed -i "s/>/>SPADES.k\${x}./g" ${sample_id}_spades_\${x}/transcripts.fasta
             done
 
-            cat ${sample_id}_idba_*/contig.fa >${sample_id}.IDBA.fa
+            cat ${sample_id}_spades_*/transcripts.fasta >${sample_id}.SPADES.fa
 
-            rm ${sample_id}_reads.fa
+            rm -rf ${sample_id}_spades_*
+            """
+    }
 
-            rm -rf ${sample_id}_idba_*
+    process trans-abyss_assembly {
+
+        label 'med_mem'
+
+        tag "${sample_id}"
+
+        publishDir "${params.mypwd}/results/assemblies", mode: "copy", overwrite: true
+
+        input:
+            val k from "${params.k}"
+            tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_transabyss
+
+        output:
+            tuple sample_id, file("${sample_id}.TransABySS.fa") into assemblies_ch_transabyss
+
+        script:
+            """
+            echo -e "\n-- Starting Trans-ABySS assemblies --\n"
+
+            for x in `echo $k | tr "," " "`;do
+                echo -e "\n-- Trans-ABySS k\${x} --\n"
+
+                $trans/transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+
+            done
+
+            echo -e "\n-- Finished with the assemblies --\n"
+
+            for x in `echo $k | tr "," " "`;do
+                sed -i "s/>/>TransABySS.k\${x}./g" ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa
+            done
+
+            cat ${sample_id}_transabyss_*/k*.transabyss.fa-final.fa >${sample_id}.TransABySS.fa
             """
     }
 
@@ -703,7 +770,8 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
             tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap
             tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet
-            tuple sample_id, file("${sample_id}.IDBA.fa") from assemblies_ch_idba
+            tuple sample_id, file("${sample_id}.SPADES.fa") from assemblies_ch_spades
+            tuple sample_id, file("${sample_id}.TransABySS.fa") from assemblies_ch_transabyss
 
         output:
             tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
@@ -725,9 +793,9 @@ if (params.all) {
             cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
 
 
-        	if [ -d tmpfiles/ ];then
-        	    rm -rf tmpfiles/
-        	fi
+            if [ -d tmpfiles/ ];then
+                rm -rf tmpfiles/
+            fi
         	"""
     }
 
@@ -1174,9 +1242,13 @@ if (params.all) {
             echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
             echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t IDBA_tran" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">IDBA" )
+            echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+
 
             #Summary of transcripts after EvidentialGenes
             echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
@@ -1193,8 +1265,11 @@ if (params.all) {
             echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
             echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
-            echo -e "\\t IDBA_tran" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">IDBA" )
+            echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             """
     }
@@ -1306,7 +1381,7 @@ if (params.all) {
 
         script:
             """
-	    set +e
+	        set +e
             bash get_busco_val.sh short_summary_${sample_id}.Trinity.fa.bus.txt short_summary_${sample_id}.fa.bus.txt
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
@@ -1333,7 +1408,7 @@ if (params.all) {
 
         script:
             """
-	    cp ${params.mypwd}/bin/GO_plots.R .
+	        cp ${params.mypwd}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
             | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_cellular.txt
@@ -1356,8 +1431,8 @@ if (params.all) {
 
         publishDir "${params.mypwd}/results/", mode: "copy", overwrite: true
 
-	output:
-	    file("run_info.txt") into run_info
+	    output:
+	       file("run_info.txt") into run_info
 
         script:
             """
@@ -1377,8 +1452,11 @@ if (params.all) {
             v=\$( ${params.oa} | grep "Version" | cut -f 2 -d " " )
             echo "Oases:"\$v >>run_info.txt
 
-            v=\$( echo "1.1.3" )
-            echo "IDBA:"\$v >>run_info.txt
+            v=\$( ${params.sp} -v )
+            echo "rna-SPADES:"\$v >>run_info.txt
+
+            v=\$( $trans/transabyss --version )
+            echo "Trans-ABySS:"\$v >>run_info.txt
 
             v=\$( ${params.tr} --version | grep "version" | head -n 1 | cut -f 2 -d "-" )
             echo "Trinity:"\$v >>run_info.txt
