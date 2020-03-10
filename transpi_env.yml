@@ -22,3 +22,7 @@ dependencies:
   - perl-xml-simple=2.25
   - r-svglite=1.2.3
   - r-ggthemes=4.2.0
+  - python-igraph=0.8.0
+  - abyss=2.2.4
+  - blat=36
+  - spades=3.14.0
