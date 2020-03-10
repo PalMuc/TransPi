@@ -509,7 +509,6 @@ evi_c () {
                 echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
                 wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar
                 tar -xf evigene19may14.tar
-                mv evigene19may14/ evigene/
                 rm evigene19may14.tar
             ;;
             [nN] | [nN][oO])
