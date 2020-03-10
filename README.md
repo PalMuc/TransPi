@@ -22,7 +22,7 @@ We have tested the pipeline with various non-model organisms that often present 
 # What TransPi uses for the analyses?  
 
 List of programs use by TransPi:
-- IDBA  
+- rnaSPADES  
 - SOAP  
 - Trinity  
 - Velvet  
