@@ -496,21 +496,6 @@ nextflow_c () {
 	    fi
     fi
 }
-#evi_bash_c () {
-#    if [ -f ~/.bashrc ];then
-#        if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
-#            echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
-#            echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
-#            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
-#            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
-#            rm .varfile.sh
-#            source_c
-#        else
-#            rm .varfile.sh
-#            source_c
-#        fi
-#    fi
-#}
 evi_c () {
 	cd $mypwd
     check_evi=$( command -v tr2aacds.pl | wc -l )
@@ -522,7 +507,7 @@ evi_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
-                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar 
+                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar
                 tar -xf evigene19may14.tar
                 mv evigene19may14/ evigene/
                 rm evigene19may14.tar
@@ -645,6 +630,12 @@ util_c () {
     cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
     sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
 }
+trans_c () {
+    cd $mypwd
+    wget https://github.com/bcgsc/transabyss/releases/download/2.0.1/transabyss-2.0.1.zip
+    unzip transabyss-2.0.1.zip
+
+}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -670,8 +661,6 @@ get_var () {
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|buscodb|buscodb=\"${buscodb}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" >nextflow.config
-#    evi_bash_c
-    #Temporary rm of .varfile.sh
     rm .varfile.sh
 }
 #Main
@@ -695,6 +684,7 @@ elif [ -d "$mypwd" ];then
     buildsql_c
     cbs_dtu_c
     util_c
+    trans_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
