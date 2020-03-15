@@ -362,7 +362,7 @@ if (params.onlyEvi) {
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- Trans-ABySS k\${x} --\n"
 
-                $trans/transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+                ${params.ta} -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
 
             done
 
@@ -744,7 +744,7 @@ if (params.all) {
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- Trans-ABySS k\${x} --\n"
 
-                $trans/transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+                ${params.ta} -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
 
             done
 
