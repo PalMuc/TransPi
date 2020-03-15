@@ -45,6 +45,7 @@ source_c() {
 }
 conda_c() {
     source ~/.bashrc
+    cd $mypwd
     #Check conda and environment
     check_conda=$( command -v conda )
     if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
@@ -542,7 +543,7 @@ trisql_c () {
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
                 if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
-                    echo -e -n "\n\t    Provide the full PATH of your Anaconda installation (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
+                    echo -e -n "\n\t    Provide the full PATH of your Anaconda main installation, not an environment (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
                     read ans
                     source ${ans}/etc/profile.d/conda.sh
                     conda activate TransPi
@@ -627,8 +628,15 @@ cbs_dtu_c () {
 util_c () {
     source ~/.bashrc
     cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
-    sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
-}
+    if [ -f ${cpath}/bin/RnammerTranscriptome.pl ];then
+        sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
+    else
+        echo -e "\n\t -- Cannot find the TransPi environment -- \n"
+        echo -e -n "\n\t    Provide the PATH of TransPi environment (Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi): "
+        read ans
+        sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
+    fi
+} 
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
