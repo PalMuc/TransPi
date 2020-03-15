@@ -302,7 +302,7 @@ if (params.onlyEvi) {
             """
     }
 
-    process rna-spades_assembly_OA {
+    process rna_spades_assembly_OA {
 
         label 'med_mem'
 
@@ -340,7 +340,7 @@ if (params.onlyEvi) {
             """
     }
 
-    process trans-abyss_assembly_OA {
+    process transabyss_assembly_OA {
 
         label 'med_mem'
 
@@ -684,7 +684,7 @@ if (params.all) {
             """
     }
 
-    process rna-spades_assembly {
+    process rna_spades_assembly {
 
         label 'med_mem'
 
@@ -722,7 +722,7 @@ if (params.all) {
             """
     }
 
-    process trans-abyss_assembly {
+    process transabyss_assembly {
 
         label 'med_mem'
 
@@ -1455,7 +1455,7 @@ if (params.all) {
             v=\$( ${params.sp} -v )
             echo "rna-SPADES:"\$v >>run_info.txt
 
-            v=\$( $trans/transabyss --version )
+            v=\$( ${params.ta} --version )
             echo "Trans-ABySS:"\$v >>run_info.txt
 
             v=\$( ${params.tr} --version | grep "version" | head -n 1 | cut -f 2 -d "-" )
