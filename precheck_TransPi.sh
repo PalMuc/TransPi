@@ -629,12 +629,6 @@ util_c () {
     cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
     sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
 }
-trans_c () {
-    cd $mypwd
-    wget https://github.com/bcgsc/transabyss/releases/download/2.0.1/transabyss-2.0.1.zip
-    unzip transabyss-2.0.1.zip
-
-}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -665,8 +659,8 @@ get_var () {
 #Main
 if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
     echo -e "\n\t Script for checking the requirenments of TransPi \n"
-    echo -e "\t Usage:\n\n\t\t pre-check_TransPi.sh WORK_PATH \n"
-    echo -e "\n\t\t\t WORK_PATH = PATH to run TransPi and download the requirenments \n\n\t\t\t\t Example: /home/bioinf/run/ \n"
+    echo -e "\t Usage:\n\n\t\t bash precheck_TransPi.sh WORK_PATH \n"
+    echo -e "\n\t\t WORK_PATH = PATH to run TransPi and download the requirenments \n\n\t\t Example: /home/bioinf/run/ \n"
     exit 0
 elif [ ! -d "$mypwd" ];then
     echo -e "\n\t -- Please provide a valid PATH to run TransPi -- \n"
@@ -683,7 +677,6 @@ elif [ -d "$mypwd" ];then
     buildsql_c
     cbs_dtu_c
     util_c
-    trans_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
