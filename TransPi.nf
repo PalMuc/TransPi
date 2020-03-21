@@ -1501,5 +1501,9 @@ if (params.all) {
 }
 
 workflow.onComplete {
-    log.info ( workflow.success ? "\n\nDone! Open the following report in your browser --> ${params.tracedir}/transpi_report.html\n" : "Oops .. something went wrong" )
+    log.info ( workflow.success ? \
+        "---------------------------------------------------------------------------------" \
+        + "\n\t\033[0;32mDone! Open the following report in your browser --> ${params.tracedir}/transpi_report.html\033[0m" : \
+        "---------------------------------------------------------------------------------" \
+        + "\n\t\033[0;31mSomething went wrong. Check error message above and/or log files.\033[0m" )
 }
