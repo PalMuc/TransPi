@@ -176,7 +176,7 @@ if (params.onlyEvi) {
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-            ${params.in_norm} --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
+            insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
             echo -e "\n-- DONE with Normalization --\n"
 
@@ -205,7 +205,7 @@ if (params.onlyEvi) {
             """
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-            ${params.tr} --max_memory \${mem}G --seqType fq --left left-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
+            Trinity --max_memory \${mem}G --seqType fq --left left-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
 
             mv trinity_out_dir.Trinity.fasta ${sample_id}.Trinity.fa
             """
@@ -232,7 +232,7 @@ if (params.onlyEvi) {
             echo "max_rd_len="${params.max_rd_len} >>config.txt
             echo "[LIB]" >>config.txt
             echo "rd_len_cutof="${params.rd_len_cutof} >>config.txt
-            echo "avg_ins="${params.avg_ins} >>config.txt
+            #echo "avg_ins="${params.avg_ins} >>config.txt
             echo "reverse_seq="${params.reverse_seq} >>config.txt
             echo "asm_flags="${params.asm_flags} >>config.txt
             echo "map_len="${params.map_len} >>config.txt
@@ -243,7 +243,7 @@ if (params.onlyEvi) {
 
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- SOAP k\${x} --\n"
-                ${params.soap} all -s config.txt -K \${x} -o output\${x} -p ${task.cpus}
+                SOAPdenovo-Trans-127mer all -s config.txt -K \${x} -o output\${x} -p ${task.cpus}
                 sed -i "s/>/>SOAP.k\${x}./g" output\${x}.scafSeq
             done
 
@@ -275,19 +275,19 @@ if (params.onlyEvi) {
             echo -e "\n-- Starting with Velveth --\n"
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- k\${x} --\n"
-                ${params.vh} oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
+                velveth oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
             done
 
             echo -e "\n-- Starting with Velvetg --\n"
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- vg \${x} --\n"
-                ${params.vg} oases.\${x} -read_trkg yes
+                velvetg oases.\${x} -read_trkg yes
             done
 
             echo -e "\n-- Starting with Oases --\n"
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- oases \${x} --\n"
-                ${params.oa} oases.\${x}
+                oases oases.\${x}
             done
 
             echo -e "\n-- Finished with Velvet/Oases assemblies --\n"
@@ -324,7 +324,7 @@ if (params.onlyEvi) {
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- rnaSPADES k\${x} --\n"
 
-                ${params.sp} -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
+                rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
 
             done
 
@@ -362,7 +362,7 @@ if (params.onlyEvi) {
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- Trans-ABySS k\${x} --\n"
 
-                ${params.ta} -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+                transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
 
             done
 
@@ -558,7 +558,7 @@ if (params.all) {
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-            ${params.in_norm} --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
+            insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
             echo -e "\n-- DONE with Normalization --\n"
 
@@ -587,7 +587,7 @@ if (params.all) {
             """
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-            ${params.tr} --max_memory \${mem}G --seqType fq --left left-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
+            Trinity --max_memory \${mem}G --seqType fq --left left-${sample_id}.norm.fq --right right-${sample_id}.norm.fq --CPU ${task.cpus} --no_normalize_reads --full_cleanup --output trinity_out_dir
 
             mv trinity_out_dir.Trinity.fasta ${sample_id}.Trinity.fa
             """
@@ -614,7 +614,7 @@ if (params.all) {
             echo "max_rd_len="${params.max_rd_len} >>config.txt
             echo "[LIB]" >>config.txt
             echo "rd_len_cutof="${params.rd_len_cutof} >>config.txt
-            echo "avg_ins="${params.avg_ins} >>config.txt
+            #echo "avg_ins="${params.avg_ins} >>config.txt
             echo "reverse_seq="${params.reverse_seq} >>config.txt
             echo "asm_flags="${params.asm_flags} >>config.txt
             echo "map_len="${params.map_len} >>config.txt
@@ -625,7 +625,7 @@ if (params.all) {
 
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- SOAP k\${x} --\n"
-                ${params.soap} all -s config.txt -K \${x} -o output\${x} -p ${task.cpus}
+                SOAPdenovo-Trans-127mer all -s config.txt -K \${x} -o output\${x} -p ${task.cpus}
                 sed -i "s/>/>SOAP.k\${x}./g" output\${x}.scafSeq
             done
 
@@ -657,19 +657,19 @@ if (params.all) {
     	    echo -e "\n-- Starting with Velveth --\n"
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- k\${x} --\n"
-                ${params.vh} oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
+                velveth oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
             done
 
             echo -e "\n-- Starting with Velvetg --\n"
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- vg \${x} --\n"
-                ${params.vg} oases.\${x} -read_trkg yes
+                velvetg oases.\${x} -read_trkg yes
             done
 
             echo -e "\n-- Starting with Oases --\n"
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- oases \${x} --\n"
-                ${params.oa} oases.\${x}
+                oases oases.\${x}
             done
 
             echo -e "\n-- Finished with Velvet/Oases assemblies --\n"
@@ -706,7 +706,7 @@ if (params.all) {
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- rnaSPADES k\${x} --\n"
 
-                ${params.sp} -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
+                rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
 
             done
 
@@ -744,7 +744,7 @@ if (params.all) {
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- Trans-ABySS k\${x} --\n"
 
-                ${params.ta} -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+                transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
 
             done
 
@@ -874,7 +874,7 @@ if (params.all) {
 
             echo -e "\n-- TransDecoder.LongOrfs... --\n"
 
-            ${params.torf} -t ${sample_id}.combined.okay.fa
+            TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa
 
             echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
 
@@ -882,19 +882,19 @@ if (params.all) {
 
             echo -e "\n-- Starting Diamond (blastp) --\n"
 
-            ${params.diam} blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
+            diamond blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
 
             echo -e "\n-- Done with Diamond (blastp) --\n"
 
             echo -e "\n-- Starting HMMER --\n"
 
-            ${params.hmsc} --cpu ${task.cpus} --domtblout pfam.domtblout \$pf \$fname.transdecoder_dir/longest_orfs.pep
+            hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout \$pf \$fname.transdecoder_dir/longest_orfs.pep
 
             echo -e "\n-- Done with HMMER --\n"
 
             echo -e "\n-- TransDecoder.Predict... --\n"
 
-            ${params.tpred} -t ${sample_id}.combined.okay.fa --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
+            TransDecoder.Predict -t ${sample_id}.combined.okay.fa --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
 
             echo -e "\n-- Done with TransDecoder.Predict --\n"
 
@@ -959,13 +959,13 @@ if (params.all) {
 
             echo -e "\n-- Starting with Diamond (blastx) --\n"
 
-            ${params.diam} blastx -d \$swissdb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+            diamond blastx -d \$swissdb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
 
             echo -e "\n-- Done with Diamond (blastx) --\n"
 
             echo -e "\n-- Starting with Diamond (blastp) --\n"
 
-            ${params.diam} blastp -d \$swissdb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+            diamond blastp -d \$swissdb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
             echo -e "\n-- Done with Diamond (blastp)  --\n"
             """
@@ -992,13 +992,13 @@ if (params.all) {
 
             echo -e "\n-- Starting with Diamond (blastx) --\n"
 
-            ${params.diam} blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+            diamond blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
 
             echo -e "\n-- Done with Diamond (blastx) --\n"
 
             echo -e "\n-- Starting with Diamond (blastp) --\n"
 
-            ${params.diam} blastp -d \$unidb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+            diamond blastp -d \$unidb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
 
             echo -e "\n-- Done with Diamond (blastp)  --\n"
             """
@@ -1022,7 +1022,7 @@ if (params.all) {
 
             echo -e "\n-- Starting with HMMER --\n"
 
-            ${params.hmsc} --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out \$pf ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out \$pf ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
 
             echo -e "\n-- Done with HMMER --\n"
             """
@@ -1095,7 +1095,7 @@ if (params.all) {
 
             echo -e "\n-- Starting with RNAMMER --\n"
 
-            ${params.rnaTri} --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
+            RnammerTranscriptome.pl --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
 
             echo -e "\n-- Done with RNAMMER --\n"
             """
@@ -1187,7 +1187,7 @@ if (params.all) {
 
             echo -e "\n-- Creating GO file from XLS... --\n"
 
-            ${params.XLStoGO} --Trinotate_xls ${sample_id}.trinotate_annotation_report.xls --trans >${sample_id}.GO.terms.txt
+            extract_GO_assignments_from_Trinotate_xls.pl --Trinotate_xls ${sample_id}.trinotate_annotation_report.xls --trans >${sample_id}.GO.terms.txt
 
             echo -e "\n-- Done with the GO --\n"
 
@@ -1440,25 +1440,25 @@ if (params.all) {
             echo ${params.k} >>run_info.txt
             echo -e "\n-- Program versions --" >>run_info.txt
 
-            v=\$( ${params.soap} --version | grep "version" | awk '{print \$2,\$3}' | cut -f 1 -d ":" | cut -f 2 -d " " )
+            v=\$( SOAPdenovo-Trans-127mer --version | grep "version" | awk '{print \$2,\$3}' | cut -f 1 -d ":" | cut -f 2 -d " " )
             echo "SOAP:"\$v >>run_info.txt
 
-            v=\$( ${params.vh} | grep "Version" | cut -f 2 -d " " )
+            v=\$( velveth | grep "Version" | cut -f 2 -d " " )
             echo "Velveth:"\$v >>run_info.txt
 
-            v=\$( ${params.vg} | grep "Version" | cut -f 2 -d " " )
+            v=\$( velvetg | grep "Version" | cut -f 2 -d " " )
             echo "Velvetg:"\$v >>run_info.txt
 
-            v=\$( ${params.oa} | grep "Version" | cut -f 2 -d " " )
+            v=\$( oases | grep "Version" | cut -f 2 -d " " )
             echo "Oases:"\$v >>run_info.txt
 
-            v=\$( ${params.sp} -v )
+            v=\$( rnaspades.py -v )
             echo "rna-SPADES:"\$v >>run_info.txt
 
-            v=\$( ${params.ta} --version )
+            v=\$( transabyss --version )
             echo "Trans-ABySS:"\$v >>run_info.txt
 
-            v=\$( ${params.tr} --version | grep "version" | head -n 1 | cut -f 2 -d "-" )
+            v=\$( Trinity --version | grep "version" | head -n 1 | cut -f 2 -d "-" )
             echo "Trinity:"\$v >>run_info.txt
 
             v=\$( diamond --version | cut -f 3 -d " " )
