@@ -811,18 +811,18 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco
 
         output:
-            tuple sample_id, file("run_${sample_id}.fa.bus") into busco_ch
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") into ( busco_summary, busco_comp_1 )
+            tuple sample_id, file("${sample_id}.fa.bus") into busco_ch
+            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") into ( busco_summary, busco_comp_1 )
 
         script:
             """
             echo -e "\n-- Starting with BUSCO --\n"
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
 
             echo -e "\n-- DONE with BUSCO --\n"
 
-            cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
+            cp ${sample_id}.fa.bus/short_summary.*.${sample_id}.fa.bus.txt .
             """
     }
 
@@ -838,17 +838,17 @@ if (params.all) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco_ch_trinity
 
         output:
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into ( busco_ch_trinity_sum, busco_comp_2 )
+            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") into ( busco_ch_trinity_sum, busco_comp_2 )
 
         script:
             """
             echo -e "\n-- Starting with BUSCO --\n"
 
-            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
+            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
 
             echo -e "\n-- DONE with BUSCO --\n"
 
-            cp run_${sample_id}.Trinity.fa.bus/short_summary_${sample_id}.Trinity.fa.bus.txt .
+            cp ${sample_id}.Trinity.fa.bus/short_summary.*.${sample_id}.Trinity.fa.bus.txt .
             """
     }
 
@@ -1281,8 +1281,8 @@ if (params.all) {
         publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco_summary
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco_ch_trinity_sum
+            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") from busco_summary
+            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") from busco_ch_trinity_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco.txt") into final_sum_2
@@ -1292,9 +1292,9 @@ if (params.all) {
             #Summary of BUSCO scores for all the final_assemblies
             echo -e "Summary of BUSCO \n" >>${sample_id}.sum_busco.txt
             echo "-- TransPi BUSCO scores -- " >>${sample_id}.sum_busco.txt
-            cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco.txt
+            cat short_summary.*.${sample_id}.fa.bus.txt >>${sample_id}.sum_busco.txt
             echo -e "\n-- Trinity BUSCO scores --" >>${sample_id}.sum_busco.txt
-            cat short_summary_${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco.txt
+            cat short_summary.*.${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco.txt
             """
     }
 
@@ -1373,8 +1373,8 @@ if (params.all) {
         publishDir "${params.mypwd}/results/figures/BUSCO", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco_comp_1
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco_comp_2
+            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") from busco_comp_1
+            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") from busco_comp_2
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO_comparison.pdf"), file("${sample_id}_BUSCO_comparison.svg") into busco_fig
@@ -1382,7 +1382,7 @@ if (params.all) {
         script:
             """
 	        set +e
-            bash get_busco_val.sh short_summary_${sample_id}.Trinity.fa.bus.txt short_summary_${sample_id}.fa.bus.txt
+            bash get_busco_val.sh short_summary.*.${sample_id}.Trinity.fa.bus.txt short_summary.*.${sample_id}.fa.bus.txt
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
