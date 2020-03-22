@@ -1,23 +1,23 @@
-name_tri=$1                      
-name_transpi=$2        
-#trinity              
+name_tri=$1
+name_transpi=$2
+#trinity
 for x in $name_tri;do
-    a=$( echo $x | sed 's/.Trinity.fa.bus.txt//g' | cut -f 3- -d "_" )
+    a=$( echo $x | sed 's/.Trinity.fa.bus.txt//g' | cut -f 4- -d "." )
     echo "'${a}','${a}','${a}','${a}'," >>tspec.txt
     b=$( cat $x | grep "(C)" -A5 | awk '{print $1}' | awk -v RS= -v OFS=, '{$1 = $1} 1' | cut -f 2,3,4,5 -d "," )
-    echo "${b}," >>tnum.txt   
+    echo "${b}," >>tnum.txt
     c=$( cat $x | grep "C:" | cut -f 2 -d "[" | cut -f 1,2,3,4 -d "," | tr -d "%" | tr -d "]" | tr -d [A-Z] | tr -d ":" )
-    echo "${c}," >>tperc.txt  
-done                          
-#transpi                 
+    echo "${c}," >>tperc.txt
+done
+#transpi
 for x in $name_transpi;do
-    a=$( echo $x | sed 's/.fa.bus.txt//g' | cut -f 3- -d "_" )
+    a=$( echo $x | sed 's/.fa.bus.txt//g' | cut -f 4- -d "." )
     echo "'${a}_TP','${a}_TP','${a}_TP','${a}_TP'" >>pspec.txt
     b=$( cat $x | grep "(C)" -A5 | awk '{print $1}' | awk -v RS= -v OFS=, '{$1 = $1} 1' | cut -f 2,3,4,5 -d "," )
-    echo "${b}" >>pnum.txt    
+    echo "${b}" >>pnum.txt
     c=$( cat $x | grep "C:" | cut -f 2 -d "[" | cut -f 1,2,3,4 -d "," | tr -d "%" | tr -d "]" | tr -d [A-Z] | tr -d ":" )
-    echo "${c}" >>pperc.txt   
-done                          
+    echo "${c}" >>pperc.txt
+done
 paste tspec.txt pspec.txt | tr "\t" "\n" | tr -d "\n" >final_spec
 paste tnum.txt pnum.txt | tr "\t" "\n" | tr -d "\n" >final_num
 paste tperc.txt pperc.txt | tr "\t" "\n" | tr -d "\n" >final_perc
