@@ -555,6 +555,7 @@ trisql_c () {
                     elif [ $check_sql -eq 1 ];then
                         Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                         rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                        date -u >.lastrun.txt
                     fi
                 elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
                     source ~/anaconda3/etc/profile.d/conda.sh
@@ -567,6 +568,7 @@ trisql_c () {
                     elif [ $check_sql -eq 1 ];then
                         Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                         rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                        date -u >.lastrun.txt
                     fi
                 fi
             ;;
@@ -636,7 +638,7 @@ util_c () {
         read ans
         sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
     fi
-} 
+}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
