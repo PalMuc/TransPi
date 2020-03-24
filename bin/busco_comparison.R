@@ -31,7 +31,7 @@ my_colors <- c("#0e9aa7", "#96ceba", "#ffcc5c", "#ff6f69")
 # Bar height ratio
 my_bar_height <- 0.55
 # Legend
-my_title <- "BUSCO Assessment Results - TransPi Demosponges"
+my_title <- "BUSCO Assessment Results - Trinity vs TransPi"
 # Font
 my_family <- "sans"
 my_size_ratio <- 1
