@@ -9,11 +9,11 @@ dependencies:
   - python=3.6
   - trinity=2.9.1
   - soapdenovo-trans=1.04
-  - spades=3.14.0     
-  - transabyss=2.0.1  
+  - spades=3.14.0
+  - transabyss=2.0.1
   - velvet=1.2.10
   - oases=0.2.09
-  - busco=4.0.5
+  #- busco=4.0.5 Not working properly with the env
   - transdecoder=5.5.0
   - trinotate=3.2.0
   - diamond=0.9.30
