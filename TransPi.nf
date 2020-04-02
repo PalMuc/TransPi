@@ -818,7 +818,7 @@ if (params.all) {
             """
             echo -e "\n-- Starting with BUSCO --\n"
 
-            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus} --offline
 
             echo -e "\n-- DONE with BUSCO --\n"
 
@@ -844,7 +844,7 @@ if (params.all) {
             """
             echo -e "\n-- Starting with BUSCO --\n"
 
-            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus}
+            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.buscodb} -m tran -c ${task.cpus} --offline
 
             echo -e "\n-- DONE with BUSCO --\n"
 
