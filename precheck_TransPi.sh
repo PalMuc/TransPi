@@ -639,6 +639,50 @@ util_c () {
         sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
     fi
 }
+#temporary for buscoV4
+bus_conf () {
+    head -n 56 config.ini >.56.txt
+    rm config.ini
+    #get the .57.txt
+    cat .56.txt .57.txt >config.ini
+}
+bus_dow4 () {
+    wget https://gitlab.com/ezlab/busco/-/archive/4.0.5/busco-4.0.5.tar.gz
+    tar -xf busco-4.0.5.tar.gz
+    cd busco-4.0.5
+    python3 setup.py install --user
+    cd ..
+    cp busco-4.0.5/bin/busco .
+    cp busco-4.0.5/config/config.ini .
+    rm -rf busco-4.0.5/
+}
+bus4 () {
+    cd $mypwd
+    if [ ! -d scripts/ ];then
+        echo "ERROR"
+        exit 0
+    elif [ -d scripts/ ];then
+        if [ ! -f busco ];then
+            cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
+            if [ "$cpath" == "" ];then
+                echo -e "\n\t -- Cannot find the TransPi environment -- \n"
+                echo -e -n "\n\t    Provide the PATH of TransPi environment (Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi): "
+                read ans
+                conda activate ${ans}
+                bus_dow4
+                # here modify the config.ini
+                bus_conf
+            else
+                conda activate TransPi
+                bus_dow4
+                # here modify the config.ini
+                bus_conf
+            fi
+        elif [ -f busco ] && [ -f config.ini ];then
+            echo "BUSCO V4 is ready to use"
+        fi
+    fi
+}
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -687,6 +731,7 @@ elif [ -d "$mypwd" ];then
     buildsql_c
     cbs_dtu_c
     util_c
+    bus4
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
