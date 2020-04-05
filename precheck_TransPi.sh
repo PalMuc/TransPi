@@ -439,7 +439,7 @@ uniprot_c () {
                 uniprot_c
             ;;
         esac
-    elif [ -d DBs/uniprot_db/];then
+    elif [ -d DBs/uniprot_db/ ];then
         cd DBs/uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- UNIPROT database directory found at: $myuni -- \n"
