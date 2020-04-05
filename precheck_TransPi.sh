@@ -32,7 +32,7 @@ read_c() {
 os_c() {
     if [ -f /etc/os-release ];then
         echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
-        curl -o Anaconda3-2019.10-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+        curl -o Anaconda3-2020.02-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
     else
         echo -e "\n\t\e[31m -- ERROR: Are you in a Linux system? Please check requirements and rerun the pre-check --\e[39m\n"
         exit 0
@@ -54,7 +54,7 @@ conda_c() {
         if [ "$ver" -gt 45 ];then
             echo -e "\n\t -- Conda is installed (v4.5 or higher). Checking environment... --\n"
             #Check environment
-            check_env=$( conda env list | grep -c "TransPi" )
+            check_env=$( conda info -e | grep -c "TransPi" )
 	    if [ "$check_env" -eq 0 ];then
                 echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
                 if [ -f transpi_env.yml ];then
@@ -75,10 +75,10 @@ conda_c() {
         case $ans in
             [yY] | [yY][eE][sS])
                 os_c
-                echo -e "\n\t -- Starting anaconda installation -- \n"
-                bash Anaconda3-2019.10*.sh
+                echo -e "\n\t -- Starting Anaconda installation -- \n"
+                bash Anaconda3-20*.sh
                 echo -e "\n\t -- Installation done -- \n"
-                rm Anaconda3-2019.10*.sh
+                rm Anaconda3-20*.sh
                 source_c
                 if [ -f transpi_env.yml ];then
                     echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
@@ -103,72 +103,79 @@ conda_c() {
         esac
     fi
 }
-pfam_c() {
-    #Check PFAM files
-    cd $mypwd
-    if [ ! -d hmmerdb/ ];then
-        echo -e "\n\t -- Creating directory for the HMMER database --\n"
-        mkdir hmmerdb
-        cd hmmerdb
-        echo -e "\n\t -- Downloading current release of PFAM for the HMMER database --\n"
-        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
-        echo -e "-- Preparing files ... --\n"
-        gunzip Pfam-A.hmm.gz
-    elif [ -d hmmerdb/ ];then
-        echo -e "\n\t -- Directory for the HMMER database is present --\n"
-        cd hmmerdb
-        if [ -f Pfam-A.hmm ];then
-            echo -e "\n\t -- Pfam file is present iand ready to be used --\n"
+dir_c () {
+    if [ ! -d scripts/ ];then
+        mkdir scripts
+    fi
+    if [ ! -d DBs ];then
+        mkdir DBs
+    fi
+}
+#temporary function for busco V3
+busv3_get () {
+    v3name=$1
+    if [ `cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" | wc -l` -eq 1 ];then
+        if [ -d ${v3name}_od9 ];then
+            export busnaV3=${v3name}_odb9
         else
-            echo -e "\n\t -- Downloading current release of PFAM for the HMMER database --\n"
-            wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
-            echo -e "-- Preparing files ... --\n"
-            gunzip Pfam-A.hmm.gz
+            tname=$( cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" )
+            wget $tname
+            tar -xvf ${v3name}_odb9.tar.gz
+            export busnaV3=${v3name}_odb9
         fi
+    else
+        echo -e "\n\t -- No BUSCO V3 available for ${v3name} --\n"
+        exit 0
     fi
 }
 bus_dow () {
     name=$1
     cd $mypwd
-    if [ ! -d busco_db/ ];then
-        echo -e "\n\t -- Creating directory for the BUSCO database --\n"
-        mkdir busco_db
-        cd busco_db
+    if [ ! -d DBs/busco_db/ ];then
+        echo -e "\n\t -- Creating directory for the BUSCO V4 database --\n"
+        mkdir -p DBs/busco_db
+        cd DBs/busco_db
         bname=$( echo $name | cut -f 1 -d "_" )
-        if [ `cat ../buslist.txt | grep "${bname};" | wc -l` -eq 1 ];then
-            echo -e "\n\t -- Downloading BUSCO \"$name\" database --\n";wait
-            wname=$( cat ../buslist.txt | grep "${bname};" | cut -f 2 -d ";" )
+        if [ `cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
+            echo -e "\n\t -- Downloading BUSCO V4 \"$name\" database --\n";wait
+            wname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
             wget $wname
             echo -e "\n\t -- Preparing files ... --\n";wait
-            tname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            tname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
             tar -xvf ${tname}*.tar.gz
             rm ${tname}*.tar.gz
-            echo -e "\n\t -- DONE with BUSCO database --\n";wait
+            echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
         fi
-        dname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        dname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        #get buscov3
+        busv3_get $dname
         if [ -d ${dname}_odb10 ];then
             export busna=${dname}_odb10
         fi
-    elif [ -d busco_db/ ];then
-        cd busco_db
+    elif [ -d DBs/busco_db/ ];then
+        cd DBs/busco_db
         bname=$( echo $name | cut -f 1 -d "_" )
-        dname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        dname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
         if [ -d ${dname}_odb10 ];then
-            echo -e "\n\t -- BUSCO \"$name\" database found -- \n"
+            #get buscov3
+            busv3_get $dname
+            echo -e "\n\t -- BUSCO V4 \"$name\" database found -- \n"
             export busna=${dname}_odb10
         else
             bname=$( echo $name | cut -f 1 -d "_" )
-            if [ `cat ../buslist.txt | grep "${bname};" | wc -l` -eq 1 ];then
-                echo -e "\n\t -- Downloading BUSCO \"$name\" database --\n";wait
-                wname=$( cat ../buslist.txt | grep "${bname};" | cut -f 2 -d ";" )
+            if [ `cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
+                echo -e "\n\t -- Downloading BUSCO V4 \"$name\" database --\n";wait
+                wname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
                 wget $wname
                 echo -e "\n\t -- Preparing files ... --\n";wait
-                tname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+                tname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
                 tar -xvf ${tname}*.tar.gz
                 rm ${tname}*.tar.gz
-                echo -e "\n\t -- DONE with BUSCO database --\n";wait
+                echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
             fi
-            dname=$( cat ../buslist.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            dname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            #get buscov3
+            busv3_get $dname
             if [ -d ${dname}_odb10 ];then
                 export busna=${dname}_odb10
             fi
@@ -177,24 +184,24 @@ bus_dow () {
 }
 bus_c () {
     cd $mypwd
-    echo -e "\n\t -- Selecting BUSCO database -- \n"
+    echo -e "\n\t -- Selecting BUSCO V4 database -- \n"
     PS3="
     Please select one (1-5): "
-    if [ -f buslist.txt ];then
-    select var in `cat buslist.txt | grep "###" | tr -d "#"`;do
+    if [ -f busV4list.txt ];then
+    select var in `cat busV4list.txt | grep "###" | tr -d "#"`;do
     case $var in
         BACTERIA)
             echo -e "\n\t You selected BACTERIA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat busV4list.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
     	    case $var1 in
     	        MAIN_MENU)
                     bus_c
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat buslist.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -210,20 +217,20 @@ bus_c () {
             echo -e "\n\tYou selected EUKARYOTA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat busV4list.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
         	case $var1 in
         	    MAIN_MENU)
                     bus_c
                 ;;
                 Arthropoda_\(Phylum\))
-                    select var2 in `cat buslist.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat busV4list.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -235,14 +242,14 @@ bus_c () {
                     done
                 ;;
                 Fungi_\(Kingdom\))
-                    select var2 in `cat buslist.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat busV4list.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -254,14 +261,14 @@ bus_c () {
                     done
                 ;;
                 Plants_\(Kingdom\))
-                    select var2 in `cat buslist.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat busV4list.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -273,14 +280,14 @@ bus_c () {
                     done
                 ;;
                 Protists_\(Clade\))
-                    select var2 in `cat buslist.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat busV4list.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -292,14 +299,14 @@ bus_c () {
                     done
                 ;;
                 Vertebrata_\(Sub_phylum\))
-                    select var2 in `cat buslist.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat busV4list.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat buslist.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -312,7 +319,7 @@ bus_c () {
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat buslist.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -328,14 +335,14 @@ bus_c () {
             echo -e "\n\tYou selected ARCHAEA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat buslist.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat busV4list.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
             case $var1 in
             	MAIN_MENU)
                     bus_c
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat buslist.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -359,13 +366,11 @@ bus_c () {
     break
     done
     else
-        echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"buslist.txt\" is available. Please check requirements and rerun the pre-check --\e[39m\n\n"
+        echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"busV4list.txt\" is available. Please check requirements and rerun the pre-check --\e[39m\n\n"
 	    exit 0
     fi
 }
 uni_c () {
-    cd $mypwd
-    cd uniprot_db
     PS3="
     Please select UNIPROT database to use: "
     select var in `ls *fasta`;do
@@ -404,10 +409,10 @@ unicomp_c () {
 uniprot_c () {
     #Check UNIPROT
     cd $mypwd
-    if [ ! -d uniprot_db/ ];then
+    if [ ! -d DBs/uniprot_db/ ];then
         echo -e "\n\t -- Creating directory for the UNIPROT database --\n"
-        mkdir uniprot_db
-        cd uniprot_db/
+        mkdir -p DBs/uniprot_db/
+        cd DBs/uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- TransPi uses customs protein databases from UNIPROT for the annotation -- \n"
         echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
@@ -418,6 +423,7 @@ uniprot_c () {
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
                 curl -o uniprot_metazoa_33208.fasta.gz "https://www.uniprot.org/uniprot/?query=taxonomy:33208&format=fasta&compress=yes&include=no"
                 gunzip uniprot_metazoa_33208.fasta.gz
+                date -u >.lastrun.txt
                 uni_c
             ;;
             [nN] | [nN][oO])
@@ -433,8 +439,8 @@ uniprot_c () {
                 uniprot_c
             ;;
         esac
-    elif [ -d uniprot_db/ ];then
-        cd uniprot_db/
+    elif [ -d DBs/uniprot_db/];then
+        cd DBs/uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- UNIPROT database directory found at: $myuni -- \n"
         ls -1 *.fasta 2>&1 | head -n 1 >.unilist.txt
@@ -501,12 +507,13 @@ evi_c () {
 	cd $mypwd
     check_evi=$( command -v tr2aacds.pl | wc -l )
     if [ $check_evi -eq 0 ];then
-        if [ ! -d evigene/ ];then
+        if [ ! -d scripts/evigene/ ];then
         echo -e "\n\t -- EvidentialGene is not installed -- \n"
         echo -e -n "\n\t    Do you want to install EvidentialGene? (y or n): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
+                cd scripts
                 echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
                 wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar
                 tar -xf evigene19may14.tar
@@ -522,11 +529,17 @@ evi_c () {
             ;;
         esac
         else
-            echo -e "\n\t -- EvidentialGene directory was found at $mypwd (local installation) -- \n"
+            echo -e "\n\t -- EvidentialGene directory was found at ${mypwd}/scripts (local installation) -- \n"
         fi
     elif [ $check_evi -eq 1 ];then
         echo -e "\n\t -- EvidentialGene is already installed -- \n"
     fi
+}
+#change BuildSQL PATH (temporary)
+sql_path () {
+    a=$( which Build_Trinotate_Boilerplate_SQLite_db.pl )
+    sed -i 's/$SPROT_DAT_URL = \"http:/$SPROT_DAT_URL = \"ftp:/' $a
+    sed -i 's/$EGGNOG_DAT_URL.*/$EGGNOG_DAT_URL = \"http://eggnog5.embl.de/download/eggnog_5.0/e5.og_annotations.tsv\";/' $a
 }
 trisql_c () {
     source ~/.bashrc
@@ -554,8 +567,9 @@ trisql_c () {
                         exit 0
                     elif [ $check_sql -eq 1 ];then
                         Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                        rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                        rm uniprot_sprot.dat.gz
                         date -u >.lastrun.txt
+                        sql_path
                     fi
                 elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
                     source ~/anaconda3/etc/profile.d/conda.sh
@@ -567,13 +581,14 @@ trisql_c () {
                         exit 0
                     elif [ $check_sql -eq 1 ];then
                         Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                        rm Pfam-A.hmm.gz uniprot_sprot.dat.gz
+                        rm uniprot_sprot.dat.gz
                         date -u >.lastrun.txt
+                        sql_path
                     fi
                 fi
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/sqlite_db". Then rerun the pre-check  --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/DBs/sqlite_db". Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             *)
@@ -582,46 +597,72 @@ trisql_c () {
             ;;
         esac
     else
-        echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/sqlite_db" -- \n"
+        echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
+        DB=$( cat .lastrun.txt )
+        echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
     fi
 }
 buildsql_c () {
     cd ${mypwd}
-    if [ -d sqlite_db/ ];then
-        cd sqlite_db
+    if [ -d DBs/sqlite_db/ ];then
+        cd DBs/sqlite_db/
         trisql_c
     else
-        mkdir sqlite_db/
-        cd sqlite_db
+        mkdir -p DBs/sqlite_db/
+        cd DBs/sqlite_db/
         trisql_c
     fi
 }
+pfam_c() {
+    #Check PFAM files
+    cd $mypwd
+    if [ ! -d DBs/hmmerdb/ ];then
+        echo -e "\n\t -- Creating directory for the HMMER database --\n"
+        mkdir -p DBs/hmmerdb/
+        cd DBs/hmmerdb/
+        echo -e "-- Downloading Pfam-A files ... --\n"
+        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
+        echo -e "-- Preparing Pfam-A files ... --\n"
+        gunzip Pfam-A.hmm.gz
+        date -u >.lastrun.txt
+    elif [ -d DBs/hmmerdb/ ];then
+        echo -e "\n\t -- Directory for the HMMER database is present --\n"
+        cd DBs/hmmerdb/
+        if [ -f Pfam-A.hmm ];then
+            echo -e "\n\t -- Pfam file is present and ready to be used --\n"
+            DB=$( cat .lastrun.txt )
+            echo -e "\n\t -- Pfam last update: ${DB} --\n"
+        else
+            echo -e "-- Downloading Pfam-A files ... --\n"
+            wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
+            echo -e "-- Preparing Pfam-A files ... --\n"
+            gunzip Pfam-A.hmm.gz
+            date -u >.lastrun.txt
+        fi
+    fi
+}
+cbs_c () {
+    #rnammer
+    cd cbs-dtu-tools/rnammer/
+    name=$( pwd )
+    sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
+    cd ..
+    #signalP
+    cd signalp-4.1/
+    name=$( pwd )
+    sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
+    cd ..
+}
+#later to be removed or to scripts directory
 cbs_dtu_c () {
     cd $mypwd
     if [ -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
         echo -e "\n\t -- Preparing scripts of CBS-DTU -- \n"
         echo -e "\n\t -- Uncompressing files -- \n"
         tar -xvf cbs-dtu-tools.tar.gz
-        #rnammer
-        cd cbs-dtu-tools/rnammer/
-        name=$( pwd )
-        sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
-        cd ..
-        #signalP
-        cd signalp-4.1/
-        name=$( pwd )
-        sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
-        cd ..
+        cbs_c
     elif [ -f cbs-dtu-tools.tar.gz ] && [ -d cbs-dtu-tools/ ];then
-        cd cbs-dtu-tools/rnammer/
-        name=$( pwd )
-        sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
-        cd ..
-        #signalP
-        cd signalp-4.1/
-        name=$( pwd )
-        sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
-        cd ..
+        cbs_c
     elif [ ! -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
         echo -e "\n\t\e[31m -- ERROR: Please make sure the cbs-dtu-tools.tar.gz is available. Then rerun the pre-check  --\e[39m\n"
         exit 0
@@ -629,7 +670,7 @@ cbs_dtu_c () {
 }
 util_c () {
     source ~/.bashrc
-    cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
+    cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
     if [ -f ${cpath}/bin/RnammerTranscriptome.pl ];then
         sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
     else
@@ -644,7 +685,10 @@ bus_conf () {
     head -n 56 config.ini >.56.txt
     rm config.ini
     #get the .57.txt
+    cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
+    tail -n +45 ${cpath}/config/config.ini >.57.txt
     cat .56.txt .57.txt >config.ini
+    rm .56.txt .57.txt
 }
 bus_dow4 () {
     wget https://gitlab.com/ezlab/busco/-/archive/4.0.5/busco-4.0.5.tar.gz
@@ -659,14 +703,20 @@ bus_dow4 () {
 bus4 () {
     cd $mypwd
     if [ ! -d scripts/ ];then
-        echo "ERROR"
-        exit 0
+        mkdir -p scripts/busco4
+        cd scripts/busco4
+        bus_dow4
+        # here modify the config.ini
+        bus_conf
     elif [ -d scripts/ ];then
-        if [ ! -f busco ];then
-            cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
+        cd scripts
+        if [ ! -d busco4 ];then
+            mkdir busco4
+            cd busco4
+            cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
             if [ "$cpath" == "" ];then
                 echo -e "\n\t -- Cannot find the TransPi environment -- \n"
-                echo -e -n "\n\t    Provide the PATH of TransPi environment (Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi): "
+                echo -e -n "\n\t    Provide the PATH of TransPi environment ( Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi ): "
                 read ans
                 conda activate ${ans}
                 bus_dow4
@@ -678,36 +728,52 @@ bus4 () {
                 # here modify the config.ini
                 bus_conf
             fi
-        elif [ -f busco ] && [ -f config.ini ];then
-            echo "BUSCO V4 is ready to use"
+        elif [ -d busco4 ];then
+            cd busco4
+            if [ -f busco ] && [ -f config.ini ];then
+                echo "BUSCO V4 is ready to use"
+            else
+                rm -rf *
+                bus_dow4
+                # here modify the config.ini
+                bus_conf
+            fi
         fi
     fi
 }
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
-    echo "buscodb=$mypwd/busco_db/$busna" >${mypwd}/.varfile.sh
+    echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
+    echo "busco4db=$mypwd/DBs/busco_db/$busna" >${mypwd}/.varfile.sh
     echo "uniname=$unina" >>${mypwd}/.varfile.sh
-    echo "uniprot=$mypwd/uniprot_db/$unina" >>${mypwd}/.varfile.sh
-    echo "pfloc=$mypwd/hmmerdb/Pfam-A.hmm" >>${mypwd}/.varfile.sh
+    echo "uniprot=$mypwd/DBs/uniprot_db/$unina" >>${mypwd}/.varfile.sh
+    echo "pfloc=$mypwd/DBs/hmmerdb/Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
-    echo "Tsql=$mypwd/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
+    echo "Tsql=$mypwd/DBs/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
     echo "rnam=$mypwd/cbs-dtu-tools/rnammer/rnammer" >>${mypwd}/.varfile.sh
     echo "tmhmm=$mypwd/cbs-dtu-tools/tmhmm-2.0c/bin/tmhmm" >>${mypwd}/.varfile.sh
     echo "signalp=$mypwd/cbs-dtu-tools/signalp-4.1/signalp" >>${mypwd}/.varfile.sh
+    #echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "pfdate=$( cat ${mypwd}/DBs/hmmerdb/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "dbdate=$( cat ${mypwd}/DBs/sqlite_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
-    echo -e "\n\t -- INFO to use in the pipeline --\n"
+    echo -e "\n\n\t -- INFO to use in TransPi --\n"
     echo -e "\t Pipeline PATH:\t\t $mypwd"
-    echo -e "\t BUSCO database:\t $buscodb"
+    echo -e "\t BUSCO V4 database:\t $busco4db"
     echo -e "\t UNIPROT database:\t $uniprot"
+    #echo -e "\t UNIPROT last update:\t $unpdate"
     echo -e "\t PFAM files:\t\t $pfloc"
+    echo -e "\t PFAM last update:\t $pfdate"
+    echo -e "\t SQL database (SwissProt,EggNOG,GO,PFAM) last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
-    cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|buscodb|buscodb=\"${buscodb}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
+    cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" >nextflow.config
+        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" \
+        -e "s|busco3db|busco3db=\"${busco3db}\"|" >nextflow.config
     rm .varfile.sh
 }
 #Main
@@ -723,12 +789,13 @@ elif [ -d "$mypwd" ];then
     cd $mypwd
     read_c
     conda_c
-    pfam_c
+    dir_c
     bus_c
     uniprot_c
     nextflow_c
     evi_c
     buildsql_c
+    pfam_c
     cbs_dtu_c
     util_c
     bus4
