@@ -758,7 +758,7 @@ get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
     echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
-    echo "busco4db=$mypwd/DBs/busco_db/$busna" >${mypwd}/.varfile.sh
+    echo "busco4db=$mypwd/DBs/busco_db/$busna" >>${mypwd}/.varfile.sh
     echo "uniname=$unina" >>${mypwd}/.varfile.sh
     echo "uniprot=$mypwd/DBs/uniprot_db/$unina" >>${mypwd}/.varfile.sh
     echo "pfloc=$mypwd/DBs/hmmerdb/Pfam-A.hmm" >>${mypwd}/.varfile.sh
