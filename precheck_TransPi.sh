@@ -690,9 +690,14 @@ bus_conf () {
     rm config.ini
     #get the .57.txt
     cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
-    tail -n +45 ${cpath}/config/config.ini >.57.txt
-    cat .56.txt .57.txt >config.ini
-    rm .56.txt .57.txt
+    if [ ! -f ${cpath}/config/config.ini ];then
+        echo -e "\n\t\e[31m -- ERROR: BUSCO config.ini not found. Please check TransPi environment installation --\e[39m\n"
+        exit 0
+    else
+        tail -n +45 ${cpath}/config/config.ini >.57.txt
+        cat .56.txt .57.txt >config.ini
+        rm .56.txt .57.txt
+    fi
 }
 bus_dow4 () {
     wget https://gitlab.com/ezlab/busco/-/archive/4.0.5/busco-4.0.5.tar.gz
@@ -722,11 +727,13 @@ bus4 () {
                 echo -e "\n\t -- Cannot find the TransPi environment -- \n"
                 echo -e -n "\n\t    Provide the PATH of TransPi environment ( Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi ): "
                 read ans
+                source ${ans}/../../etc/profile.d/conda.sh
                 conda activate ${ans}
                 bus_dow4
                 # here modify the config.ini
                 bus_conf
             else
+                source ${cpath}/../../etc/profile.d/conda.sh
                 conda activate TransPi
                 bus_dow4
                 # here modify the config.ini
