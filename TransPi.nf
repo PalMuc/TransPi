@@ -188,7 +188,7 @@ log.info """\
         Kmers:              ${params.k}
         Working directory:  ${params.mypwd}
         Uniprot DB:         ${params.uniprot}
-        Busco DB:           ${params.buscodb}
+        Busco DB:           ${params.busco4db}
         """.stripIndent()
 
 if (params.readsTest) {
@@ -588,7 +588,7 @@ if (params.onlyEvi) {
 
         input:
             tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco3_summary_OE
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum_OE
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum_OE
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3_OE
@@ -2238,7 +2238,7 @@ if (params.onlyEvi) {
 
         input:
             tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco3_summary
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3
@@ -2483,7 +2483,6 @@ if (params.onlyEvi) {
             cp ${params.mypwd}/bin/custom_uniprot_hits.R .
             Rscript custom_uniprot_hits.R ${sample_id}
             """
-    }
     }
 
     process get_run_info {
