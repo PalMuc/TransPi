@@ -188,20 +188,20 @@ bus_c () {
     PS3="
     Please select one (1-5): "
     if [ -f busV4list.txt ];then
-    select var in `cat busV4list.txt | grep "###" | tr -d "#"`;do
+    select var in `cat ${mypwd}/conf/busV4list.txt | grep "###" | tr -d "#"`;do
     case $var in
         BACTERIA)
             echo -e "\n\t You selected BACTERIA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat busV4list.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
     	    case $var1 in
     	        MAIN_MENU)
                     bus_c
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat busV4list.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -217,20 +217,20 @@ bus_c () {
             echo -e "\n\tYou selected EUKARYOTA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat busV4list.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
         	case $var1 in
         	    MAIN_MENU)
                     bus_c
                 ;;
                 Arthropoda_\(Phylum\))
-                    select var2 in `cat busV4list.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -242,14 +242,14 @@ bus_c () {
                     done
                 ;;
                 Fungi_\(Kingdom\))
-                    select var2 in `cat busV4list.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -261,14 +261,14 @@ bus_c () {
                     done
                 ;;
                 Plants_\(Kingdom\))
-                    select var2 in `cat busV4list.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -280,14 +280,14 @@ bus_c () {
                     done
                 ;;
                 Protists_\(Clade\))
-                    select var2 in `cat busV4list.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -299,14 +299,14 @@ bus_c () {
                     done
                 ;;
                 Vertebrata_\(Sub_phylum\))
-                    select var2 in `cat busV4list.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -319,7 +319,7 @@ bus_c () {
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat busV4list.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -335,14 +335,14 @@ bus_c () {
             echo -e "\n\tYou selected ARCHAEA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat busV4list.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
             case $var1 in
             	MAIN_MENU)
                     bus_c
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat busV4list.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
