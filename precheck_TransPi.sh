@@ -406,6 +406,34 @@ unicomp_c () {
         ;;
     esac
 }
+uniprot_meta () {
+    myuni=$( pwd )
+    echo -e "\n\t -- TransPi uses a customs protein database (one of many) from UNIPROT for the annotation -- \n"
+    echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
+    read ans
+    case $ans in
+        [yY] | [yY][eE][sS])
+            echo -e "\n\n\t -- Downloading current metazoan protein dataset from UNIPROT -- \n"
+            echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
+            curl -o uniprot_metazoa_33208.fasta.gz "https://www.uniprot.org/uniprot/?query=taxonomy:33208&format=fasta&compress=yes&include=no"
+            gunzip uniprot_metazoa_33208.fasta.gz
+            date -u >.lastrun.txt
+            uni_c
+        ;;
+        [nN] | [nN][oO])
+            echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". Rerun the pre-check  --\e[39m\n"
+            exit 0
+        ;;
+        exit)
+            echo -e "\n\t -- Exiting -- \n"
+            exit 0
+        ;;
+        *)
+            echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+            uniprot_meta
+        ;;
+    esac
+}
 uniprot_c () {
     #Check UNIPROT
     cd $mypwd
@@ -413,32 +441,7 @@ uniprot_c () {
         echo -e "\n\t -- Creating directory for the UNIPROT database --\n"
         mkdir -p DBs/uniprot_db/
         cd DBs/uniprot_db/
-        myuni=$( pwd )
-        echo -e "\n\t -- TransPi uses customs protein databases from UNIPROT for the annotation -- \n"
-        echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
-        read ans
-        case $ans in
-            [yY] | [yY][eE][sS])
-                echo -e "\n\n\t -- Downloading metazoa protein dataset from UNIPROT -- \n"
-                echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-                curl -o uniprot_metazoa_33208.fasta.gz "https://www.uniprot.org/uniprot/?query=taxonomy:33208&format=fasta&compress=yes&include=no"
-                gunzip uniprot_metazoa_33208.fasta.gz
-                date -u >.lastrun.txt
-                uni_c
-            ;;
-            [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". rerun the pre-check  --\e[39m\n"
-                exit 0
-            ;;
-            exit)
-                echo -e "\n\t -- Exiting -- \n"
-                exit 0
-            ;;
-            *)
-                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
-                uniprot_c
-            ;;
-        esac
+        uniprot_meta
     elif [ -d DBs/uniprot_db/ ];then
         cd DBs/uniprot_db/
         myuni=$( pwd )
@@ -447,9 +450,9 @@ uniprot_c () {
         if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
             ls -1 *.fasta.gz 2>&1 | head -n 1 >.unilist.txt
             if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
-                echo -e "\n\t\e[31m -- ERROR: Directory \"$myuni\" is empty. Please download a UNIPROT database and rerun the pre-check --\e[39m\n"
+                echo -e "\n\t -- Directory \"$myuni\" is empty --\n"
                 rm .unilist.txt
-                uniprot_c
+                uniprot_meta
             else
                 echo -e "\n\t\e[31m -- Directory \"$myuni\" is available but UNIPROT database is compressed --\e[39m\n"
                 unicomp_c
