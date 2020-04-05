@@ -115,7 +115,7 @@ dir_c () {
 busv3_get () {
     v3name=$1
     if [ `cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" | wc -l` -eq 1 ];then
-        if [ -d ${v3name}_od9 ];then
+        if [ -d ${v3name}_odb9 ];then
             export busnaV3=${v3name}_odb9
         else
             tname=$( cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" )
@@ -539,7 +539,7 @@ evi_c () {
 sql_path () {
     a=$( which Build_Trinotate_Boilerplate_SQLite_db.pl )
     sed -i 's/$SPROT_DAT_URL = \"http:/$SPROT_DAT_URL = \"ftp:/' $a
-    sed -i 's/$EGGNOG_DAT_URL.*/$EGGNOG_DAT_URL = \"http://eggnog5.embl.de/download/eggnog_5.0/e5.og_annotations.tsv\";/' $a
+    sed -i 's/$EGGNOG_DAT_URL = \".*/$EGGNOG_DAT_URL = \"http://eggnog5.embl.de/download/eggnog_5.0/e5.og_annotations.tsv\";/' $a
 }
 trisql_c () {
     source ~/.bashrc
