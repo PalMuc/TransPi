@@ -1288,10 +1288,10 @@ if (params.onlyEvi) {
         script:
             """
             #get custom blast hits
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 8 | grep [a-Z] | grep "|" | tr "\`" "\n" | \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 8 | grep [a-Z] | grep "|" | tr "\\`" "\n" | \
                 cut -f 1 -d "^" | cut -f 3 -d "|" | cut -f 2 -d "_" >a.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 9 | grep [a-Z] | grep "|" | tr "\`" "\n" | \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 9 | grep [a-Z] | grep "|" | tr "\\`" "\n" | \
                 cut -f 1 -d "^" | cut -f 3 -d "|" | cut -f 2 -d "_" >b.txt
 
             cat a.txt b.txt | sort | uniq -c | sort -nr | head -n 20 | awk 'OFS="," {print $1,$2}' >${sample_id}_custom_uniprot_hits.txt
@@ -2455,10 +2455,10 @@ if (params.onlyEvi) {
         script:
             """
             #get custom blast hits
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 8 | grep [a-Z] | grep "|" | tr "\`" "\n" | \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 8 | grep [a-Z] | grep "|" | tr "\\`" "\n" | \
                 cut -f 1 -d "^" | cut -f 3 -d "|" | cut -f 2 -d "_" >a.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 9 | grep [a-Z] | grep "|" | tr "\`" "\n" | \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 9 | grep [a-Z] | grep "|" | tr "\\`" "\n" | \
                 cut -f 1 -d "^" | cut -f 3 -d "|" | cut -f 2 -d "_" >b.txt
 
             cat a.txt b.txt | sort | uniq -c | sort -nr | head -n 20 | awk 'OFS="," {print $1,$2}' >${sample_id}_custom_uniprot_hits.txt
