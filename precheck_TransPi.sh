@@ -781,7 +781,7 @@ get_var () {
     #echo -e "\t UNIPROT last update:\t $unpdate"
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t PFAM last update:\t $pfdate"
-    echo -e "\t SQL database (SwissProt,EggNOG,GO,PFAM) last update: \t $dbdate"
+    echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
