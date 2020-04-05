@@ -187,7 +187,7 @@ bus_c () {
     echo -e "\n\t -- Selecting BUSCO V4 database -- \n"
     PS3="
     Please select one (1-5): "
-    if [ -f busV4list.txt ];then
+    if [ -f ${mypwd}/conf/busV4list.txt ];then
     select var in `cat ${mypwd}/conf/busV4list.txt | grep "###" | tr -d "#"`;do
     case $var in
         BACTERIA)
