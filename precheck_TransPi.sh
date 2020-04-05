@@ -711,6 +711,7 @@ bus_dow4 () {
 }
 bus4 () {
     cd $mypwd
+    cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
     if [ ! -d scripts/ ];then
         mkdir -p scripts/busco4
         cd scripts/busco4
@@ -722,7 +723,6 @@ bus4 () {
         if [ ! -d busco4 ];then
             mkdir busco4
             cd busco4
-            cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
             if [ "$cpath" == "" ];then
                 echo -e "\n\t -- Cannot find the TransPi environment -- \n"
                 echo -e -n "\n\t    Provide the PATH of TransPi environment ( Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi ): "
@@ -745,6 +745,8 @@ bus4 () {
                 echo -e "\n\t -- BUSCO V4 is ready to use --\n"
             else
                 rm -rf *
+                source ${cpath}/../../etc/profile.d/conda.sh
+                conda activate TransPi
                 bus_dow4
                 # here modify the config.ini
                 bus_conf
