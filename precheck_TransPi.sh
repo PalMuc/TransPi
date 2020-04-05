@@ -689,7 +689,7 @@ bus_conf () {
     head -n 56 config.ini >.56.txt
     rm config.ini
     #get the .57.txt
-    cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
+    cpath=$( conda info -e | grep "TransPi" | awk '{print $3}' ) #print $3 only here, env activated
     if [ ! -f ${cpath}/config/config.ini ];then
         echo -e "\n\t\e[31m -- ERROR: BUSCO config.ini not found. Please check TransPi environment installation --\e[39m\n"
         exit 0
