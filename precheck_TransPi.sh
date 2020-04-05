@@ -769,12 +769,12 @@ get_var () {
     echo "tmhmm=$mypwd/cbs-dtu-tools/tmhmm-2.0c/bin/tmhmm" >>${mypwd}/.varfile.sh
     echo "signalp=$mypwd/cbs-dtu-tools/signalp-4.1/signalp" >>${mypwd}/.varfile.sh
     #echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
-    echo "pfdate=$( cat ${mypwd}/DBs/hmmerdb/.lastrun.txt )" >>${mypwd}/.varfile.sh
-    echo "dbdate=$( cat ${mypwd}/DBs/sqlite_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "pfdate=\"$( cat ${mypwd}/DBs/hmmerdb/.lastrun.txt )\"" >>${mypwd}/.varfile.sh
+    echo "dbdate=\"$( cat ${mypwd}/DBs/sqlite_db/.lastrun.txt )\"" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
-    echo -e "\n\n\t -- INFO to use in TransPi --\n"
+    echo -e "\n\t -- INFO to use in TransPi --\n"
     echo -e "\t Pipeline PATH:\t\t $mypwd"
     echo -e "\t BUSCO V4 database:\t $busco4db"
     echo -e "\t UNIPROT database:\t $uniprot"
