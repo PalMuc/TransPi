@@ -735,7 +735,7 @@ bus4 () {
         elif [ -d busco4 ];then
             cd busco4
             if [ -f busco ] && [ -f config.ini ];then
-                echo "BUSCO V4 is ready to use"
+                echo -e "\n\t -- BUSCO V4 is ready to use --\n"
             else
                 rm -rf *
                 bus_dow4
