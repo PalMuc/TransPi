@@ -540,6 +540,7 @@ sql_path () {
     a=$( which Build_Trinotate_Boilerplate_SQLite_db.pl )
     sed -i 's/$SPROT_DAT_URL = \"http:/$SPROT_DAT_URL = \"ftp:/' $a
     sed -i 's/$EGGNOG_DAT_URL = \".*/$EGGNOG_DAT_URL = \"http://eggnog5.embl.de/download/eggnog_5.0/e5.og_annotations.tsv\";/' $a
+    sed -i 's/gunzip -c NOG.annotations.tsv.gz/cat e5.og_annotations.tsv/' $a
 }
 trisql_c () {
     source ~/.bashrc
