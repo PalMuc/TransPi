@@ -830,7 +830,7 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
 
         script:
-        if (shortTransdecoder) {
+        if (params.shortTransdecoder) {
             """
             echo -e "\n-- TransDecoder.LongOrfs... --\n"
 
@@ -1866,7 +1866,7 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
 
         script:
-        if (shortTransdecoder) {
+        if (params.shortTransdecoder) {
             """
             echo -e "\n-- TransDecoder.LongOrfs... --\n"
 
