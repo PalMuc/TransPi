@@ -513,7 +513,7 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OE
 
         output:
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum_OE, busco3_comp_2_OE )
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum_OE, busco3_comp_2_OE )
 
         script:
             """
@@ -528,6 +528,8 @@ if (params.onlyEvi) {
     }
 
     process busco4_OE {
+
+        conda "${params.cenv}"
 
         label 'big_cpus'
 
@@ -555,6 +557,8 @@ if (params.onlyEvi) {
     }
 
     process busco4_tri_OE {
+
+        conda "${params.cenv}"
 
         label 'big_cpus'
 
@@ -694,7 +698,7 @@ if (params.onlyEvi) {
     println("\n\tRunning only annotation analysis\n")
 
     Channel
-        .fromFilePairs("${params.mypwd}/onlyAnn/*.fa", size: -1, checkIfExists: true)
+        .fromFilePairs("${params.mypwd}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
         .into{ annotation_ch_transdecoder_OA; assembly_ch_diamond_OA; assembly_ch_diamond_custom_OA; assembly_ch_rnammer_OA; assembly_ch_trinotate_OA}
 
     process custom_diamond_db_OA {
@@ -827,8 +831,7 @@ if (params.onlyEvi) {
 
         script:
             """
-            unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
-            pf=${params.mypwd}/hmmerdb/${params.pfname}
+            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
             echo -e "\n-- TransDecoder.LongOrfs... --\n"
 
@@ -846,7 +849,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting HMMER --\n"
 
-            hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout \$pf \$fname.transdecoder_dir/longest_orfs.pep
+            hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout ${params.pfloc} \$fname.transdecoder_dir/longest_orfs.pep
 
             echo -e "\n-- Done with HMMER --\n"
 
@@ -911,7 +914,7 @@ if (params.onlyEvi) {
 
         script:
             """
-            swissdb=${params.mypwd}/diamonddb_swiss/uniprot_sprot.pep
+            swissdb=${params.mypwd}/DBs/diamonddb_swiss/uniprot_sprot.pep
 
             #Diamond (BLAST) Homologies
 
@@ -944,7 +947,7 @@ if (params.onlyEvi) {
 
         script:
             """
-            unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
+            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
             #Diamond (BLAST) Homologies
 
@@ -976,11 +979,10 @@ if (params.onlyEvi) {
 
         script:
             """
-            pf=${params.mypwd}/hmmerdb/${params.pfname}
 
             echo -e "\n-- Starting with HMMER --\n"
 
-            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out \$pf ${assembly}.transdecoder.pep >pfam.log
+            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${assembly}.transdecoder.pep >pfam.log
 
             echo -e "\n-- Done with HMMER --\n"
             """
@@ -1109,10 +1111,10 @@ if (params.onlyEvi) {
             Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
 
             #Load custom protein hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${sample_id}_custom_uniprot
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${params.uniname}
 
             #Load custom transcript hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${sample_id}_custom_uniprot
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${params.uniname}
 
             #Load Pfam domain entries
             Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
@@ -1129,6 +1131,13 @@ if (params.onlyEvi) {
                 Trinotate \$sqlname LOAD_signalp ${sample_id}.signalp.out
             else
                 echo "No Signal-P"
+            fi
+
+            #Load rnammer results
+            if [ -s ${sample_id}.combined.okay.fa.rnammer.gff ];then
+                Trinotate \$sqlname LOAD_rnammer ${assembly}.rnammer.gff
+            else
+                echo "No rnammer results"
             fi
 
             echo -e "\n-- Loading finished --\n"
@@ -1741,7 +1750,7 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
         output:
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
 
         script:
             """
@@ -1756,6 +1765,8 @@ if (params.onlyEvi) {
     }
 
     process busco4 {
+
+        conda "${params.cenv}"
 
         label 'big_cpus'
 
@@ -1774,7 +1785,7 @@ if (params.onlyEvi) {
             """
             echo -e "\n-- Starting BUSCO --\n"
 
-            $bus4/busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\n-- DONE with BUSCO --\n"
 
@@ -1783,6 +1794,8 @@ if (params.onlyEvi) {
     }
 
     process busco4_tri {
+
+        conda "${params.cenv}"
 
         label 'big_cpus'
 
@@ -1800,7 +1813,7 @@ if (params.onlyEvi) {
             """
             echo -e "\n-- Starting BUSCO --\n"
 
-            $bus4/busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\n-- DONE with BUSCO --\n"
 
@@ -1825,8 +1838,7 @@ if (params.onlyEvi) {
 
         script:
             """
-            unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
-            pf=${params.mypwd}/hmmerdb/${params.pfname}
+            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
             echo -e "\n-- TransDecoder.LongOrfs... --\n"
 
@@ -1844,7 +1856,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting HMMER --\n"
 
-            hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout \$pf \$fname.transdecoder_dir/longest_orfs.pep
+            hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout ${params.pfloc} \$fname.transdecoder_dir/longest_orfs.pep
 
             echo -e "\n-- Done with HMMER --\n"
 
@@ -1909,7 +1921,7 @@ if (params.onlyEvi) {
 
         script:
             """
-            swissdb=${params.mypwd}/diamonddb_swiss/uniprot_sprot.pep
+            swissdb=${params.mypwd}/DBs/diamonddb_swiss/uniprot_sprot.pep
 
             #Diamond (BLAST) Homologies
 
@@ -1942,7 +1954,7 @@ if (params.onlyEvi) {
 
         script:
             """
-            unidb=${params.mypwd}/diamonddb_custom/${params.uniname}
+            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
             #Diamond (BLAST) Homologies
 
@@ -1974,11 +1986,10 @@ if (params.onlyEvi) {
 
         script:
             """
-            pf=${params.mypwd}/hmmerdb/${params.pfname}
 
             echo -e "\n-- Starting with HMMER --\n"
 
-            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out \$pf ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
 
             echo -e "\n-- Done with HMMER --\n"
             """
@@ -2107,10 +2118,10 @@ if (params.onlyEvi) {
             Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
 
             #Load custom protein hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${sample_id}_custom_uniprot
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${params.uniname}
 
             #Load custom transcript hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${sample_id}_custom_uniprot
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${params.uniname}
 
             #Load Pfam domain entries
             Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
@@ -2127,6 +2138,13 @@ if (params.onlyEvi) {
                 Trinotate \$sqlname LOAD_signalp ${sample_id}.signalp.out
             else
                 echo "No Signal-P"
+            fi
+
+            #Load rnammer results
+            if [ -s ${sample_id}.combined.okay.fa.rnammer.gff ];then
+                Trinotate \$sqlname LOAD_rnammer ${sample_id}.combined.okay.fa.rnammer.gff
+            else
+                echo "No rnammer results"
             fi
 
             echo -e "\n-- Loading finished --\n"
