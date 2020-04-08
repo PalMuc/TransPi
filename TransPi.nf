@@ -1884,15 +1884,15 @@ if (params.onlyEvi) {
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c ">" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:complete" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
             echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
             echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:internal" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\t ORFs type=internal: \$orfnum \n">>${sample_id}.transdecoder.stats
 
             echo -e "\n-- Done with statistics --\n"
@@ -1934,28 +1934,28 @@ if (params.onlyEvi) {
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c ">" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
             echo -e "\t Of these ORFs" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep ">" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep ">" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
             echo -e "\t\t no annotation: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:complete" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
             echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
             echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep -c "ORF type:internal" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\t ORFs type=internal: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
 
             echo -e "\n-- Done with statistics --\n"
