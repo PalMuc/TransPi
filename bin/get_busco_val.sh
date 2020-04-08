@@ -49,4 +49,4 @@ elif [ "$version" == "v4" ];then
     paste tperc.txt pperc.txt | tr "\t" "\n" | tr -d "\n" >final_perc
     rm tnum.txt tperc.txt tspec.txt
     rm pnum.txt pperc.txt pspec.txt
-done
+fi
