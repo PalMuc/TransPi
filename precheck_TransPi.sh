@@ -409,7 +409,7 @@ unicomp_c () {
 }
 uniprot_meta () {
     myuni=$( pwd )
-    echo -e "\n\t -- TransPi uses a customs protein database (one of many) from UNIPROT for the annotation -- \n"
+    echo -e "\n\t -- TransPi uses a custom protein database (one of many) from UNIPROT for the annotation -- \n"
     echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
     read ans
     case $ans in
@@ -690,25 +690,17 @@ util_c () {
 }
 #temporary for buscoV4
 bus_env4 () {
+    echo -e "\n\t -- Creating BUSCO V4 environment --\n"
     conda create -n busco4 -c bioconda busco=4.0.5 -y
 }
 bus4 () {
     cd $mypwd
-    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " | tr -d "\"" )
+    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " | tr -d "\"" )
     if [ "$cpath" == "" ];then
-        echo -e "\n\t -- Cannot find the TransPi environment -- \n"
-        echo -e -n "\n\t    Provide the PATH of TransPi environment ( Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi ): "
-        read ans
-        if [ -d "${ans}" ];then
-            source ${ans}/../../etc/profile.d/conda.sh
-            bus_env4
-        else
-            echo -e "\n\t -- TransPi environment provided cannot be found. Try again --\n"
-            bus4
-        fi
-    else
-        source ${cpath}/../../etc/profile.d/conda.sh
+        echo -e "\n\t -- Cannot find the BUSCO V4 environment -- \n"
         bus_env4
+    else
+        echo -e "\n\t -- BUSCO V4 environment found --\n"
     fi
 }
 get_var () {
@@ -744,7 +736,7 @@ get_var () {
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=${cenv}" >nextflow.config
+        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=${cenv}|" >nextflow.config
     rm .varfile.sh
 }
 #Main
