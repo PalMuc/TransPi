@@ -955,7 +955,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting with Diamond (blastp) --\n"
 
-            diamond blastp -d \$swissdb -q ${sample_id}.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+            diamond blastp -d \$swissdb -q ${sample_id}.*.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
             echo -e "\n-- Done with Diamond (blastp)  --\n"
             """
@@ -988,7 +988,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting with Diamond (blastp) --\n"
 
-            diamond blastp -d \$unidb -q ${sample_id}.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+            diamond blastp -d \$unidb -q ${sample_id}.*.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
 
             echo -e "\n-- Done with Diamond (blastp)  --\n"
             """
@@ -1011,7 +1011,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting with HMMER --\n"
 
-            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.transdecoder.pep >pfam.log
+            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.*.transdecoder.pep >pfam.log
 
             echo -e "\n-- Done with HMMER --\n"
             """
@@ -1035,7 +1035,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting with SignalP --\n"
 
-            ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.transdecoder.pep
+            ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.*.transdecoder.pep
 
             echo -e "\n-- Done with SignalP --\n"
             """
@@ -1059,7 +1059,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Starting with tmHMM --\n"
 
-            ${params.tmhmm} --short < ${sample_id}.transdecoder.pep >${sample_id}.tmhmm.out
+            ${params.tmhmm} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
 
             echo -e "\n-- Done with tmHMM --\n"
             """
@@ -1127,7 +1127,7 @@ if (params.onlyEvi) {
 
             echo -e "\n-- Running Trinotate --\n"
 
-            Trinotate \$sqlname init --gene_trans_map ${assembly}.gene_trans_map --transcript_fasta ${assembly} --transdecoder_pep ${sample_id}.transdecoder.pep
+            Trinotate \$sqlname init --gene_trans_map ${assembly}.gene_trans_map --transcript_fasta ${assembly} --transdecoder_pep ${sample_id}.*.transdecoder.pep
 
             echo -e "\n-- Ending run of Trinotate --\n"
 
