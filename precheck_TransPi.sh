@@ -736,7 +736,7 @@ get_var () {
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=${cenv}|" >nextflow.config
+        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
 }
 #Main
