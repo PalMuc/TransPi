@@ -826,7 +826,7 @@ if (params.onlyEvi) {
             tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
 
         output:
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") into ( transdecoder_ch_diamond_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA, transdecoder_ch_trinotate_OA, transdecoder_ch_diamond_custom_OA )
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_diamond_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA, transdecoder_ch_trinotate_OA, transdecoder_ch_diamond_custom_OA )
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
 
         script:
@@ -848,15 +848,15 @@ if (params.onlyEvi) {
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c ">" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:complete" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
             echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
             echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:internal" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\t ORFs type=internal: \$orfnum \n">>${sample_id}.transdecoder.stats
 
             echo -e "\n-- Done with statistics --\n"
@@ -897,28 +897,28 @@ if (params.onlyEvi) {
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c ">" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
             echo -e "\t Of these ORFs" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep ">" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
             echo -e "\t\t no annotation: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:complete" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
             echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
             echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep -c "ORF type:internal" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\t ORFs type=internal: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.{fa,fasta}.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
+            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
 
             echo -e "\n-- Done with statistics --\n"
@@ -936,7 +936,7 @@ if (params.onlyEvi) {
 
         input:
             tuple sample_id, file(assembly) from assembly_ch_diamond_OA
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") from transdecoder_ch_diamond_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_diamond_OA
 
         output:
             tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") into trinotate_ch_diamond_OA
@@ -969,7 +969,7 @@ if (params.onlyEvi) {
 
         input:
             tuple sample_id, file(assembly) from assembly_ch_diamond_custom_OA
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") from transdecoder_ch_diamond_custom_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_diamond_custom_OA
 
         output:
             tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") into trinotate_ch_diamond_custom_OA
@@ -1001,7 +1001,7 @@ if (params.onlyEvi) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") from transdecoder_ch_hmmer_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_hmmer_OA
 
         output:
             tuple sample_id, file("${sample_id}.TrinotatePFAM.out") into trinotate_ch_hmmer_OA
@@ -1024,7 +1024,7 @@ if (params.onlyEvi) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") from transdecoder_ch_signalp_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp_OA
 
         output:
             tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp_OA
@@ -1048,7 +1048,7 @@ if (params.onlyEvi) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") from transdecoder_ch_tmhmm_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm_OA
 
         output:
             tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm_OA
@@ -1100,7 +1100,7 @@ if (params.onlyEvi) {
 
         input:
             tuple sample_id, file(assembly) from assembly_ch_trinotate_OA
-            tuple sample_id, file("${sample_id}.{fa,fasta}.transdecoder.pep") from transdecoder_ch_trinotate_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_trinotate_OA
             tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") from trinotate_ch_diamond_OA
             tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") from trinotate_ch_diamond_custom_OA
             tuple sample_id, file("${sample_id}.TrinotatePFAM.out") from trinotate_ch_hmmer_OA
