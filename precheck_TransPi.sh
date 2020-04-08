@@ -49,13 +49,14 @@ conda_c() {
     #Check conda and environment
     check_conda=$( command -v conda )
     if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
-        echo -e "\n\t -- Conda seems to be installed in your system environment --\n"
-        ver=$( conda -V | cut -f 2 -d " " | cut -f 1,2 -d "." | tr -d "." )
-        if [ "$ver" -gt 45 ];then
-            echo -e "\n\t -- Conda is installed (v4.5 or higher). Checking environment... --\n"
+        echo -e "\n\t -- Conda seems to be installed in your system --\n"
+        ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." )
+        vern=4.8
+        if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
+            echo -e "\n\t -- Conda is installed (v4.8 or higher). Checking environment... --\n"
             #Check environment
             check_env=$( conda info -e | grep -c "TransPi" )
-	    if [ "$check_env" -eq 0 ];then
+	        if [ "$check_env" -eq 0 ];then
                 echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
                 if [ -f transpi_env.yml ];then
                     echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
@@ -542,8 +543,7 @@ evi_c () {
 sql_path () {
     a=$( which Build_Trinotate_Boilerplate_SQLite_db.pl )
     sed -i 's/$SPROT_DAT_URL = \"http:/$SPROT_DAT_URL = \"ftp:/' $a
-    sed -i 's/$EGGNOG_DAT_URL = \".*/$EGGNOG_DAT_URL = \"http://eggnog5.embl.de/download/eggnog_5.0/e5.og_annotations.tsv\";/' $a
-    sed -i 's/gunzip -c NOG.annotations.tsv.gz/cat e5.og_annotations.tsv/' $a
+    sed -i 's/\$EGGNOG_DAT_URL = \".*/\$EGGNOG_DAT_URL = \"http:\/\/eggnogdb.embl.de\/download\/eggnog_4.5\/data\/NOG\/NOG.annotations.tsv.gz\";/' $a
 }
 trisql_c () {
     source ~/.bashrc
@@ -673,85 +673,42 @@ cbs_dtu_c () {
     fi
 }
 util_c () {
-    source ~/.bashrc
-    cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
+    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " | tr -d "\"" )
     if [ -f ${cpath}/bin/RnammerTranscriptome.pl ];then
         sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
     else
         echo -e "\n\t -- Cannot find the TransPi environment -- \n"
         echo -e -n "\n\t    Provide the PATH of TransPi environment (Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi): "
         read ans
-        sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
+        if [ -f ${ans}/bin/RnammerTranscriptome.pl ];then
+            sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
+        else
+            echo -e "\n\t -- Wrong PATH given for TransPi environment --\n"
+            util_c
+        fi
     fi
 }
 #temporary for buscoV4
-bus_conf () {
-    head -n 56 config.ini >.56.txt
-    rm config.ini
-    #get the .57.txt
-    cpath=$( conda info -e | grep "TransPi" | awk '{print $3}' ) #print $3 only here, env activated
-    if [ ! -f ${cpath}/config/config.ini ];then
-        echo -e "\n\t\e[31m -- ERROR: BUSCO config.ini not found. Please check TransPi environment installation --\e[39m\n"
-        exit 0
-    else
-        tail -n +45 ${cpath}/config/config.ini >.57.txt
-        cat .56.txt .57.txt >config.ini
-        rm .56.txt .57.txt
-    fi
-}
-bus_dow4 () {
-    wget https://gitlab.com/ezlab/busco/-/archive/4.0.5/busco-4.0.5.tar.gz
-    tar -xf busco-4.0.5.tar.gz
-    cd busco-4.0.5
-    python3 setup.py install --user
-    cd ..
-    cp busco-4.0.5/bin/busco .
-    cp busco-4.0.5/config/config.ini .
-    rm -rf busco-4.0.5/
+bus_env4 () {
+    conda create -n busco4 -c bioconda busco=4.0.5 -y
 }
 bus4 () {
     cd $mypwd
-    cpath=$( conda info -e | grep "TransPi" | awk '{print $2}' )
-    if [ ! -d scripts/ ];then
-        mkdir -p scripts/busco4
-        cd scripts/busco4
-        bus_dow4
-        # here modify the config.ini
-        bus_conf
-    elif [ -d scripts/ ];then
-        cd scripts
-        if [ ! -d busco4 ];then
-            mkdir busco4
-            cd busco4
-            if [ "$cpath" == "" ];then
-                echo -e "\n\t -- Cannot find the TransPi environment -- \n"
-                echo -e -n "\n\t    Provide the PATH of TransPi environment ( Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi ): "
-                read ans
-                source ${ans}/../../etc/profile.d/conda.sh
-                conda activate ${ans}
-                bus_dow4
-                # here modify the config.ini
-                bus_conf
-            else
-                source ${cpath}/../../etc/profile.d/conda.sh
-                conda activate TransPi
-                bus_dow4
-                # here modify the config.ini
-                bus_conf
-            fi
-        elif [ -d busco4 ];then
-            cd busco4
-            if [ -f busco ] && [ -f config.ini ];then
-                echo -e "\n\t -- BUSCO V4 is ready to use --\n"
-            else
-                rm -rf *
-                source ${cpath}/../../etc/profile.d/conda.sh
-                conda activate TransPi
-                bus_dow4
-                # here modify the config.ini
-                bus_conf
-            fi
+    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " | tr -d "\"" )
+    if [ "$cpath" == "" ];then
+        echo -e "\n\t -- Cannot find the TransPi environment -- \n"
+        echo -e -n "\n\t    Provide the PATH of TransPi environment ( Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi ): "
+        read ans
+        if [ -d "${ans}" ];then
+            source ${ans}/../../etc/profile.d/conda.sh
+            bus_env4
+        else
+            echo -e "\n\t -- TransPi environment provided cannot be found. Try again --\n"
+            bus4
         fi
+    else
+        source ${cpath}/../../etc/profile.d/conda.sh
+        bus_env4
     fi
 }
 get_var () {
@@ -771,6 +728,7 @@ get_var () {
     #echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( cat ${mypwd}/DBs/hmmerdb/.lastrun.txt )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( cat ${mypwd}/DBs/sqlite_db/.lastrun.txt )\"" >>${mypwd}/.varfile.sh
+    echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
@@ -786,7 +744,7 @@ get_var () {
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" >nextflow.config
+        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=${cenv}" >nextflow.config
     rm .varfile.sh
 }
 #Main
