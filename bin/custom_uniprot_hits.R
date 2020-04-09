@@ -6,7 +6,7 @@ library(ggplot2)
 
 data=read.csv(paste(sample_name,"_custom_uniprot_hits.txt",sep=""),header=F)
 
-nlim=round((head(data$V1,n = 1)+150),digits = -2)
+nlim=round((head(data$V1,n = 1)+450),digits = -2)
 p1<-ggplot(data=data, aes(x=reorder(data$V2,data$V1), y=data$V1))+
   geom_bar(stat="identity", fill="dark blue", width=.5)+
   coord_flip()+labs(x="UniProt Species",y="Number of Hits")+
