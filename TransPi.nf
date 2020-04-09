@@ -452,7 +452,8 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.TransABySS.fa") from assemblies_ch_transabyss_OE
 
         output:
-            tuple  file("*.combined.okay.fa") into ( evigene_ch_busco3_OE, evigene_ch_busco4_OE )
+            tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OE, evigene_ch_busco4_OE )
+            tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary_OE
 
         script:
             def mem_MB=(task.memory.toMega())
@@ -471,6 +472,66 @@ if (params.onlyEvi) {
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
             fi
+            """
+    }
+
+    process summary_evigene_individual_OE {
+
+        tag "${sample_id}"
+
+        publishDir "${params.mypwd}/results/stats", mode: "copy", overwrite: true
+
+        input:
+            tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary_OE
+
+        output:
+            tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1_OE
+
+        script:
+            """
+            #Summary of total number of transcripts
+            echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_preEG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+
+            #Summary of transcripts after EvidentialGenes
+            echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
+            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             """
     }
 
@@ -2264,19 +2325,19 @@ if (params.onlyEvi) {
             """
             #Summary of total number of transcripts
             echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
-            echo "- Individual "${sample_id} >>${sample_id}.sum_preEG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_preEG.txt
             echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
             echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
             echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
             echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
             echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
@@ -2284,22 +2345,21 @@ if (params.onlyEvi) {
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
 
-
             #Summary of transcripts after EvidentialGenes
             echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
-            echo -e "- Individual "${sample_id} >>${sample_id}.sum_EG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
