@@ -828,6 +828,7 @@ if (params.onlyEvi) {
         output:
             tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_diamond_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA, transdecoder_ch_trinotate_OA, transdecoder_ch_diamond_custom_OA )
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
+            tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
         script:
         if (params.shortTransdecoder) {
@@ -1287,7 +1288,7 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch_OA
 
         output:
-            tuple sample_id, file("*.svg"), file("*.pdf") into go_fig_OA
+            tuple sample_id, file("*.svg"), file("*.pdf"), file("*.txt") into go_fig_OA
 
         script:
             """
@@ -1864,6 +1865,7 @@ if (params.onlyEvi) {
         output:
             tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate, transdecoder_ch_diamond_custom )
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
+            tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
         script:
         if (params.shortTransdecoder) {
@@ -2493,7 +2495,7 @@ if (params.onlyEvi) {
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch
 
         output:
-            tuple sample_id, file("*.svg"), file("*.pdf") into go_fig
+            tuple sample_id, file("*.svg"), file("*.pdf"), file("*.txt") into go_fig
 
         script:
             """
