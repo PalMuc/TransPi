@@ -381,10 +381,12 @@ if (params.onlyEvi) {
             """
             echo -e "\n-- Starting rnaSPADES assemblies --\n"
 
+            mem=\$( echo ${task.memory} | cut -f 1 -d " " )
+
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- rnaSPADES k\${x} --\n"
 
-                rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
+                rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x} -m \${mem}
 
             done
 
@@ -1706,10 +1708,12 @@ if (params.onlyEvi) {
             """
             echo -e "\n-- Starting rnaSPADES assemblies --\n"
 
+            mem=\$( echo ${task.memory} | cut -f 1 -d " " )
+
             for x in `echo $k | tr "," " "`;do
                 echo -e "\n-- rnaSPADES k\${x} --\n"
 
-                rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x}
+                rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x} -m \${mem}
 
             done
 
