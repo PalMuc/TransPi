@@ -24,3 +24,7 @@ dependencies:
   - perl-xml-simple=2.25
   - r-svglite=1.2.3
   - r-ggthemes=4.2.0
+  - rnaquast=2.0.1
+  - fastqc=0.11.9
+  - multiqc=1.8
+  - fastp=0.20.1
