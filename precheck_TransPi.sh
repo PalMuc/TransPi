@@ -741,9 +741,9 @@ get_var () {
 }
 #Main
 if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
-    echo -e "\n\t Script for checking the requirenments of TransPi \n"
+    echo -e "\n\t Script for checking the requirements of TransPi \n"
     echo -e "\t Usage:\n\n\t\t bash precheck_TransPi.sh WORK_PATH \n"
-    echo -e "\n\t\t WORK_PATH = PATH to run TransPi and download the requirenments \n\n\t\t Example: /home/bioinf/run/ \n"
+    echo -e "\n\t\t WORK_PATH = PATH to run TransPi and download the requirements \n\n\t\t Example: /home/bioinf/run/ \n"
     exit 0
 elif [ ! -d "$mypwd" ];then
     echo -e "\n\t -- Please provide a valid PATH to run TransPi -- \n"
