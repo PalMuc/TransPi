@@ -288,13 +288,13 @@ if (params.onlyAsm) {
             """
             echo ${sample_id}
 
-            echo -e "\n-- Starting Normalization --\n"
+            echo -e "\\n-- Starting Normalization --\\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
             insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left ${reads[0]} --right ${reads[1]} --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
-            echo -e "\n-- DONE with Normalization --\n"
+            echo -e "\\n-- DONE with Normalization --\\n"
 
             mv left.norm.fq left-"${sample_id}".norm.fq
             mv right.norm.fq right-"${sample_id}".norm.fq
@@ -305,13 +305,13 @@ if (params.onlyAsm) {
             zcat ${reads[0]} >left-${sample_id}.fq &
             zcat ${reads[1]} >right-${sample_id}.fq
 
-            echo -e "\n-- Starting Normalization --\n"
+            echo -e "\\n-- Starting Normalization --\\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
             insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
-            echo -e "\n-- DONE with Normalization --\n"
+            echo -e "\\n-- DONE with Normalization --\\n"
 
             mv left.norm.fq left-"${sample_id}".norm.fq
             mv right.norm.fq right-"${sample_id}".norm.fq
@@ -362,7 +362,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Generating SOAP config file --\n"
+            echo -e "\\n-- Generating SOAP config file --\\n"
             echo "max_rd_len="${params.max_rd_len} >>config.txt
             echo "[LIB]" >>config.txt
             echo "rd_len_cutof="${params.rd_len_cutof} >>config.txt
@@ -373,15 +373,15 @@ if (params.onlyAsm) {
             echo "q1="left-${sample_id}.norm.fq >>config.txt
             echo "q2="right-${sample_id}.norm.fq >>config.txt
 
-            echo -e "\n-- Starting SOAP assemblies --\n"
+            echo -e "\\n-- Starting SOAP assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- SOAP k\${x} --\n"
+                echo -e "\\n-- SOAP k\${x} --\\n"
                 SOAPdenovo-Trans-127mer all -s config.txt -K \${x} -o output\${x} -p ${task.cpus}
                 sed -i "s/>/>SOAP.k\${x}./g" output\${x}.scafSeq
             done
 
-            echo -e "\n-- Finished with the assemblies --\n"
+            echo -e "\\n-- Finished with the assemblies --\\n"
 
             cat output*.scafSeq >${sample_id}.SOAP.fa
 
@@ -406,25 +406,25 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting with Velveth --\n"
+            echo -e "\\n-- Starting with Velveth --\\n"
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- k\${x} --\n"
+                echo -e "\\n-- k\${x} --\\n"
                 velveth oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
             done
 
-            echo -e "\n-- Starting with Velvetg --\n"
+            echo -e "\\n-- Starting with Velvetg --\\n"
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- vg \${x} --\n"
+                echo -e "\\n-- vg \${x} --\\n"
                 velvetg oases.\${x} -read_trkg yes
             done
 
-            echo -e "\n-- Starting with Oases --\n"
+            echo -e "\\n-- Starting with Oases --\\n"
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- oases \${x} --\n"
+                echo -e "\\n-- oases \${x} --\\n"
                 oases oases.\${x}
             done
 
-            echo -e "\n-- Finished with Velvet/Oases assemblies --\n"
+            echo -e "\\n-- Finished with Velvet/Oases assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
                 sed -i "s/>/>Velvet.k\${x}./g" oases.\${x}/contigs.fa
@@ -453,18 +453,18 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting rnaSPADES assemblies --\n"
+            echo -e "\\n-- Starting rnaSPADES assemblies --\\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- rnaSPADES k\${x} --\n"
+                echo -e "\\n-- rnaSPADES k\${x} --\\n"
 
                 rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x} -m \${mem}
 
             done
 
-            echo -e "\n-- Finished with the assemblies --\n"
+            echo -e "\\n-- Finished with the assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
                 sed -i "s/>/>SPADES.k\${x}./g" ${sample_id}_spades_\${x}/transcripts.fasta
@@ -493,22 +493,24 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting Trans-ABySS assemblies --\n"
+            echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- Trans-ABySS k\${x} --\n"
+                echo -e "\\n-- Trans-ABySS k\${x} --\\n"
 
                 transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
 
             done
 
-            echo -e "\n-- Finished with the assemblies --\n"
+            echo -e "\\n-- Finished with the assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
                 sed -i "s/>/>TransABySS.k\${x}./g" ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa
             done
 
             cat ${sample_id}_transabyss_*/k*.transabyss.fa-final.fa >${sample_id}.TransABySS.fa
+
+            rm -rf ${sample_id}_transabyss_*
             """
     }
 
@@ -535,13 +537,13 @@ if (params.onlyAsm) {
             def mem_MB=(task.memory.toMega())
 
             """
-            echo -e "\n-- Starting EviGene --\n"
+            echo -e "\\n-- Starting EviGene --\\n"
 
             cat *.fa >${sample_id}.combined.fa
 
             $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
-            echo -e "\n-- DONE with EviGene --\n"
+            echo -e "\\n-- DONE with EviGene --\\n"
 
             cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
 
@@ -628,11 +630,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
             """
@@ -654,11 +656,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp run_${sample_id}.Trinity.fa.bus/short_summary_${sample_id}.Trinity.fa.bus.txt .
             """
@@ -683,11 +685,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp ${sample_id}.fa.bus/short_summary.*.${sample_id}.fa.bus.txt .
             """
@@ -711,11 +713,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp ${sample_id}.Trinity.fa.bus/short_summary.*.${sample_id}.Trinity.fa.bus.txt .
             """
@@ -740,7 +742,7 @@ if (params.onlyAsm) {
             echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
             cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
-            echo -e "\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
+            echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
             cat short_summary_${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
             """
     }
@@ -764,7 +766,7 @@ if (params.onlyAsm) {
             echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
             cat short_summary.*.${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
-            echo -e "\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
+            echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
             cat short_summary.*.${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
             """
     }
@@ -841,9 +843,9 @@ if (params.onlyAsm) {
         script:
             """
             cd ${params.mypwd}
-            echo -e "-- Checking if Diamond database folder is present --\n"
+            echo -e "-- Checking if Diamond database folder is present --\\n"
             if [ ! -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                 mkdir -p DBs/diamonddb_custom/
                 cd DBs/diamonddb_custom
                 cp ${params.uniprot} .
@@ -851,15 +853,15 @@ if (params.onlyAsm) {
                 export unidb=`pwd`/${params.uniname}
                 cd ../
             elif [ -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is present. Checking if Diamond database is built --\n"
+                echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
                 cd DBs/diamonddb_custom
                 if [ ! -e ${params.uniname}.dmnd ];then
-                    echo -e "-- Diamond database not present, creating one --\n"
+                    echo -e "-- Diamond database not present, creating one --\\n"
                     cp ${params.uniprot} .
                     diamond makedb --in ${params.uniname} -d ${params.uniname}
                     export unidb=`pwd`/${params.uniname}
                 elif [ -e ${params.uniname}.dmnd  ];then
-                    echo -e "-- Diamond database already created --\n"
+                    echo -e "-- Diamond database already created --\\n"
                     export unidb=`pwd`/${params.uniname}
                 fi
                 cd ../
@@ -871,16 +873,16 @@ if (params.onlyAsm) {
         script:
             """
             cd ${params.mypwd}
-            echo -e "-- Checking if HMMER database folder is present --\n"
+            echo -e "-- Checking if HMMER database folder is present --\\n"
             if [ -d DBs/hmmerdb/ ];then
-                echo -e "-- Folder is present. Checking if HMMER database is built --\n"
+                echo -e "-- Folder is present. Checking if HMMER database is built --\\n"
                 cd DBs/hmmerdb
                 if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database not present, creating one --\n"
+                    echo -e "-- HMMER database not present, creating one --\\n"
                     hmmpress ${params.pfname}
                     export pf=`pwd`/${params.pfname}
                 elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database already created --\n"
+                    echo -e "-- HMMER database already created --\\n"
                     export pf=`pwd`/${params.pfname}
                 fi
                 cd ../
@@ -895,7 +897,7 @@ if (params.onlyAsm) {
             if [ -e uniprot_sprot.pep ];then
                 cd ${params.mypwd}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
                     cd DBs/diamonddb_swiss
                     cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
@@ -904,19 +906,19 @@ if (params.onlyAsm) {
                 elif [ -d DBs/diamonddb_swiss/ ];then
                     cd DBs/diamonddb_swiss
                     if [ ! -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database not present, creating one --\n"
+                        echo -e "-- Diamond database not present, creating one --\\n"
                         cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
                         diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                         export swissdb=`pwd`/uniprot_sprot.pep
                     elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\n"
+                        echo -e "-- Diamond database already created --\\n"
                         export swissdb=`pwd`/uniprot_sprot.pep
                     fi
                 fi
             elif [ ! -e uniprot_sprot.pep ];then
                 cd ${params.mypwd}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
                     cd DBs/diamonddb_swiss
                     wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
@@ -926,11 +928,11 @@ if (params.onlyAsm) {
                     diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                     export swissdb=`pwd`/uniprot_sprot.pep
                 elif [ -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is present. Checking if Diamond database is built --\n"
+                    echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
                     cd DBs/diamonddb_swiss
                     if [ ! -e uniprot_sprot.pep.dmnd ];then
                         if [ ! -e uniprot_sprot.pep ];then
-                            echo -e "-- Diamond database not present, creating one --\n"
+                            echo -e "-- Diamond database not present, creating one --\\n"
                             wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
                             EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
                             rm ind.*
@@ -942,7 +944,7 @@ if (params.onlyAsm) {
                             export swissdb=`pwd`/uniprot_sprot.pep
                         fi
                     elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\n"
+                        echo -e "-- Diamond database already created --\\n"
                         export swissdb=`pwd`/uniprot_sprot.pep
                     fi
                 fi
@@ -969,19 +971,19 @@ if (params.onlyAsm) {
         script:
         if (params.shortTransdecoder) {
             """
-            echo -e "\n-- TransDecoder.LongOrfs... --\n"
+            echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
             TransDecoder.LongOrfs -t ${assembly}
 
-            echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
+            echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
-            echo -e "\n-- TransDecoder.Predict... --\n"
+            echo -e "\\n-- TransDecoder.Predict... --\\n"
 
             TransDecoder.Predict -t ${assembly}
 
-            echo -e "\n-- Done with TransDecoder.Predict --\n"
+            echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
-            echo -e "\n-- Calculating statistics... --\n"
+            echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
@@ -996,41 +998,41 @@ if (params.onlyAsm) {
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\t ORFs type=internal: \$orfnum \n">>${sample_id}.transdecoder.stats
 
-            echo -e "\n-- Done with statistics --\n"
+            echo -e "\\n-- Done with statistics --\\n"
 
-            echo -e "\n-- DONE with TransDecoder --\n"
+            echo -e "\\n-- DONE with TransDecoder --\\n"
             """
         } else {
             """
             unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
-            echo -e "\n-- TransDecoder.LongOrfs... --\n"
+            echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
             TransDecoder.LongOrfs -t ${assembly}
 
-            echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
+            echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
             fname=${assembly}
 
-            echo -e "\n-- Starting Diamond (blastp) --\n"
+            echo -e "\\n-- Starting Diamond (blastp) --\\n"
 
             diamond blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastp) --\n"
+            echo -e "\\n-- Done with Diamond (blastp) --\\n"
 
-            echo -e "\n-- Starting HMMER --\n"
+            echo -e "\\n-- Starting HMMER --\\n"
 
             hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout ${params.pfloc} \$fname.transdecoder_dir/longest_orfs.pep
 
-            echo -e "\n-- Done with HMMER --\n"
+            echo -e "\\n-- Done with HMMER --\\n"
 
-            echo -e "\n-- TransDecoder.Predict... --\n"
+            echo -e "\\n-- TransDecoder.Predict... --\\n"
 
             TransDecoder.Predict -t ${assembly} --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with TransDecoder.Predict --\n"
+            echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
-            echo -e "\n-- Calculating statistics... --\n"
+            echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
@@ -1058,9 +1060,9 @@ if (params.onlyAsm) {
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
 
-            echo -e "\n-- Done with statistics --\n"
+            echo -e "\\n-- Done with statistics --\\n"
 
-            echo -e "\n-- DONE with TransDecoder --\n"
+            echo -e "\\n-- DONE with TransDecoder --\\n"
             """
         }
     }
@@ -1084,17 +1086,17 @@ if (params.onlyAsm) {
 
             #Diamond (BLAST) Homologies
 
-            echo -e "\n-- Starting with Diamond (blastx) --\n"
+            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
 
             diamond blastx -d \$swissdb -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastx) --\n"
+            echo -e "\\n-- Done with Diamond (blastx) --\\n"
 
-            echo -e "\n-- Starting with Diamond (blastp) --\n"
+            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
             diamond blastp -d \$swissdb -q ${sample_id}.*.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastp)  --\n"
+            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
     }
 
@@ -1117,17 +1119,17 @@ if (params.onlyAsm) {
 
             #Diamond (BLAST) Homologies
 
-            echo -e "\n-- Starting with Diamond (blastx) --\n"
+            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
 
             diamond blastx -d \$unidb -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastx) --\n"
+            echo -e "\\n-- Done with Diamond (blastx) --\\n"
 
-            echo -e "\n-- Starting with Diamond (blastp) --\n"
+            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
             diamond blastp -d \$unidb -q ${sample_id}.*.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastp)  --\n"
+            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
     }
 
@@ -1146,11 +1148,11 @@ if (params.onlyAsm) {
         script:
             """
 
-            echo -e "\n-- Starting with HMMER --\n"
+            echo -e "\\n-- Starting with HMMER --\\n"
 
             hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.*.transdecoder.pep >pfam.log
 
-            echo -e "\n-- Done with HMMER --\n"
+            echo -e "\\n-- Done with HMMER --\\n"
             """
     }
 
@@ -1170,11 +1172,11 @@ if (params.onlyAsm) {
             """
             #signalP to predict signal peptides
 
-            echo -e "\n-- Starting with SignalP --\n"
+            echo -e "\\n-- Starting with SignalP --\\n"
 
             ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.*.transdecoder.pep
 
-            echo -e "\n-- Done with SignalP --\n"
+            echo -e "\\n-- Done with SignalP --\\n"
             """
     }
 
@@ -1194,11 +1196,11 @@ if (params.onlyAsm) {
             """
             #tmHMM to predict transmembrane regions
 
-            echo -e "\n-- Starting with tmHMM --\n"
+            echo -e "\\n-- Starting with tmHMM --\\n"
 
             ${params.tmhmm} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
 
-            echo -e "\n-- Done with tmHMM --\n"
+            echo -e "\\n-- Done with tmHMM --\\n"
             """
     }
 
@@ -1219,11 +1221,11 @@ if (params.onlyAsm) {
             set +e
             #RNAMMER to identify rRNA transcripts
 
-            echo -e "\n-- Starting with RNAMMER --\n"
+            echo -e "\\n-- Starting with RNAMMER --\\n"
 
             RnammerTranscriptome.pl --transcriptome ${assembly} --path_to_rnammer ${params.rnam}
 
-            echo -e "\n-- Done with RNAMMER --\n"
+            echo -e "\\n-- Done with RNAMMER --\\n"
             """
     }
 
@@ -1262,13 +1264,13 @@ if (params.onlyAsm) {
             cp ${params.Tsql} .
             sqlname=`echo ${params.Tsql} | tr "\\/" "\\n" | grep "\\.sqlite"`
 
-            echo -e "\n-- Running Trinotate --\n"
+            echo -e "\\n-- Running Trinotate --\\n"
 
             Trinotate \$sqlname init --gene_trans_map ${assembly}.gene_trans_map --transcript_fasta ${assembly} --transdecoder_pep ${sample_id}.*.transdecoder.pep
 
-            echo -e "\n-- Ending run of Trinotate --\n"
+            echo -e "\\n-- Ending run of Trinotate --\\n"
 
-            echo -e "\n-- Loading hits and predictions to sqlite database... --\n"
+            echo -e "\\n-- Loading hits and predictions to sqlite database... --\\n"
 
             #Load protein hits
             Trinotate \$sqlname LOAD_swissprot_blastp ${sample_id}.diamond_blastp.outfmt6
@@ -1306,43 +1308,43 @@ if (params.onlyAsm) {
                 echo "No rnammer results"
             fi
 
-            echo -e "\n-- Loading finished --\n"
+            echo -e "\\n-- Loading finished --\\n"
 
             #Report
 
-            echo -e "\n-- Generating report... --\n"
+            echo -e "\\n-- Generating report... --\\n"
 
             Trinotate \$sqlname report >${sample_id}.trinotate_annotation_report.xls
 
-            echo -e "\n-- Report generated --\n"
+            echo -e "\\n-- Report generated --\\n"
 
             #Extract info from XLS file
 
-            echo -e "\n-- Creating GO file from XLS... --\n"
+            echo -e "\\n-- Creating GO file from XLS... --\\n"
 
             extract_GO_assignments_from_Trinotate_xls.pl --Trinotate_xls ${sample_id}.trinotate_annotation_report.xls --trans >${sample_id}.GO.terms.txt
 
-            echo -e "\n-- Done with the GO --\n"
+            echo -e "\\n-- Done with the GO --\\n"
 
-            echo -e "\n-- Creating KEGG file from XLS... --\n"
+            echo -e "\\n-- Creating KEGG file from XLS... --\\n"
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,14 | grep "KEGG" | tr "\\`" ";" | grep "KO:K" | sed 's/\\tKEGG/\\t#KEGG/g' | sed 's/KO:/KO:#/g' | cut -f 1,3 -d "#" | tr -d "#" >${sample_id}.KEGG.terms.txt
 
-            echo -e "\n-- Done with the KEGG --\n"
+            echo -e "\\n-- Done with the KEGG --\\n"
 
-            echo -e "\n-- Creating eggNOG file from XLS... --\n"
+            echo -e "\\n-- Creating eggNOG file from XLS... --\\n"
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,13 | grep "OG" | tr "\\`" ";" | sed 's/^/#/g' | sed 's/;/\\n;/g' | cut -f 1 -d "^" | tr -d "\\n" | tr "#" "\\n" | grep "OG" >${sample_id}.eggNOG_COG.terms.txt
 
-            echo -e "\n-- Done with the eggNOG --\n"
+            echo -e "\\n-- Done with the eggNOG --\\n"
 
-            echo -e "\n-- Creating PFAM file from XLS... --\n"
+            echo -e "\\n-- Creating PFAM file from XLS... --\\n"
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,10 | grep "PF" | tr "\\`" ";" | sed 's/^/#/g' | sed 's/;PF/\\n;PF/g' | cut -f 1 -d "^" | tr -d "\\n" | tr "#" "\\n" | grep "PF" | tr ";" "," >${sample_id}.PFAM.terms.txt
 
-            echo -e "\n-- Done with the PFAM --\n"
+            echo -e "\\n-- Done with the PFAM --\\n"
 
-            echo -e "\n-- DONE with Trinotate --\n"
+            echo -e "\\n-- DONE with Trinotate --\\n"
             """
     }
 
@@ -1431,13 +1433,13 @@ if (params.onlyAsm) {
             cp ${params.mypwd}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_cellular.txt
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\\0#/g' | tr "#" "\\t" >GO_cellular.txt
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_biological.txt
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\\0#/g' | tr "#" "\\t" >GO_biological.txt
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_molecular.txt
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\\0#/g' | tr "#" "\\t" >GO_molecular.txt
 
             Rscript GO_plots.R ${sample_id}
 
@@ -1501,9 +1503,9 @@ if (params.onlyAsm) {
         script:
             """
             cd ${params.mypwd}
-            echo -e "-- Checking if Diamond database folder is present --\n"
+            echo -e "-- Checking if Diamond database folder is present --\\n"
             if [ ! -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                 mkdir -p DBs/diamonddb_custom/
                 cd DBs/diamonddb_custom
                 cp ${params.uniprot} .
@@ -1511,15 +1513,15 @@ if (params.onlyAsm) {
                 export unidb=`pwd`/${params.uniname}
                 cd ../
             elif [ -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is present. Checking if Diamond database is built --\n"
+                echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
                 cd DBs/diamonddb_custom
                 if [ ! -e ${params.uniname}.dmnd ];then
-                    echo -e "-- Diamond database not present, creating one --\n"
+                    echo -e "-- Diamond database not present, creating one --\\n"
                     cp ${params.uniprot} .
                     diamond makedb --in ${params.uniname} -d ${params.uniname}
                     export unidb=`pwd`/${params.uniname}
                 elif [ -e ${params.uniname}.dmnd  ];then
-                    echo -e "-- Diamond database already created --\n"
+                    echo -e "-- Diamond database already created --\\n"
                     export unidb=`pwd`/${params.uniname}
                 fi
                 cd ../
@@ -1531,16 +1533,16 @@ if (params.onlyAsm) {
         script:
             """
             cd ${params.mypwd}
-            echo -e "-- Checking if HMMER database folder is present --\n"
+            echo -e "-- Checking if HMMER database folder is present --\\n"
             if [ -d DBs/hmmerdb/ ];then
-                echo -e "-- Folder is present. Checking if HMMER database is built --\n"
+                echo -e "-- Folder is present. Checking if HMMER database is built --\\n"
                 cd DBs/hmmerdb
                 if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database not present, creating one --\n"
+                    echo -e "-- HMMER database not present, creating one --\\n"
                     hmmpress ${params.pfname}
                     export pf=`pwd`/${params.pfname}
                 elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database already created --\n"
+                    echo -e "-- HMMER database already created --\\n"
                     export pf=`pwd`/${params.pfname}
                 fi
                 cd ../
@@ -1555,7 +1557,7 @@ if (params.onlyAsm) {
             if [ -e uniprot_sprot.pep ];then
                 cd ${params.mypwd}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
                     cd DBs/diamonddb_swiss
                     cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
@@ -1564,19 +1566,19 @@ if (params.onlyAsm) {
                 elif [ -d DBs/diamonddb_swiss/ ];then
                     cd DBs/diamonddb_swiss
                     if [ ! -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database not present, creating one --\n"
+                        echo -e "-- Diamond database not present, creating one --\\n"
                         cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
                         diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                         export swissdb=`pwd`/uniprot_sprot.pep
                     elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\n"
+                        echo -e "-- Diamond database already created --\\n"
                         export swissdb=`pwd`/uniprot_sprot.pep
                     fi
                 fi
             elif [ ! -e uniprot_sprot.pep ];then
                 cd ${params.mypwd}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\n"
+                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
                     cd DBs/diamonddb_swiss
                     wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
@@ -1586,11 +1588,11 @@ if (params.onlyAsm) {
                     diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                     export swissdb=`pwd`/uniprot_sprot.pep
                 elif [ -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is present. Checking if Diamond database is built --\n"
+                    echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
                     cd DBs/diamonddb_swiss
                     if [ ! -e uniprot_sprot.pep.dmnd ];then
                         if [ ! -e uniprot_sprot.pep ];then
-                            echo -e "-- Diamond database not present, creating one --\n"
+                            echo -e "-- Diamond database not present, creating one --\\n"
                             wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
                             EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
                             rm ind.*
@@ -1602,7 +1604,7 @@ if (params.onlyAsm) {
                             export swissdb=`pwd`/uniprot_sprot.pep
                         fi
                     elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\n"
+                        echo -e "-- Diamond database already created --\\n"
                         export swissdb=`pwd`/uniprot_sprot.pep
                     fi
                 fi
@@ -1684,13 +1686,13 @@ if (params.onlyAsm) {
             """
             echo ${sample_id}
 
-            echo -e "\n-- Starting Normalization --\n"
+            echo -e "\\n-- Starting Normalization --\\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
             insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left ${reads[0]} --right ${reads[1]} --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
-            echo -e "\n-- DONE with Normalization --\n"
+            echo -e "\\n-- DONE with Normalization --\\n"
 
             mv left.norm.fq left-"${sample_id}".norm.fq
             mv right.norm.fq right-"${sample_id}".norm.fq
@@ -1701,13 +1703,13 @@ if (params.onlyAsm) {
             zcat ${reads[0]} >left-${sample_id}.fq &
             zcat ${reads[1]} >right-${sample_id}.fq
 
-            echo -e "\n-- Starting Normalization --\n"
+            echo -e "\\n-- Starting Normalization --\\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
             insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
-            echo -e "\n-- DONE with Normalization --\n"
+            echo -e "\\n-- DONE with Normalization --\\n"
 
             mv left.norm.fq left-"${sample_id}".norm.fq
             mv right.norm.fq right-"${sample_id}".norm.fq
@@ -1758,7 +1760,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Generating SOAP config file --\n"
+            echo -e "\\n-- Generating SOAP config file --\\n"
             echo "max_rd_len="${params.max_rd_len} >>config.txt
             echo "[LIB]" >>config.txt
             echo "rd_len_cutof="${params.rd_len_cutof} >>config.txt
@@ -1769,15 +1771,15 @@ if (params.onlyAsm) {
             echo "q1="left-${sample_id}.norm.fq >>config.txt
             echo "q2="right-${sample_id}.norm.fq >>config.txt
 
-            echo -e "\n-- Starting SOAP assemblies --\n"
+            echo -e "\\n-- Starting SOAP assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- SOAP k\${x} --\n"
+                echo -e "\\n-- SOAP k\${x} --\\n"
                 SOAPdenovo-Trans-127mer all -s config.txt -K \${x} -o output\${x} -p ${task.cpus}
                 sed -i "s/>/>SOAP.k\${x}./g" output\${x}.scafSeq
             done
 
-            echo -e "\n-- Finished with the assemblies --\n"
+            echo -e "\\n-- Finished with the assemblies --\\n"
 
             cat output*.scafSeq >${sample_id}.SOAP.fa
 
@@ -1802,25 +1804,25 @@ if (params.onlyAsm) {
 
         script:
             """
-    	    echo -e "\n-- Starting with Velveth --\n"
+    	    echo -e "\\n-- Starting with Velveth --\\n"
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- k\${x} --\n"
+                echo -e "\\n-- k\${x} --\\n"
                 velveth oases.\${x} \${x} -shortPaired -fastq -separate left-${sample_id}.norm.fq right-${sample_id}.norm.fq
             done
 
-            echo -e "\n-- Starting with Velvetg --\n"
+            echo -e "\\n-- Starting with Velvetg --\\n"
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- vg \${x} --\n"
+                echo -e "\\n-- vg \${x} --\\n"
                 velvetg oases.\${x} -read_trkg yes
             done
 
-            echo -e "\n-- Starting with Oases --\n"
+            echo -e "\\n-- Starting with Oases --\\n"
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- oases \${x} --\n"
+                echo -e "\\n-- oases \${x} --\\n"
                 oases oases.\${x}
             done
 
-            echo -e "\n-- Finished with Velvet/Oases assemblies --\n"
+            echo -e "\\n-- Finished with Velvet/Oases assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
                 sed -i "s/>/>Velvet.k\${x}./g" oases.\${x}/contigs.fa
@@ -1849,18 +1851,18 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting rnaSPADES assemblies --\n"
+            echo -e "\\n-- Starting rnaSPADES assemblies --\\n"
 
             mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- rnaSPADES k\${x} --\n"
+                echo -e "\\n-- rnaSPADES k\${x} --\\n"
 
                 rnaspades.py -1 left-${sample_id}.norm.fq -2 right-${sample_id}.norm.fq -o ${sample_id}_spades_\${x} -t ${task.cpus} -k \${x} -m \${mem}
 
             done
 
-            echo -e "\n-- Finished with the assemblies --\n"
+            echo -e "\\n-- Finished with the assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
                 sed -i "s/>/>SPADES.k\${x}./g" ${sample_id}_spades_\${x}/transcripts.fasta
@@ -1889,22 +1891,24 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting Trans-ABySS assemblies --\n"
+            echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
-                echo -e "\n-- Trans-ABySS k\${x} --\n"
+                echo -e "\\n-- Trans-ABySS k\${x} --\\n"
 
                 transabyss -k \${x} --pe left-${sample_id}.norm.fq right-${sample_id}.norm.fq --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
 
             done
 
-            echo -e "\n-- Finished with the assemblies --\n"
+            echo -e "\\n-- Finished with the assemblies --\\n"
 
             for x in `echo $k | tr "," " "`;do
                 sed -i "s/>/>TransABySS.k\${x}./g" ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa
             done
 
             cat ${sample_id}_transabyss_*/k*.transabyss.fa-final.fa >${sample_id}.TransABySS.fa
+
+            rm -rf ${sample_id}_transabyss_*
             """
     }
 
@@ -1931,13 +1935,13 @@ if (params.onlyAsm) {
             def mem_MB=(task.memory.toMega())
 
             """
-            echo -e "\n-- Starting EviGene --\n"
+            echo -e "\\n-- Starting EviGene --\\n"
 
             cat *.fa >${sample_id}.combined.fa
 
             $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
-            echo -e "\n-- DONE with EviGene --\n"
+            echo -e "\\n-- DONE with EviGene --\\n"
 
             cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
             cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
@@ -1966,11 +1970,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
             """
@@ -1992,11 +1996,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp run_${sample_id}.Trinity.fa.bus/short_summary_${sample_id}.Trinity.fa.bus.txt .
             """
@@ -2021,11 +2025,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp ${sample_id}.fa.bus/short_summary.*.${sample_id}.fa.bus.txt .
             """
@@ -2049,11 +2053,11 @@ if (params.onlyAsm) {
 
         script:
             """
-            echo -e "\n-- Starting BUSCO --\n"
+            echo -e "\\n-- Starting BUSCO --\\n"
 
             busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-            echo -e "\n-- DONE with BUSCO --\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
             cp ${sample_id}.Trinity.fa.bus/short_summary.*.${sample_id}.Trinity.fa.bus.txt .
             """
@@ -2078,19 +2082,19 @@ if (params.onlyAsm) {
         script:
         if (params.shortTransdecoder) {
             """
-            echo -e "\n-- TransDecoder.LongOrfs... --\n"
+            echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
             TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa"
 
-            echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
+            echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
-            echo -e "\n-- TransDecoder.Predict... --\n"
+            echo -e "\\n-- TransDecoder.Predict... --\\n"
 
             TransDecoder.Predict -t ${sample_id}.combined.okay.fa"
 
-            echo -e "\n-- Done with TransDecoder.Predict --\n"
+            echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
-            echo -e "\n-- Calculating statistics... --\n"
+            echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
@@ -2105,42 +2109,42 @@ if (params.onlyAsm) {
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\t ORFs type=internal: \$orfnum \n">>${sample_id}.transdecoder.stats
 
-            echo -e "\n-- Done with statistics --\n"
+            echo -e "\\n-- Done with statistics --\\n"
 
-            echo -e "\n-- DONE with TransDecoder --\n"
+            echo -e "\\n-- DONE with TransDecoder --\\n"
             """
 
         } else {
             """
             unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
-            echo -e "\n-- TransDecoder.LongOrfs... --\n"
+            echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
             TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa
 
-            echo -e "\n-- Done with TransDecoder.LongOrfs --\n"
+            echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
             fname=${sample_id}.combined.okay.fa
 
-            echo -e "\n-- Starting Diamond (blastp) --\n"
+            echo -e "\\n-- Starting Diamond (blastp) --\\n"
 
             diamond blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastp) --\n"
+            echo -e "\\n-- Done with Diamond (blastp) --\\n"
 
-            echo -e "\n-- Starting HMMER --\n"
+            echo -e "\\n-- Starting HMMER --\\n"
 
             hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout ${params.pfloc} \$fname.transdecoder_dir/longest_orfs.pep
 
-            echo -e "\n-- Done with HMMER --\n"
+            echo -e "\\n-- Done with HMMER --\\n"
 
-            echo -e "\n-- TransDecoder.Predict... --\n"
+            echo -e "\\n-- TransDecoder.Predict... --\\n"
 
             TransDecoder.Predict -t ${sample_id}.combined.okay.fa --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with TransDecoder.Predict --\n"
+            echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
-            echo -e "\n-- Calculating statistics... --\n"
+            echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
@@ -2168,9 +2172,9 @@ if (params.onlyAsm) {
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
             echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
 
-            echo -e "\n-- Done with statistics --\n"
+            echo -e "\\n-- Done with statistics --\\n"
 
-            echo -e "\n-- DONE with TransDecoder --\n"
+            echo -e "\\n-- DONE with TransDecoder --\\n"
             """
         }
     }
@@ -2194,17 +2198,17 @@ if (params.onlyAsm) {
 
             #Diamond (BLAST) Homologies
 
-            echo -e "\n-- Starting with Diamond (blastx) --\n"
+            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
 
             diamond blastx -d \$swissdb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastx) --\n"
+            echo -e "\\n-- Done with Diamond (blastx) --\\n"
 
-            echo -e "\n-- Starting with Diamond (blastp) --\n"
+            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
             diamond blastp -d \$swissdb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastp)  --\n"
+            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
     }
 
@@ -2227,17 +2231,17 @@ if (params.onlyAsm) {
 
             #Diamond (BLAST) Homologies
 
-            echo -e "\n-- Starting with Diamond (blastx) --\n"
+            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
 
             diamond blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastx) --\n"
+            echo -e "\\n-- Done with Diamond (blastx) --\\n"
 
-            echo -e "\n-- Starting with Diamond (blastp) --\n"
+            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
             diamond blastp -d \$unidb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
 
-            echo -e "\n-- Done with Diamond (blastp)  --\n"
+            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
     }
 
@@ -2256,11 +2260,11 @@ if (params.onlyAsm) {
         script:
             """
 
-            echo -e "\n-- Starting with HMMER --\n"
+            echo -e "\\n-- Starting with HMMER --\\n"
 
             hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
 
-            echo -e "\n-- Done with HMMER --\n"
+            echo -e "\\n-- Done with HMMER --\\n"
             """
     }
 
@@ -2280,11 +2284,11 @@ if (params.onlyAsm) {
             """
             #signalP to predict signal peptides
 
-            echo -e "\n-- Starting with SignalP --\n"
+            echo -e "\\n-- Starting with SignalP --\\n"
 
             ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.combined.okay.fa.transdecoder.pep
 
-            echo -e "\n-- Done with SignalP --\n"
+            echo -e "\\n-- Done with SignalP --\\n"
             """
     }
 
@@ -2304,11 +2308,11 @@ if (params.onlyAsm) {
             """
             #tmHMM to predict transmembrane regions
 
-            echo -e "\n-- Starting with tmHMM --\n"
+            echo -e "\\n-- Starting with tmHMM --\\n"
 
             ${params.tmhmm} --short < ${sample_id}.combined.okay.fa.transdecoder.pep >${sample_id}.tmhmm.out
 
-            echo -e "\n-- Done with tmHMM --\n"
+            echo -e "\\n-- Done with tmHMM --\\n"
             """
     }
 
@@ -2329,11 +2333,11 @@ if (params.onlyAsm) {
             set +e
             #RNAMMER to identify rRNA transcripts
 
-            echo -e "\n-- Starting with RNAMMER --\n"
+            echo -e "\\n-- Starting with RNAMMER --\\n"
 
             RnammerTranscriptome.pl --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
 
-            echo -e "\n-- Done with RNAMMER --\n"
+            echo -e "\\n-- Done with RNAMMER --\\n"
             """
     }
 
@@ -2372,13 +2376,13 @@ if (params.onlyAsm) {
             cp ${params.Tsql} .
             sqlname=`echo ${params.Tsql} | tr "\\/" "\\n" | grep "\\.sqlite"`
 
-            echo -e "\n-- Running Trinotate --\n"
+            echo -e "\\n-- Running Trinotate --\\n"
 
             Trinotate \$sqlname init --gene_trans_map ${sample_id}.combined.okay.fa.gene_trans_map --transcript_fasta ${sample_id}.combined.okay.fa --transdecoder_pep ${sample_id}.combined.okay.fa.transdecoder.pep
 
-            echo -e "\n-- Ending run of Trinotate --\n"
+            echo -e "\\n-- Ending run of Trinotate --\\n"
 
-            echo -e "\n-- Loading hits and predictions to sqlite database... --\n"
+            echo -e "\\n-- Loading hits and predictions to sqlite database... --\\n"
 
             #Load protein hits
             Trinotate \$sqlname LOAD_swissprot_blastp ${sample_id}.diamond_blastp.outfmt6
@@ -2416,43 +2420,43 @@ if (params.onlyAsm) {
                 echo "No rnammer results"
             fi
 
-            echo -e "\n-- Loading finished --\n"
+            echo -e "\\n-- Loading finished --\\n"
 
             #Report
 
-            echo -e "\n-- Generating report... --\n"
+            echo -e "\\n-- Generating report... --\\n"
 
             Trinotate \$sqlname report >${sample_id}.trinotate_annotation_report.xls
 
-            echo -e "\n-- Report generated --\n"
+            echo -e "\\n-- Report generated --\\n"
 
             #Extract info from XLS file
 
-            echo -e "\n-- Creating GO file from XLS... --\n"
+            echo -e "\\n-- Creating GO file from XLS... --\\n"
 
             extract_GO_assignments_from_Trinotate_xls.pl --Trinotate_xls ${sample_id}.trinotate_annotation_report.xls --trans >${sample_id}.GO.terms.txt
 
-            echo -e "\n-- Done with the GO --\n"
+            echo -e "\\n-- Done with the GO --\\n"
 
-            echo -e "\n-- Creating KEGG file from XLS... --\n"
+            echo -e "\\n-- Creating KEGG file from XLS... --\\n"
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,14 | grep "KEGG" | tr "\\`" ";" | grep "KO:K" | sed 's/\\tKEGG/\\t#KEGG/g' | sed 's/KO:/KO:#/g' | cut -f 1,3 -d "#" | tr -d "#" >${sample_id}.KEGG.terms.txt
 
-            echo -e "\n-- Done with the KEGG --\n"
+            echo -e "\\n-- Done with the KEGG --\\n"
 
-            echo -e "\n-- Creating eggNOG file from XLS... --\n"
+            echo -e "\\n-- Creating eggNOG file from XLS... --\\n"
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,13 | grep "OG" | tr "\\`" ";" | sed 's/^/#/g' | sed 's/;/\\n;/g' | cut -f 1 -d "^" | tr -d "\\n" | tr "#" "\\n" | grep "OG" >${sample_id}.eggNOG_COG.terms.txt
 
-            echo -e "\n-- Done with the eggNOG --\n"
+            echo -e "\\n-- Done with the eggNOG --\\n"
 
-            echo -e "\n-- Creating PFAM file from XLS... --\n"
+            echo -e "\\n-- Creating PFAM file from XLS... --\\n"
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,10 | grep "PF" | tr "\\`" ";" | sed 's/^/#/g' | sed 's/;PF/\\n;PF/g' | cut -f 1 -d "^" | tr -d "\\n" | tr "#" "\\n" | grep "PF" | tr ";" "," >${sample_id}.PFAM.terms.txt
 
-            echo -e "\n-- Done with the PFAM --\n"
+            echo -e "\\n-- Done with the PFAM --\\n"
 
-            echo -e "\n-- DONE with Trinotate --\n"
+            echo -e "\\n-- DONE with Trinotate --\\n"
             """
     }
 
@@ -2511,7 +2515,7 @@ if (params.onlyAsm) {
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             """
     }
@@ -2535,7 +2539,7 @@ if (params.onlyAsm) {
             echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
             cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
-            echo -e "\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
+            echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
             cat short_summary_${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
             """
     }
@@ -2559,7 +2563,7 @@ if (params.onlyAsm) {
             echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
             cat short_summary.*.${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
-            echo -e "\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
+            echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
             cat short_summary.*.${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
             """
     }
@@ -2709,13 +2713,13 @@ if (params.onlyAsm) {
 	        cp ${params.mypwd}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_cellular.txt
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_cellular.txt
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_biological.txt
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_biological.txt
 
             cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\0#/g' | tr "#" "\\t" >GO_molecular.txt
+            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_molecular.txt
 
             Rscript GO_plots.R ${sample_id}
 
@@ -2802,13 +2806,13 @@ if (params.onlyAsm) {
             script:
                 def mem_MB=(task.memory.toMega())
                 """
-                echo -e "\n-- Starting EviGene --\n"
+                echo -e "\\n-- Starting EviGene --\\n"
 
                 cat ${assembly} >${params.nameEvi}.combined.fa
 
                 $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${params.nameEvi}.combined.fa
 
-                echo -e "\n-- DONE with EviGene --\n"
+                echo -e "\\n-- DONE with EviGene --\\n"
 
                 cp okayset/${params.nameEvi}.combined.okay.combined.fa ${params.nameEvi}.combined.okay.fa
 
@@ -2835,11 +2839,11 @@ if (params.onlyAsm) {
 
             script:
                 """
-                echo -e "\n-- Starting BUSCO --\n"
+                echo -e "\\n-- Starting BUSCO --\\n"
 
                 run_BUSCO.py -i ${params.nameEvi}.combined.okay.fa -o ${params.nameEvi}.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-                echo -e "\n-- DONE with BUSCO --\n"
+                echo -e "\\n-- DONE with BUSCO --\\n"
 
                 cp run_${params.nameEvi}.fa.bus/short_summary_${params.nameEvi}.fa.bus.txt .
                 """
@@ -2864,11 +2868,11 @@ if (params.onlyAsm) {
 
             script:
                 """
-                echo -e "\n-- Starting BUSCO --\n"
+                echo -e "\\n-- Starting BUSCO --\\n"
 
                 busco -i ${params.nameEvi}.combined.okay.fa -o ${params.nameEvi}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-                echo -e "\n-- DONE with BUSCO --\n"
+                echo -e "\\n-- DONE with BUSCO --\\n"
 
                 cp ${params.nameEvi}.fa.bus/short_summary.*.${params.nameEvi}.fa.bus.txt .
                 """
@@ -3005,7 +3009,7 @@ process get_run_info {
 
         echo -e "\\n-- Programming Languages --" >>versions.txt
 
-        v=\$( R --version | head -n1 | awk '{print \$3}' )
+        v=\$( R --version | grep "R version" | awk '{print \$3}' )
         echo "R: \$v" >>versions.txt
 
         v=\$( python --version | cut -f 2 -d " " )
@@ -3019,7 +3023,7 @@ process get_run_info {
 workflow.onComplete {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
-        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.tracedir}/transpi_report.html\033[0m" : \
+        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
 }
