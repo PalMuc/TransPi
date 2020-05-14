@@ -1328,7 +1328,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- Creating KEGG file from XLS... --\\n"
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,14 | grep "KEGG" | tr "\\`" ";" | grep "KO:K" | sed 's/\\tKEGG/\\t#KEGG/g' | sed 's/KO:/KO:#/g' | cut -f 1,3 -d "#" | tr -d "#" >${sample_id}.KEGG.terms.txt
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,14 | grep "KEGG" | tr "\\`" ";" | grep "KO:K" | sed 's/\\tKEGG/\\t#KEGG/g' | sed 's/KO:/KO:#/g' | cut -f 1,3 -d "#" | tr -d "#" | sed 's/;KO://g' >${sample_id}.KEGG.terms.txt
 
             echo -e "\\n-- Done with the KEGG --\\n"
 
