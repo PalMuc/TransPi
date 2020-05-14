@@ -123,6 +123,7 @@ busv3_get () {
             wget $tname
             tar -xvf ${v3name}_odb9.tar.gz
             export busnaV3=${v3name}_odb9
+            rm ${v3name}_odb9.tar.gz
         fi
     else
         echo -e "\n\t -- No BUSCO V3 available for ${v3name} --\n"
@@ -519,7 +520,7 @@ evi_c () {
             [yY] | [yY][eE][sS])
                 cd scripts
                 echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
-                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar
+                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_older/evigene19may14.tar
                 tar -xf evigene19may14.tar
                 rm evigene19may14.tar
             ;;
