@@ -1,17 +1,17 @@
-# TransPi - TRanscriptome ANalysiS PIpeline (DEV)
+# TransPi - TRanscriptome ANalysiS PIpeline (in development)
 
 # Table of contents
 * [General info](#General-info)
 * [Detailed description](#Detailed-description)  
     * [Precheck run](#Precheck-run)  
     * [Main Pipeline](#Main-pipeline)  
-* [Why use TransPi?](#Why-use-TransPi?)  
-* [What TransPi uses for the analyses?](#What-TransPi-uses-for-the-analyses? )  
+* [Why use TransPi?](#Why-use-TransPi)  
+* [What TransPi uses for the analyses?](#What-TransPi-uses-for-the-analyses?)  
 * [How to use TransPi](#How-to-use-TransPi)
     * [Requirements](#Requirements)
     * [Downloading TransPi](#Downloading-TransPi)
     * [Installation and configuration](#Installation-and-configuration)
-    * [Running TransPi](Running-TransPi)
+    * [Running TransPi](#Running-TransPi)
 * [Extra notes](#Extra-notes)
 * [Future work](#Future-work)
 
