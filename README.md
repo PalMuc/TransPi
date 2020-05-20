@@ -6,7 +6,7 @@
     * [Precheck run](#Precheck-run)  
     * [Main Pipeline](#Main-pipeline)  
 * [Why use TransPi?](#Why-use-TransPi)  
-* [What TransPi uses for the analyses?](#What-TransPi-uses-for-the-analyses?)  
+* [What TransPi uses for the analyses?](#What-TransPi-uses-for-the-analyses)  
 * [How to use TransPi](#How-to-use-TransPi)
     * [Requirements](#Requirements)
     * [Downloading TransPi](#Downloading-TransPi)
