@@ -23,4 +23,5 @@ dependencies:
   - cd-hit=4.8.1
   - perl-xml-simple=2.25
   - r-svglite=1.2.3
-  - r-ggthemes=4.2.0
+
+

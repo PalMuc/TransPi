@@ -51,6 +51,8 @@ Databases used by TransPi:
 
 Installing all these programs can be confusing and time consuming. Thus, apart from the automatization for the transcriptome analysis by TransPi, we also developed a script to install all dependencies and databases needed for the pipeline. Also, it will create all the necessary config files needed to run the analysis. More info on the "How to use TransPi" section below.  
 
+**NOTE**  
+Rnammer, tmhmm and signalP are for academic users; other users are requested to contact CBS Software Package Manager at software@cbs.dtu.dk.  
 
 **NOTE**  
 Rnammer, tmhmm and signalP are for academic users; other users are requested to contact CBS Software Package Manager at software@cbs.dtu.dk.  
