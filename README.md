@@ -22,6 +22,7 @@
     * [Installation and configuration](#Installation-and-configuration)
     * [Running TransPi](#Running-TransPi)
     * [Results](#Results)
+    * [Other parameters](#Other-parameters)
 * [Extra notes](#Extra-notes)
 * [Future work](#Future-work)
 
@@ -235,8 +236,13 @@ Also a directory called `work` is also created. It containes all the nextflow wo
 
 
 ## Other parameters 
-This can be changed in the command line by using the `--outdir NAME_HERE`.  
-To change the name of the this directory when executing TransPi use `-work NAME_HERE`.  
+There are other parameters that can be changed when executing TransPi.  
+
+`--outdir` = name of output directory. Example: `--outdir Sponges_150`  
+
+`-work` = name of working directory. Example: `-work Sponges_work`. Only one dash is needed for `-work` since it is a nextflow function.   
+
+`--reads` = PATH of reads directory. Example: `--reads "/home/ubuntu/sponge_reads/*R{1,2}.fastq.gz"`. Use of `"` is neccesary.    
 
 </br>  
 
