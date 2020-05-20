@@ -12,8 +12,8 @@ else
     while read line;do
         a=$( echo $line | awk '{print $2}' )
         echo $a
-        if [ -d work/${a}* ];then
-            rm -rf work/${a}*
+        if [ -d work*/${a}* ];then
+            rm -rf work*/${a}*
         fi
     done <.erase.txt
     rm .erase.txt
