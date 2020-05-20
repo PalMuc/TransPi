@@ -30,31 +30,32 @@ read_c() {
     fi
 }
 os_c() {
-    if [ `which sw_vers | wc -l` -eq 1 ];then
-        echo -e "\n\t -- Downloading MacOS Anaconda3 installation -- \n"
-        curl -o Anaconda3-2019.10-MacOSX-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-MacOSX-x86_64.sh
-    elif [ -f /etc/os-release ];then
+    if [ -f /etc/os-release ];then
         echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
         curl -o Anaconda3-2019.10-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+    else
+        echo -e "\n\t\e[31m -- ERROR: Are you in a Linux system? Please check requirements and rerun the pre-check --\e[39m\n"
+        exit 0
     fi
 }
 source_c() {
-    if [ -f ~/bash_profile ];then
-        source ~/.bash_profile
-    elif [ -f ~/bashrc ];then
+    if [ -f ~/.bashrc ];then
         source ~/.bashrc
     fi
 }
 conda_c() {
+    source ~/.bashrc
+    cd $mypwd
     #Check conda and environment
     check_conda=$( command -v conda )
     if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
+        echo -e "\n\t -- Conda seems to be installed in your system environment --\n"
         ver=$( conda -V | cut -f 2 -d " " | cut -f 1,2 -d "." | tr -d "." )
         if [ "$ver" -gt 45 ];then
             echo -e "\n\t -- Conda is installed (v4.5 or higher). Checking environment... --\n"
             #Check environment
             check_env=$( conda env list | grep -c "TransPi" )
-            if [ "$check_env" -eq 0 ];then
+	    if [ "$check_env" -eq 0 ];then
                 echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
                 if [ -f transpi_env.yml ];then
                     echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
@@ -68,14 +69,14 @@ conda_c() {
             fi
         fi
     else
-        echo -e "\n\t -- Conda is not intalled. Please install Anaconda or Miniconda (https://www.anaconda.com) and rerun this script --\n"
-        echo -e -n "\n\t    Do you want me to try to install Anaconda for you? (y,n,exit): "
+        echo -e "\n\t -- Conda is not intalled. Please install Anaconda (https://www.anaconda.com) and rerun this script --\n"
+        echo -e -n "\n\t    Do you want to install Anaconda? (y,n,exit): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
                 os_c
                 echo -e "\n\t -- Starting anaconda installation -- \n"
-                bash Anaconda3-2019.10*.sh 
+                bash Anaconda3-2019.10*.sh
                 echo -e "\n\t -- Installation done -- \n"
                 rm Anaconda3-2019.10*.sh
                 source_c
@@ -88,7 +89,7 @@ conda_c() {
                 fi
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Download and Install Anaconda. Then rerun the pre-check again --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Download and Install Anaconda. Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             exit)
@@ -359,10 +360,7 @@ bus_c () {
     done
     else
         echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"buslist.txt\" is available. Please check requirements and rerun the pre-check --\e[39m\n\n"
-	#
-	# Try to get it automatically from GitHub  ############################################################################################################
-	#
-	exit 0
+	    exit 0
     fi
 }
 uni_c () {
@@ -382,7 +380,7 @@ uni_c () {
     done
 }
 unicomp_c () {
-    echo -e -n "\n\t    Do you want me to uncompress the file(s)? (y,n,exit): "
+    echo -e -n "\n\t    Do you want to uncompress the file(s)? (y,n,exit): "
     read ans
     case $ans in
         [yY] | [yY][eE][sS])
@@ -390,7 +388,7 @@ unicomp_c () {
             gunzip *fasta.gz
         ;;
         [nN] | [nN][oO])
-            echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and rerun the pre-check again --\e[39m\n"
+            echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and rerun the pre-check  --\e[39m\n"
             exit 0
         ;;
         exit)
@@ -412,17 +410,18 @@ uniprot_c () {
         cd uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- TransPi uses customs protein databases from UNIPROT for the annotation -- \n"
-        echo -e -n "\n\t    Do you want me download the current metazoan proteins from UNIPROT for you? (y,n,exit): "
+        echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
-                echo -e "\n\n\t -- Downloading metazoa protein dataset from UNIPROT ... -- \n"
+                echo -e "\n\n\t -- Downloading metazoa protein dataset from UNIPROT -- \n"
+                echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
                 curl -o uniprot_metazoa_33208.fasta.gz "https://www.uniprot.org/uniprot/?query=taxonomy:33208&format=fasta&compress=yes&include=no"
                 gunzip uniprot_metazoa_33208.fasta.gz
                 uni_c
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". Rerun the pre-check again --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             exit)
@@ -444,7 +443,7 @@ uniprot_c () {
             if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
                 echo -e "\n\t\e[31m -- ERROR: Directory \"$myuni\" is empty. Please download a UNIPROT database and rerun the pre-check --\e[39m\n"
                 rm .unilist.txt
-                exit 0
+                uniprot_c
             else
                 echo -e "\n\t\e[31m -- Directory \"$myuni\" is available but UNIPROT database is compressed --\e[39m\n"
                 unicomp_c
@@ -459,14 +458,13 @@ uniprot_c () {
     fi
 }
 java_c () {
-    jav=$( java -version 2>&1 | awk '{print $3}' | grep [0-9] | cut -f 1,2 -d "." | tr -d "." | tr -d "\"" )
-    if [ $jav -eq 18 ] || [ $jav -eq 110 ];then
-        echo -e "\n\t -- Java 1.8 (or later) is installed -- \n"
-	rep=yes
-    elif [ $jav -eq 17 ];then
-        echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement for Nextflow --\e[39m\n"
-        exit 0
-    fi
+	export NXF_VER=20.01.0-edge && curl -s https://get.nextflow.io | bash 2>.error_nextflow
+	check_err=$( head -n 1 .error_nextflow | grep -c "java: command not found" )
+	if [ $check_err -eq 1 ];then
+		echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement for Nextflow --\e[39m\n"
+		exit 0
+	fi
+	rm .error_nextflow
 }
 nextflow_c () {
     #Check Nextflow
@@ -479,19 +477,16 @@ nextflow_c () {
         if [ $check_next -eq 1 ];then
             echo -e "\n\t -- Nextflow is installed -- \n"
 	    else
-            echo -e -n "\n\t    Do you want me to try to install Nextflow for you? (y or n): "
+            echo -e -n "\n\t    Do you want to install Nextflow? (y or n): "
             read ans
             case $ans in
                 [yY] | [yY][eE][sS])
+                    echo -e "\n\t -- Downloading Nextflow ... -- \n"
                     java_c
-                    if [ "$rep" == "yes" ];then
-                        echo -e "\n\t -- Downloading Nextflow ... -- \n"
-                        curl -s https://get.nextflow.io | bash
-		                echo -e "\n\t -- Nextflow is now installed on $mypwd (local installation) -- \n"
-                    fi
+		    		echo -e "\n\t -- Nextflow is now installed on $mypwd (local installation) -- \n"
                 ;;
                 [nN] | [nN][oO])
-                    echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check again --\e[39m\n"
+                    echo -e "\n\t\e[31m -- ERROR: Download and Install Nextflow. Then rerun the pre-check  --\e[39m\n"
                     exit 0
                 ;;
                 *)
@@ -502,50 +497,23 @@ nextflow_c () {
 	    fi
     fi
 }
-evi_bash () {
-    if [ -f ~/.bashrc ];then
-        if [ `cat ~/.bashrc | grep -c "evigene"` -eq 0 ];then
-            echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
-            echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
-            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
-            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
-            rm .varfile.sh
-            source_c
-        else
-            rm .varfile.sh
-            source_c
-        fi
-    elif [ -f ~/.bash_profile ];then
-        if [ `cat ~/.bash_profile | grep -c "evigene"` -eq 0 ];then
-            echo -e "\n\t -- PATHs added to the "~/.bashrc". Before running the pipeline please "source ~/.bashrc" -- \n"
-            echo -e "# EvidentialGene\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/prot/\"\n# EvidentialGene(other scripts)\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/\"\n">> ~/.bashrc
-            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/ests/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genes/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/genoasm/\"\n">> ~/.bashrc
-            echo -e "export PATH=\"\$PATH:${mypwd}/evigene/scripts/omcl/\"\nexport PATH=\"\$PATH:${mypwd}/evigene/scripts/rnaseq/\"\n" >> ~/.bashrc
-            rm .varfile.sh
-            source_c
-        else
-            rm .varfile.sh
-            source_c
-        fi
-    fi
-}
 evi_c () {
+	cd $mypwd
     check_evi=$( command -v tr2aacds.pl | wc -l )
     if [ $check_evi -eq 0 ];then
         if [ ! -d evigene/ ];then
         echo -e "\n\t -- EvidentialGene is not installed -- \n"
-        echo -e -n "\n\t    Do you want me to try to install EvidentialGene for you? (y or n): "
+        echo -e -n "\n\t    Do you want to install EvidentialGene? (y or n): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
-                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19jan01.tar
-                tar -xf evigene19jan01.tar
-                mv evigene19jan01/ evigene/
-                rm evigene19jan01.tar
+                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_old/evigene_older/evigene19may14.tar
+                tar -xf evigene19may14.tar
+                rm evigene19may14.tar
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check again --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             *)
@@ -561,20 +529,21 @@ evi_c () {
     fi
 }
 trisql_c () {
+    source ~/.bashrc
     check_conda=$( command -v conda )
     if [ "$check_conda" == "" ];then
-        echo -e "\n\t -- Looks like conda is not installed -- \n"
-
+        echo -e "\n\t\e[31m -- Looks like conda is not installed--\e[39m\n"
+        exit 0
     fi
     if [ ! -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
-        echo -e -n "\n\t    Do you want me to try to install the custom sqlite database for you? (y or n): "
+        echo -e -n "\n\t    Do you want to install the custom sqlite database? (y or n): "
         read ans
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
                 if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
-                    echo -e -n "\n\t    Provide the full PATH of your Anaconda installation (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
+                    echo -e -n "\n\t    Provide the full PATH of your Anaconda main installation, not an environment (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
                     read ans
                     source ${ans}/etc/profile.d/conda.sh
                     conda activate TransPi
@@ -602,7 +571,7 @@ trisql_c () {
                 fi
             ;;
             [nN] | [nN][oO])
-                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/sqlite_db". Then rerun the pre-check again --\e[39m\n"
+                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/sqlite_db". Then rerun the pre-check  --\e[39m\n"
                 exit 0
             ;;
             *)
@@ -625,6 +594,49 @@ buildsql_c () {
         trisql_c
     fi
 }
+cbs_dtu_c () {
+    cd $mypwd
+    if [ -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
+        echo -e "\n\t -- Preparing scripts of CBS-DTU -- \n"
+        echo -e "\n\t -- Uncompressing files -- \n"
+        tar -xvf cbs-dtu-tools.tar.gz
+        #rnammer
+        cd cbs-dtu-tools/rnammer/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
+        cd ..
+        #signalP
+        cd signalp-4.1/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
+        cd ..
+    elif [ -f cbs-dtu-tools.tar.gz ] && [ -d cbs-dtu-tools/ ];then
+        cd cbs-dtu-tools/rnammer/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
+        cd ..
+        #signalP
+        cd signalp-4.1/
+        name=$( pwd )
+        sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
+        cd ..
+    elif [ ! -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
+        echo -e "\n\t\e[31m -- ERROR: Please make sure the cbs-dtu-tools.tar.gz is available. Then rerun the pre-check  --\e[39m\n"
+        exit 0
+    fi
+}
+util_c () {
+    source ~/.bashrc
+    cpath=$( conda env list | grep "TransPi" | awk '{print $2}' )
+    if [ -f ${cpath}/bin/RnammerTranscriptome.pl ];then
+        sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
+    else
+        echo -e "\n\t -- Cannot find the TransPi environment -- \n"
+        echo -e -n "\n\t    Provide the PATH of TransPi environment (Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi): "
+        read ans
+        sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
+    fi
+} 
 get_var () {
     cd $mypwd
     #echo "=$mypwd/" >${mypwd}/.varfile.sh
@@ -635,6 +647,9 @@ get_var () {
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
     echo "Tsql=$mypwd/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
+    echo "rnam=$mypwd/cbs-dtu-tools/rnammer/rnammer" >>${mypwd}/.varfile.sh
+    echo "tmhmm=$mypwd/cbs-dtu-tools/tmhmm-2.0c/bin/tmhmm" >>${mypwd}/.varfile.sh
+    echo "signalp=$mypwd/cbs-dtu-tools/signalp-4.1/signalp" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
@@ -645,14 +660,15 @@ get_var () {
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|buscodb|buscodb=\"${buscodb}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
-    evi_bash
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
+        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" >nextflow.config
+    rm .varfile.sh
 }
 #Main
 if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
     echo -e "\n\t Script for checking the requirenments of TransPi \n"
-    echo -e "\t Usage:\n\n\t\t pre-check_TransPi.sh WORK_PATH \n"
-    echo -e "\n\t\t\t WORK_PATH = PATH to run TransPi and download the requirenments \n\n\t\t\t\t Example: /home/bioinf/run/ \n"
+    echo -e "\t Usage:\n\n\t\t bash precheck_TransPi.sh WORK_PATH \n"
+    echo -e "\n\t\t WORK_PATH = PATH to run TransPi and download the requirenments \n\n\t\t Example: /home/bioinf/run/ \n"
     exit 0
 elif [ ! -d "$mypwd" ];then
     echo -e "\n\t -- Please provide a valid PATH to run TransPi -- \n"
@@ -667,6 +683,8 @@ elif [ -d "$mypwd" ];then
     nextflow_c
     evi_c
     buildsql_c
+    cbs_dtu_c
+    util_c
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
 fi
