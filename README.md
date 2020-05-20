@@ -1,5 +1,14 @@
 # TransPi - TRanscriptome ANalysiS PIpeline (in development)
 
+```
+ _______                                _____   _ 
+|__   __|                              |  __ \ (_)
+  | |     _ __    __ _   _ __    ___   | |__) | _ 
+  | |    |  __|  / _  | |  _ \  / __|  |  ___/ | |
+  | |    | |    | (_| | | | | | \__ \  | |     | |
+  |_|    |_|     \__,_| |_| |_| |___/  |_|     |_|
+ ```
+
 # Table of contents
 * [General info](#General-info)
 * [Detailed description](#Detailed-description)  
