@@ -21,6 +21,7 @@
     * [Downloading TransPi](#Downloading-TransPi)
     * [Installation and configuration](#Installation-and-configuration)
     * [Running TransPi](#Running-TransPi)
+    * [Results](#Results)
 * [Extra notes](#Extra-notes)
 * [Future work](#Future-work)
 
@@ -214,6 +215,29 @@ Other options:
                             singularity (in development - Run TransPi with a singularity container with all the neccesary tools)
 
 ```
+
+## Results
+After a succesful run of TransPi all the results are save in a directory called `results`. This directory divided into multiple directories for each major step of the pipeline. 
+- assemblies = all individual assemblies 
+- busco3 = busco V3 results
+- busco4 = busco V4 results
+- evigene = non-redundant final assemblies (end with name `.combined.okay.fa`)
+- fastqc = fastqc html files
+- figures = figures created by TransPi (BUSCO comparison, Annotation, GO, etc)
+- filter = html files generated from filter step
+- pipeline_info = nextflow report, trace file and others
+- stats = some basic stats from all steps of TransPi
+- transdecoder = transdecoder results
+- trinotate = annotation results
+- versions.txt = file with all versionts of the tools used by TransPi 
+
+Also a directory called `work` is also created. It containes all the nextflow working files. This can be removed after the pipeline is done since all important files are stored in the `results` directory. 
+
+
+## Other parameters 
+This can be changed in the command line by using the `--outdir NAME_HERE`.  
+To change the name of the this directory when executing TransPi use `-work NAME_HERE`.  
+
 </br>  
 
 ## Extra notes
