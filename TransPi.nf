@@ -626,7 +626,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("run_${sample_id}.fa.bus") into busco3_ch
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") into ( busco3_summary_OAS, busco3_comp_1_OAS )
+            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco3_summary_OAS, busco3_comp_1_OAS )
 
         script:
             """
@@ -652,7 +652,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OAS
 
         output:
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum_OAS, busco3_comp_2_OAS )
+            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum_OAS, busco3_comp_2_OAS )
 
         script:
             """
@@ -681,7 +681,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.fa.bus") into busco4_ch
-            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") into ( busco4_summary_OAS, busco4_comp_1_OAS )
+            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco4_summary_OAS, busco4_comp_1_OAS )
 
         script:
             """
@@ -709,7 +709,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity_OAS
 
         output:
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") into ( busco4_ch_trinity_sum_OAS, busco4_comp_2_OAS )
+            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco4_ch_trinity_sum_OAS, busco4_comp_2_OAS )
 
         script:
             """
@@ -730,8 +730,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco3_summary_OAS
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum_OAS
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_summary_OAS
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum_OAS
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3_OAS
@@ -741,9 +741,9 @@ if (params.onlyAsm) {
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
-            cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
             echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
-            cat short_summary_${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
             """
     }
 
@@ -754,8 +754,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") from busco4_summary_OAS
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum_OAS
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_summary_OAS
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum_OAS
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco4.txt") into final_sum_2v4_OAS
@@ -765,9 +765,9 @@ if (params.onlyAsm) {
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
-            cat short_summary.*.${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
             echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
-            cat short_summary.*.${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
             """
     }
 
@@ -778,8 +778,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco3_comp_1_OAS
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco3_comp_2_OAS
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_comp_1_OAS
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_comp_2_OAS
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig_OAS
@@ -787,7 +787,7 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh short_summary_${sample_id}.Trinity.fa.bus.txt short_summary_${sample_id}.fa.bus.txt v3
+            bash get_busco_val.sh ${sample_id}.Trinity.fa.bus.txt ${sample_id}.fa.bus.txt v3
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -808,8 +808,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") from busco4_comp_1_OAS
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") from busco4_comp_2_OAS
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_comp_1_OAS
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco4_comp_2_OAS
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
@@ -817,7 +817,7 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh short_summary.*.${sample_id}.Trinity.fa.bus.txt short_summary.*.${sample_id}.fa.bus.txt v4
+            bash get_busco_val.sh ${sample_id}.Trinity.fa.bus.txt ${sample_id}.fa.bus.txt v4
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -988,15 +988,15 @@ if (params.onlyAsm) {
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
-            echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
-            echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
-            echo -e "\t ORFs type=internal: \$orfnum \n">>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -1037,28 +1037,28 @@ if (params.onlyAsm) {
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
-            echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            echo -e "\t Of these ORFs" >>${sample_id}.transdecoder.stats
+            echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
-            echo -e "\t\t no annotation: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
-            echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
-            echo -e "\t ORFs type=internal: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -1363,9 +1363,9 @@ if (params.onlyAsm) {
         script:
             """
             #Summary of Transdecoder stats
-            echo -e "Summary of Transdecoder \n" >>${sample_id}.sum_transdecoder.txt
+            echo -e "Summary of Transdecoder \\n" >>${sample_id}.sum_transdecoder.txt
             cat ${sample_id}.transdecoder.stats >>${sample_id}.sum_transdecoder.txt
-            echo -e "##### \n" >>${sample_id}.sum_transdecoder.txt
+            echo -e "##### \\n" >>${sample_id}.sum_transdecoder.txt
             """
     }
 
@@ -1432,16 +1432,24 @@ if (params.onlyAsm) {
             """
             cp ${params.mypwd}/bin/GO_plots.R .
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\\0#/g' | tr "#" "\\t" >GO_cellular.txt
+            cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\\0#/g' | tr "#" "\\t" >GO_biological.txt
+            while read line;do
+                echo ${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
+            done<all_GOs.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed -r 's/[0-9] /\\0#/g' | tr "#" "\\t" >GO_molecular.txt
+            cat final_GOs.txt | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
+            | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_cellular.txt
+
+            cat final_GOs.txt | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
+            | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_biological.txt
+
+            cat final_GOs.txt | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
+            | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_molecular.txt
 
             Rscript GO_plots.R ${sample_id}
+
+            rm all_GOs.txt final_GOs.txt
 
             mv GO_cellular.txt ${sample_id}_GO_cellular.txt
             mv GO_biological.txt ${sample_id}_GO_biological.txt
@@ -1966,7 +1974,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("run_${sample_id}.fa.bus") into busco3_ch
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") into ( busco3_summary, busco3_comp_1 )
+            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco3_summary, busco3_comp_1 )
 
         script:
             """
@@ -1992,7 +2000,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
         output:
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
 
         script:
             """
@@ -2021,7 +2029,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.fa.bus") into busco4_ch
-            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") into ( busco4_summary, busco4_comp_1 )
+            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco4_summary, busco4_comp_1 )
 
         script:
             """
@@ -2049,7 +2057,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
 
         output:
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
+            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
 
         script:
             """
@@ -2099,15 +2107,15 @@ if (params.onlyAsm) {
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-            echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-            echo -e "\t ORFs type=internal: \$orfnum \n">>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2149,28 +2157,28 @@ if (params.onlyAsm) {
             #Calculate statistics of Transdecoder
             echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-            echo -e "Total number of ORFs: \$orfnum \n" >>${sample_id}.transdecoder.stats
-            echo -e "\t Of these ORFs" >>${sample_id}.transdecoder.stats
+            echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep ">" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
-            echo -e "\t\t no annotation: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            echo -e "\t ORFs type=complete: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            echo -e "\t ORFs type=5prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            echo -e "\t ORFs type=3prime_partial: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-            echo -e "\t ORFs type=internal: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
-            echo -e "\t\t with annotations: \$orfnum \n" >>${sample_id}.transdecoder.stats
+            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2527,8 +2535,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco3_summary
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_summary
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3
@@ -2536,11 +2544,11 @@ if (params.onlyAsm) {
         script:
             """
             #Summary of BUSCO scores for the final_assemblies
-            echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
+            echo -e "Summary of BUSCO V3 \\n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
-            cat short_summary_${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
             echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
-            cat short_summary_${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
             """
     }
 
@@ -2551,8 +2559,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") from busco4_summary
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_summary
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco4.txt") into final_sum_2v4
@@ -2560,11 +2568,11 @@ if (params.onlyAsm) {
         script:
             """
             #Summary of BUSCO scores for the final_assemblies
-            echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
+            echo -e "Summary of BUSCO V4 \\n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
-            cat short_summary.*.${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
             echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
-            cat short_summary.*.${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
             """
     }
 
@@ -2583,9 +2591,9 @@ if (params.onlyAsm) {
         script:
             """
             #Summary of Transdecoder stats
-            echo -e "Summary of Transdecoder \n" >>${sample_id}.sum_transdecoder.txt
+            echo -e "Summary of Transdecoder \\n" >>${sample_id}.sum_transdecoder.txt
             cat ${sample_id}.transdecoder.stats >>${sample_id}.sum_transdecoder.txt
-            echo -e "##### \n" >>${sample_id}.sum_transdecoder.txt
+            echo -e "##### \\n" >>${sample_id}.sum_transdecoder.txt
             """
     }
 
@@ -2643,8 +2651,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary_${sample_id}.fa.bus.txt") from busco3_comp_1
-            tuple sample_id, file("short_summary_${sample_id}.Trinity.fa.bus.txt") from busco3_comp_2
+            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_comp_1
+            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_comp_2
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig
@@ -2652,7 +2660,7 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh short_summary_${sample_id}.Trinity.fa.bus.txt short_summary_${sample_id}.fa.bus.txt v3
+            bash get_busco_val.sh ${sample_id}.Trinity.fa.bus.txt ${sample_id}.fa.bus.txt v3
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -2673,8 +2681,8 @@ if (params.onlyAsm) {
         publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("short_summary.*.${sample_id}.fa.bus.txt") from busco4_comp_1
-            tuple sample_id, file("short_summary.*.${sample_id}.Trinity.fa.bus.txt") from busco4_comp_2
+            tuple sample_id, file("{sample_id}.fa.bus.txt") from busco4_comp_1
+            tuple sample_id, file("{sample_id}.Trinity.fa.bus.txt") from busco4_comp_2
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig
@@ -2682,7 +2690,7 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh short_summary.*.${sample_id}.Trinity.fa.bus.txt short_summary.*.${sample_id}.fa.bus.txt v4
+            bash get_busco_val.sh {sample_id}.Trinity.fa.bus.txt {sample_id}.fa.bus.txt v4
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -2712,16 +2720,24 @@ if (params.onlyAsm) {
             """
 	        cp ${params.mypwd}/bin/GO_plots.R .
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_cellular.txt
+            cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_biological.txt
+            while read line;do
+                echo ${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
+            done<all_GOs.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 15 | tr "\\`" "\\n" | grep "GO:" | cut -f 2- -d "^" | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" \
-            | cut -f 2 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_molecular.txt
+            cat final_GOs.txt | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
+            | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_cellular.txt
+
+            cat final_GOs.txt | tr [a-z] [A-Z] | grep "BIOLOGICAL_PROCESS" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
+            | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_biological.txt
+
+            cat final_GOs.txt | tr [a-z] [A-Z] | grep "MOLECULAR_FUNCTION" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
+            | sed 's/\\([0-9] \\)/\\1#/g' | tr "#" "\\t" >GO_molecular.txt
 
             Rscript GO_plots.R ${sample_id}
+
+            rm all_GOs.txt final_GOs.txt
 
             mv GO_cellular.txt ${sample_id}_GO_cellular.txt
             mv GO_biological.txt ${sample_id}_GO_biological.txt
@@ -2864,7 +2880,7 @@ if (params.onlyAsm) {
 
             output:
                 file("${params.nameEvi}.fa.bus") into busco4_ch_OE
-                file("short_summary.*.${params.nameEvi}.fa.bus.txt") into ( busco4_summary_OE )
+                file("*.${params.nameEvi}.fa.bus.txt") into ( busco4_summary_OE )
 
             script:
                 """
@@ -2885,7 +2901,7 @@ if (params.onlyAsm) {
             publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
 
             input:
-                file("short_summary.*.${params.nameEvi}.fa.bus.txt") from busco4_summary_OE
+                file("*.${params.nameEvi}.fa.bus.txt") from busco4_summary_OE
                 file("short_summary_${params.nameEvi}.fa.bus.txt") from busco3_summary_OE
 
             output:
@@ -2893,10 +2909,10 @@ if (params.onlyAsm) {
 
             script:
                 """
-                echo -e "Summary of BUSCO V4 \n" >>${params.nameEvi}.sum_busco.txt
+                echo -e "Summary of BUSCO V4 \\n" >>${params.nameEvi}.sum_busco.txt
                 echo "-- TransPi BUSCO V4 scores -- " >>${params.nameEvi}.sum_busco.txt
-                cat short_summary.*.${params.nameEvi}.fa.bus.txt >>${params.nameEvi}.sum_busco.txt
-                echo -e "\nSummary of BUSCO V3 \n" >>${params.nameEvi}.sum_busco.txt
+                cat *.${params.nameEvi}.fa.bus.txt >>${params.nameEvi}.sum_busco.txt
+                echo -e "\\nSummary of BUSCO V3 \\n" >>${params.nameEvi}.sum_busco.txt
                 echo "-- TransPi BUSCO V3 scores -- " >>${params.nameEvi}.sum_busco.txt
                 cat short_summary_${params.nameEvi}.fa.bus.txt >>${params.nameEvi}.sum_busco.txt
                 """
@@ -2919,7 +2935,7 @@ process get_run_info {
         echo "==========================================" >>versions.txt
         echo "TransPi - Transcriptome Analysis Pipeline" >>versions.txt
         echo -e "==========================================\\n" >>versions.txt
-        echo -e "\t\tRUN INFO\\n" >>versions.txt
+        echo -e "\\t\\tRUN INFO\\n" >>versions.txt
         echo "-- Kmers used --" >>versions.txt
         echo ${params.k} >>versions.txt
 
@@ -3023,7 +3039,7 @@ process get_run_info {
 workflow.onComplete {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
-        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
+        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.mypwd}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
 }
