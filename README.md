@@ -1,9 +1,9 @@
 # TransPi - TRanscriptome ANalysiS PIpeline (in development)
 
 ```
- _______                                 _____   _ 
+ _______                                 _____   _
 |__   __|                               |  __ \ (_)
-   | |     _ __    __ _   _ __    ___   | |__) | _ 
+   | |     _ __    __ _   _ __    ___   | |__) | _
    | |    |  __|  / _  | |  _ \  / __|  |  ___/ | |
    | |    | |    | (_| | | | | | \__ \  | |     | |
    |_|    |_|     \__,_| |_| |_| |___/  |_|     |_|
@@ -218,11 +218,11 @@ Other options:
 ```
 
 ## Results
-After a succesful run of TransPi all the results are save in a directory called `results`. This directory divided into multiple directories for each major step of the pipeline. 
-- assemblies = all individual assemblies 
+After a succesful run of TransPi all the results are save in a directory called `results`. This directory divided into multiple directories for each major step of the pipeline.
+- assemblies = all individual assemblies
 - busco3 = busco V3 results
 - busco4 = busco V4 results
-- evigene = non-redundant final assemblies (end with name `.combined.okay.fa`)
+- evigene = non-redundant final assemblies (ends with name `.combined.okay.fa`)
 - fastqc = fastqc html files
 - figures = figures created by TransPi (BUSCO comparison, Annotation, GO, etc)
 - filter = html files generated from filter step
@@ -230,12 +230,12 @@ After a succesful run of TransPi all the results are save in a directory called 
 - stats = some basic stats from all steps of TransPi
 - transdecoder = transdecoder results
 - trinotate = annotation results
-- versions.txt = file with all versionts of the tools used by TransPi 
+- versions.txt = file with all versionts of the tools used by TransPi
 
-Also a directory called `work` is also created. It containes all the nextflow working files. This can be removed after the pipeline is done since all important files are stored in the `results` directory. 
+Also a directory called `work` is also created. It containes all the nextflow working files. This can be removed after the pipeline is done since all important files are stored in the `results` directory.
 
 
-## Other parameters 
+## Other parameters
 There are other parameters that can be changed when executing TransPi.  
 
 `--outdir` = name of output directory. Example: `--outdir Sponges_150`  
