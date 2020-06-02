@@ -4,7 +4,7 @@ version=$3
 if [ "$version" == "v3" ];then
     #trinity
     for x in $name_tri;do
-        a=$( echo $x | sed 's/.Trinity.fa.bus.txt//g' | cut -f 3- -d "_" )
+        a=$( echo $x | sed 's/.Trinity.fa.bus.txt//g' )
         echo "'${a}','${a}','${a}','${a}'," >>tspec.txt
         b=$( cat $x | grep "(C)" -A5 | awk '{print $1}' | awk -v RS= -v OFS=, '{$1 = $1} 1' | cut -f 2,3,4,5 -d "," )
         echo "${b}," >>tnum.txt
@@ -13,7 +13,7 @@ if [ "$version" == "v3" ];then
     done
     #transpi
     for x in $name_transpi;do
-        a=$( echo $x | sed 's/.fa.bus.txt//g' | cut -f 3- -d "_" )
+        a=$( echo $x | sed 's/.fa.bus.txt//g' )
         echo "'${a}_TP','${a}_TP','${a}_TP','${a}_TP'" >>pspec.txt
         b=$( cat $x | grep "(C)" -A5 | awk '{print $1}' | awk -v RS= -v OFS=, '{$1 = $1} 1' | cut -f 2,3,4,5 -d "," )
         echo "${b}" >>pnum.txt
@@ -28,7 +28,7 @@ if [ "$version" == "v3" ];then
 elif [ "$version" == "v4" ];then
     #trinity
     for x in $name_tri;do
-        a=$( echo $x | sed 's/.Trinity.fa.bus.txt//g' | cut -f 4- -d "." )
+        a=$( echo $x | sed 's/.Trinity.fa.bus.txt//g' )
         echo "'${a}','${a}','${a}','${a}'," >>tspec.txt
         b=$( cat $x | grep "(C)" -A5 | awk '{print $1}' | awk -v RS= -v OFS=, '{$1 = $1} 1' | cut -f 2,3,4,5 -d "," )
         echo "${b}," >>tnum.txt
@@ -37,7 +37,7 @@ elif [ "$version" == "v4" ];then
     done
     #transpi
     for x in $name_transpi;do
-        a=$( echo $x | sed 's/.fa.bus.txt//g' | cut -f 4- -d "." )
+        a=$( echo $x | sed 's/.fa.bus.txt//g' )
         echo "'${a}_TP','${a}_TP','${a}_TP','${a}_TP'" >>pspec.txt
         b=$( cat $x | grep "(C)" -A5 | awk '{print $1}' | awk -v RS= -v OFS=, '{$1 = $1} 1' | cut -f 2,3,4,5 -d "," )
         echo "${b}" >>pnum.txt
