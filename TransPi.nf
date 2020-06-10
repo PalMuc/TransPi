@@ -175,6 +175,8 @@ def fullHelpMessage() {
     """.stripIndent()
 }
 
+def workDir = System.getProperty("user.dir");
+
 // Show help message
 if (params.help) {
     helpMessage()
@@ -188,11 +190,12 @@ log.info """\
         =========================================
         TransPi - Transcriptome Analysis Pipeline
         =========================================
-        Reads Length:	    ${params.max_rd_len}
-        Kmers:              ${params.k}
-        Working directory:  ${params.mypwd}
-        Uniprot DB:         ${params.uniprot}
-        Busco DB:           ${params.busco4db}
+        TransPi Installation:       ${params.mypwd}
+        Reads Length:               ${params.max_rd_len}
+        Kmers:                      ${params.k}
+        Working Directory:          ${workDir}
+        Uniprot DB:                 ${params.uniprot}
+        Busco DB:                   ${params.busco4db}
         """.stripIndent()
 
 if (params.readsTest) {
@@ -222,7 +225,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${params.mypwd}/${params.outdir}/fastqc", mode: "copy", overwrite: true
+            publishDir "${params.workDir}/${params.outdir}/fastqc", mode: "copy", overwrite: true
 
             input:
                 tuple sample_id, file(reads) from reads_qc_ch
@@ -245,7 +248,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${params.mypwd}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+            publishDir "${params.workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
 
             input:
                 tuple sample_id, file(reads) from reads_ch
@@ -327,7 +330,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_trinity_OAS
@@ -351,7 +354,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -395,7 +398,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -442,7 +445,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -482,7 +485,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -520,7 +523,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/evigene", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity_OAS
@@ -557,7 +560,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary_OAS
@@ -619,7 +622,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco3", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OAS
@@ -646,7 +649,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco3", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OAS
@@ -674,7 +677,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco4", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OAS
@@ -703,7 +706,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco4", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity_OAS
@@ -727,7 +730,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_summary_OAS
@@ -751,7 +754,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_summary_OAS
@@ -775,7 +778,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_comp_1_OAS
@@ -805,7 +808,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_comp_1_OAS
@@ -836,7 +839,7 @@ if (params.onlyAsm) {
     println("\n\tRunning only annotation analysis\n")
 
     Channel
-        .fromFilePairs("${params.mypwd}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
+        .fromFilePairs("${params.workDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
         .into{ annotation_ch_transdecoder_OA; assembly_ch_diamond_OA; assembly_ch_diamond_custom_OA; assembly_ch_rnammer_OA; assembly_ch_trinotate_OA }
 
     process custom_diamond_db_OA {
@@ -958,7 +961,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
@@ -1235,7 +1238,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/trinotate", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file(assembly) from assembly_ch_trinotate_OA
@@ -1352,7 +1355,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary_OA
@@ -1373,7 +1376,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.GO.terms.txt") from trinotate_summary_OA
@@ -1420,7 +1423,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch_OA
@@ -1461,7 +1464,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from custom_uniprot_ch_OA
@@ -1628,7 +1631,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${params.mypwd}/${params.outdir}/fastqc", mode: "copy", overwrite: true
+            publishDir "${params.workDir}/${params.outdir}/fastqc", mode: "copy", overwrite: true
 
             input:
                 tuple sample_id, file(reads) from reads_qc_ch
@@ -1651,7 +1654,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${params.mypwd}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+            publishDir "${params.workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
 
             input:
                 tuple sample_id, file(reads) from reads_ch
@@ -1733,7 +1736,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") from norm_reads_trinity
@@ -1757,7 +1760,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -1801,7 +1804,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -1848,7 +1851,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -1888,7 +1891,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
         input:
             val k from "${params.k}"
@@ -1926,7 +1929,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/evigene", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
@@ -1967,7 +1970,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco3", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3
@@ -1994,7 +1997,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco3", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
@@ -2022,7 +2025,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco4", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4
@@ -2051,7 +2054,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/busco4", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
@@ -2077,7 +2080,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_transdecoder
@@ -2355,7 +2358,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/trinotate", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate
@@ -2472,7 +2475,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary
@@ -2532,7 +2535,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_summary
@@ -2556,7 +2559,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_summary
@@ -2580,7 +2583,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary
@@ -2601,7 +2604,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.GO.terms.txt") from trinotate_summary
@@ -2648,7 +2651,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_comp_1
@@ -2678,7 +2681,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("{sample_id}.fa.bus.txt") from busco4_comp_1
@@ -2708,7 +2711,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch
@@ -2749,7 +2752,7 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
-        publishDir "${params.mypwd}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
+        publishDir "${params.workDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
 
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from custom_uniprot_ch
@@ -2801,7 +2804,7 @@ if (params.onlyAsm) {
         println("\n\tRunning Evidential Gene analysis only \n")
 
         Channel
-            .fromPath("${params.mypwd}/onlyEvi/*.{fa,fasta}", checkIfExists: true)
+            .fromPath("${params.workDir}/onlyEvi/*.{fa,fasta}", checkIfExists: true)
             .collect()
             .set{ evigene_ch_OE }
 
@@ -2811,7 +2814,7 @@ if (params.onlyAsm) {
 
             tag "${params.nameEvi}"
 
-            publishDir "${params.mypwd}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.combined.okay.fa"
+            publishDir "${params.workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.combined.okay.fa"
 
             input:
                 file(assembly) from evigene_ch_OE
@@ -2844,7 +2847,7 @@ if (params.onlyAsm) {
 
             tag "${params.nameEvi}"
 
-            publishDir "${params.mypwd}/${params.outdir}/busco3", mode: "copy", overwrite: true
+            publishDir "${params.workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
             input:
                 file("${params.nameEvi}.combined.okay.fa") from evigene_ch_busco3_OE
@@ -2873,7 +2876,7 @@ if (params.onlyAsm) {
 
             tag "${params.nameEvi}"
 
-            publishDir "${params.mypwd}/${params.outdir}/busco4", mode: "copy", overwrite: true
+            publishDir "${params.workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
             input:
                 file("${params.nameEvi}.combined.okay.fa") from evigene_ch_busco4_OE
@@ -2898,7 +2901,7 @@ if (params.onlyAsm) {
 
             tag "${params.nameEvi}"
 
-            publishDir "${params.mypwd}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${params.workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
             input:
                 file("*.${params.nameEvi}.fa.bus.txt") from busco4_summary_OE
@@ -2925,7 +2928,7 @@ if (params.onlyAsm) {
 
 process get_run_info {
 
-    publishDir "${params.mypwd}/${params.outdir}/", mode: "copy", overwrite: true
+    publishDir "${params.workDir}/${params.outdir}/", mode: "copy", overwrite: true
 
     output:
        file("versions.txt") into run_info
@@ -3039,7 +3042,7 @@ process get_run_info {
 workflow.onComplete {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
-        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.mypwd}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
+        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.workDir}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
 }
