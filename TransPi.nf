@@ -517,6 +517,9 @@ if (params.onlyAsm) {
             """
     }
 
+    all_assemblies = Channel.create()
+    assemblies_ch_trinity_OAS.mix( assemblies_ch_transabyss_OAS, assemblies_ch_spades_OAS, assemblies_ch_velvet_OAS, assemblies_ch_soap_OAS ).groupTuple(by:0).view().into(all_assemblies)
+
     process evigene_OAS {
 
         label 'med_mem'
@@ -526,11 +529,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity_OAS
-            tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap_OAS
-            tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet_OAS
-            tuple sample_id, file("${sample_id}.SPADES.fa") from assemblies_ch_spades_OAS
-            tuple sample_id, file("${sample_id}.TransABySS.fa") from assemblies_ch_transabyss_OAS
+            tuple sample_id, file(assemblies) from all_assemblies
 
         output:
             tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS )
@@ -542,7 +541,7 @@ if (params.onlyAsm) {
             """
             echo -e "\\n-- Starting EviGene --\\n"
 
-            cat *.fa >${sample_id}.combined.fa
+            cat ${assemblies} >${sample_id}.combined.fa
 
             $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
@@ -1923,6 +1922,9 @@ if (params.onlyAsm) {
             """
     }
 
+    all_assemblies = Channel.create()
+    assemblies_ch_trinity.mix( assemblies_ch_transabyss, assemblies_ch_spades, assemblies_ch_velvet, assemblies_ch_soap ).groupTuple(by:0).view().into(all_assemblies)
+
     process evigene {
 
         label 'med_mem'
@@ -1932,11 +1934,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.Trinity.fa") from assemblies_ch_trinity
-            tuple sample_id, file("${sample_id}.SOAP.fa") from assemblies_ch_soap
-            tuple sample_id, file("${sample_id}.Velvet.fa") from assemblies_ch_velvet
-            tuple sample_id, file("${sample_id}.SPADES.fa") from assemblies_ch_spades
-            tuple sample_id, file("${sample_id}.TransABySS.fa") from assemblies_ch_transabyss
+            tuple sample_id, file(assemblies) from all_assemblies
 
         output:
             tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
@@ -1948,7 +1946,7 @@ if (params.onlyAsm) {
             """
             echo -e "\\n-- Starting EviGene --\\n"
 
-            cat *.fa >${sample_id}.combined.fa
+            cat ${assemblies} >${sample_id}.combined.fa
 
             $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
