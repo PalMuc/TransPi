@@ -518,7 +518,7 @@ if (params.onlyAsm) {
     }
 
     all_assemblies = Channel.create()
-    assemblies_ch_trinity_OAS.mix( assemblies_ch_transabyss_OAS, assemblies_ch_spades_OAS, assemblies_ch_velvet_OAS, assemblies_ch_soap_OAS ).groupTuple(by:0).view().into(all_assemblies)
+    assemblies_ch_trinity_OAS.mix( assemblies_ch_transabyss_OAS, assemblies_ch_spades_OAS, assemblies_ch_velvet_OAS, assemblies_ch_soap_OAS ).groupTuple(by:0,size:5).into(all_assemblies)
 
     process evigene_OAS {
 
@@ -627,18 +627,18 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OAS
 
         output:
-            tuple sample_id, file("run_${sample_id}.fa.bus") into busco3_ch
-            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco3_summary_OAS, busco3_comp_1_OAS )
+            tuple sample_id, file("run_${sample_id}.TransPi.bus") into busco3_ch
+            tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco3_summary_OAS, busco3_comp_1_OAS )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
+            cp run_${sample_id}.TransPi.bus/short_summary_${sample_id}.TransPi.bus.txt .
             """
     }
 
@@ -654,17 +654,17 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OAS
 
         output:
-            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum_OAS, busco3_comp_2_OAS )
+            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco3_ch_trinity_sum_OAS, busco3_comp_2_OAS )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.Trinity.fa.bus/short_summary_${sample_id}.Trinity.fa.bus.txt .
+            cp run_${sample_id}.Trinity.bus/short_summary_${sample_id}.Trinity.bus.txt .
             """
     }
 
@@ -682,18 +682,18 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OAS
 
         output:
-            tuple sample_id, file("${sample_id}.fa.bus") into busco4_ch
-            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco4_summary_OAS, busco4_comp_1_OAS )
+            tuple sample_id, file("${sample_id}.TransPi.bus") into busco4_ch
+            tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco4_summary_OAS, busco4_comp_1_OAS )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.fa.bus/short_summary.*.${sample_id}.fa.bus.txt .
+            cp ${sample_id}.TransPi.bus/short_summary.*.${sample_id}.TransPi.bus.txt .
             """
     }
 
@@ -711,19 +711,22 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity_OAS
 
         output:
-            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco4_ch_trinity_sum_OAS, busco4_comp_2_OAS )
+            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco4_ch_trinity_sum_OAS, busco4_comp_2_OAS )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.Trinity.fa.bus/short_summary.*.${sample_id}.Trinity.fa.bus.txt .
+            cp ${sample_id}.Trinity.bus/short_summary.*.${sample_id}.Trinity.bus.txt .
             """
     }
+
+    busco3_sum_OAS = Channel.create()
+    busco3_summary_OAS.mix(busco3_ch_trinity_sum_OAS).groupTuple(by:0,size:2).into(busco3_sum_OAS)
 
     process summary_busco3_individual_OAS {
 
@@ -732,22 +735,26 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_summary_OAS
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum_OAS
+            tuple sample_id, file(files) from busco3_sum_OAS
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3_OAS
 
         script:
             """
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
-            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat \${trans} >>${sample_id}.sum_busco3.txt
             echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
-            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat \${tri} >>${sample_id}.sum_busco3.txt
             """
     }
+
+    busco4_sum_OAS = Channel.create()
+    busco4_summary_OAS.mix(busco4_ch_trinity_sum_OAS).groupTuple(by:0,size:2).into(busco4_sum_OAS)
 
     process summary_busco4_individual_OAS {
 
@@ -756,22 +763,26 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_summary_OAS
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum_OAS
+            tuple sample_id, file(files) from busco4_sum_OAS
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco4.txt") into final_sum_2v4_OAS
 
         script:
             """
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
-            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat \${trans} >>${sample_id}.sum_busco4.txt
             echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
-            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat \${tri} >>${sample_id}.sum_busco4.txt
             """
     }
+
+    busco3_comp_OAS = Channel.create()
+    busco3_comp_1_OAS.mix(busco3_comp_2_OAS).groupTuple(by:0,size:2).into(busco3_comp_OAS)
 
     process get_busco3_comparison_OAS {
 
@@ -780,8 +791,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_comp_1_OAS
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_comp_2_OAS
+            tuple sample_id, file(files) from busco3_comp_OAS
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig_OAS
@@ -789,7 +799,9 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh ${sample_id}.Trinity.fa.bus.txt ${sample_id}.fa.bus.txt v3
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            bash get_busco_val.sh \${tri} \${trans} v3
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -803,6 +815,9 @@ if (params.onlyAsm) {
             """
     }
 
+    busco4_comp_OAS = Channel.create()
+    busco4_comp_1_OAS.mix(busco4_comp_2_OAS).groupTuple(by:0,size:2).into(busco4_comp_OAS)
+
     process get_busco4_comparison_OAS {
 
         tag "${sample_id}"
@@ -810,8 +825,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_comp_1_OAS
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco4_comp_2_OAS
+            tuple sample_id, file(files) from busco4_comp_OAS
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
@@ -819,7 +833,9 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh ${sample_id}.Trinity.fa.bus.txt ${sample_id}.fa.bus.txt v4
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            bash get_busco_val.sh \${tri} \${trans} v4
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -838,8 +854,8 @@ if (params.onlyAsm) {
     println("\n\tRunning only annotation analysis\n")
 
     Channel
-        .fromFilePairs("${params.workDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
-        .into{ annotation_ch_transdecoder_OA; assembly_ch_diamond_OA; assembly_ch_diamond_custom_OA; assembly_ch_rnammer_OA; assembly_ch_trinotate_OA }
+        .fromFilePairs("${workDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
+        .into{ annotation_ch_transdecoder_OA; assembly_ch_rnammer_OA }
 
     process custom_diamond_db_OA {
         script:
@@ -966,13 +982,17 @@ if (params.onlyAsm) {
             tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
 
         output:
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_diamond_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA, transdecoder_ch_trinotate_OA, transdecoder_ch_diamond_custom_OA )
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
+            tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
+            tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
             tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
         script:
         if (params.shortTransdecoder) {
             """
+            cp ${assembly} ${sample_id}_asssembly.fasta
+
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
             TransDecoder.LongOrfs -t ${assembly}
@@ -1006,6 +1026,8 @@ if (params.onlyAsm) {
             """
         } else {
             """
+            cp ${assembly} ${sample_id}_asssembly.fasta
+
             unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
@@ -1076,11 +1098,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file(assembly) from assembly_ch_diamond_OA
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_diamond_OA
+            tuple sample_id, file(transdecoder), file(assembly) from transdecoder_ch_diamond_OA
 
         output:
-            tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") into trinotate_ch_diamond_OA
+            tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6") into trinotate_ch_diamondX_OA
+            tuple sample_id, file("${sample_id}.diamond_blastp.outfmt6") into trinotate_ch_diamondP_OA
 
         script:
             """
@@ -1096,7 +1118,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
-            diamond blastp -d \$swissdb -q ${sample_id}.*.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+            diamond blastp -d \$swissdb -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
             echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
@@ -1109,11 +1131,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file(assembly) from assembly_ch_diamond_custom_OA
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_diamond_custom_OA
+            tuple sample_id, file(transdecoder), file(assembly) from transdecoder_ch_diamond_custom_OA
 
         output:
-            tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") into trinotate_ch_diamond_custom_OA
+            tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6") into trinotate_ch_diamondX_custom_OA
+            tuple sample_id, file("${sample_id}.custom.diamond_blastp.outfmt6") into trinotate_ch_diamondP_custom_OA
 
         script:
             """
@@ -1129,7 +1151,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
-            diamond blastp -d \$unidb -q ${sample_id}.*.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+            diamond blastp -d \$unidb -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
 
             echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
@@ -1158,78 +1180,140 @@ if (params.onlyAsm) {
             """
     }
 
-    process signalP_trinotate_OA {
+    if (params.signalP) {
 
-        label 'low_cpus'
+        process signalP_trinotate_OA {
 
-        tag "${sample_id}"
+            label 'low_cpus'
 
-        input:
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp_OA
+            tag "${sample_id}"
 
-        output:
-            tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp_OA
+            input:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp_OA
 
-        script:
-            """
-            #signalP to predict signal peptides
+            output:
+                tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp_OA
 
-            echo -e "\\n-- Starting with SignalP --\\n"
+            script:
+                """
+                #signalP to predict signal peptides
 
-            ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.*.transdecoder.pep
+                echo -e "\\n-- Starting with SignalP --\\n"
 
-            echo -e "\\n-- Done with SignalP --\\n"
-            """
+                ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.*.transdecoder.pep
+
+                echo -e "\\n-- Done with SignalP --\\n"
+                """
+        }
+    } else {
+
+        process skip_signalP_OA {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp_OA
+
+            output:
+                tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp_OA
+
+            script:
+                """
+                touch ${sample_id}.signalp.out
+                """
+        }
     }
 
-    process tmhmm_trinotate_OA {
+    if (params.tmhmm) {
 
-        label 'low_cpus'
+        process tmhmm_trinotate_OA {
 
-        tag "${sample_id}"
+            label 'low_cpus'
 
-        input:
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm_OA
+            tag "${sample_id}"
 
-        output:
-            tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm_OA
+            input:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm_OA
 
-        script:
-            """
-            #tmHMM to predict transmembrane regions
+            output:
+                tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm_OA
 
-            echo -e "\\n-- Starting with tmHMM --\\n"
+            script:
+                """
+                #tmHMM to predict transmembrane regions
 
-            ${params.tmhmm} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
+                echo -e "\\n-- Starting with tmHMM --\\n"
 
-            echo -e "\\n-- Done with tmHMM --\\n"
-            """
+                ${params.tmh} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
+
+                echo -e "\\n-- Done with tmHMM --\\n"
+                """
+        }
+    } else {
+
+        process skip_tmhmm_OA {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm_OA
+
+            output:
+                tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm_OA
+
+            script:
+                """
+                touch ${sample_id}.tmhmm.out
+                """
+        }
     }
 
-    process rnammer_trinotate_OA {
+    if (params.rnammer) {
 
-        label 'low_cpus'
+        process rnammer_trinotate_OA {
 
-        tag "${sample_id}"
+            label 'low_cpus'
 
-        input:
-            tuple sample_id, file(assembly) from assembly_ch_rnammer_OA
+            tag "${sample_id}"
 
-        output:
-            tuple sample_id, file("${assembly}.rnammer.gff") into trinotate_ch_rnammer_OA
+            input:
+                tuple sample_id, file(assembly) from assembly_ch_rnammer_OA
 
-        script:
-            """
-            set +e
-            #RNAMMER to identify rRNA transcripts
+            output:
+                tuple sample_id, file("*.rnammer.gff") into trinotate_ch_rnammer_OA
 
-            echo -e "\\n-- Starting with RNAMMER --\\n"
+            script:
+                """
+                set +e
+                #RNAMMER to identify rRNA transcripts
 
-            RnammerTranscriptome.pl --transcriptome ${assembly} --path_to_rnammer ${params.rnam}
+                echo -e "\\n-- Starting with RNAMMER --\\n"
 
-            echo -e "\\n-- Done with RNAMMER --\\n"
-            """
+                RnammerTranscriptome.pl --transcriptome ${assembly} --path_to_rnammer ${params.rnam}
+
+                mv ${assembly}*rnammer.gff ${sample_id}.rnammer.gff
+
+                echo -e "\\n-- Done with RNAMMER --\\n"
+                """
+        }
+    } else {
+
+        process skip_rnammer_OA {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(assembly) from assembly_ch_rnammer_OA
+
+            output:
+                tuple sample_id, file("${sample_id}.rnammer.gff") into trinotate_ch_rnammer_OA
+
+            script:
+                """
+                touch ${sample_id}.rnammer.gff
+                """
+        }
     }
+
+    trinotate_ch = Channel.create()
+    transdecoder_ch_trinotate_OA.mix( transdecoder_assembly_ch_trinotate_OA,trinotate_ch_diamondX_OA,trinotate_ch_diamondP_OA,trinotate_ch_diamondX_custom_OA,trinotate_ch_diamondP_custom_OA,trinotate_ch_hmmer_OA,trinotate_ch_signalp_OA,trinotate_ch_tmhmm_OA,trinotate_ch_rnammer_OA ).groupTuple(by:0,size:10).into(trinotate_ch)
 
     process trinotate_OA {
 
@@ -1240,14 +1324,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file(assembly) from assembly_ch_trinotate_OA
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_trinotate_OA
-            tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") from trinotate_ch_diamond_OA
-            tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") from trinotate_ch_diamond_custom_OA
-            tuple sample_id, file("${sample_id}.TrinotatePFAM.out") from trinotate_ch_hmmer_OA
-            tuple sample_id, file("${sample_id}.signalp.out") from trinotate_ch_signalp_OA
-            tuple sample_id, file("${sample_id}.tmhmm.out") from trinotate_ch_tmhmm_OA
-            tuple sample_id, file("${assembly}.rnammer.gff") from trinotate_ch_rnammer_OA
+            tuple sample_id, file(files) from trinotate_ch
 
         output:
             tuple sample_id, file("${sample_id}.GO.terms.txt") into trinotate_summary_OA
@@ -1256,11 +1333,26 @@ if (params.onlyAsm) {
 
         script:
             """
+            for x in ${files};do
+                echo \${x} >>.vars.txt
+            done
+
+            assembly=\$( cat .vars.txt | grep "${sample_id}_asssembly.fasta" )
+            transdecoder=\$( cat .vars.txt | grep "${sample_id}.fasta.transdecoder.pep" )
+            diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
+            diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
+            custom_blastx=\$( cat .vars.txt | grep "${sample_id}.custom.diamond_blastx.outfmt6" )
+            custom_blastp=\$( cat .vars.txt | grep "${sample_id}.custom.diamond_blastp.outfmt6" )
+            pfam=\$( cat .vars.txt | grep "${sample_id}.TrinotatePFAM.out" )
+            signalp=\$( cat .vars.txt | grep "${sample_id}.signalp.out" )
+            tmhmm=\$( cat .vars.txt | grep "${sample_id}.tmhmm.out" )
+            rnammer=\$( cat .vars.txt | grep "${sample_id}.rnammer.gff" )
+
             #Generate gene_trans_map
             #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
-            cat ${assembly} | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
+            cat \${assembly} | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
 
-            paste a.txt a.txt >${assembly}.gene_trans_map
+            paste a.txt a.txt >\${assembly}.gene_trans_map
 
             #Get Trinotate.sqlite from folder (original)
             cp ${params.Tsql} .
@@ -1268,44 +1360,44 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- Running Trinotate --\\n"
 
-            Trinotate \$sqlname init --gene_trans_map ${assembly}.gene_trans_map --transcript_fasta ${assembly} --transdecoder_pep ${sample_id}.*.transdecoder.pep
+            Trinotate \$sqlname init --gene_trans_map \${assembly}.gene_trans_map --transcript_fasta \${assembly} --transdecoder_pep \${transdecoder}
 
             echo -e "\\n-- Ending run of Trinotate --\\n"
 
             echo -e "\\n-- Loading hits and predictions to sqlite database... --\\n"
 
             #Load protein hits
-            Trinotate \$sqlname LOAD_swissprot_blastp ${sample_id}.diamond_blastp.outfmt6
+            Trinotate \$sqlname LOAD_swissprot_blastp \${diamond_blastp}
 
             #Load transcript hits
-            Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
+            Trinotate \$sqlname LOAD_swissprot_blastx \${diamond_blastx}
 
             #Load custom protein hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${params.uniname}
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 \${custom_blastp} --prog blastp --dbtype ${params.uniname}
 
             #Load custom transcript hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${params.uniname}
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 \${custom_blastx} --prog blastx --dbtype ${params.uniname}
 
             #Load Pfam domain entries
-            Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
+            Trinotate \$sqlname LOAD_pfam \${pfam}
 
             #Load transmembrane domains
-            if [ -s ${sample_id}.tmhmm.out ];then
-                Trinotate \$sqlname LOAD_tmhmm ${sample_id}.tmhmm.out
+            if [ -s \${tmhmm} ];then
+                Trinotate \$sqlname LOAD_tmhmm \${tmhmm}
             else
                 echo "No transmembrane domains (tmhmm)"
             fi
 
             #Load signal peptide predictions
-            if [ -s ${sample_id}.signalp.out ];then
-                Trinotate \$sqlname LOAD_signalp ${sample_id}.signalp.out
+            if [ -s \${signalp} ];then
+                Trinotate \$sqlname LOAD_signalp \${signalp}
             else
                 echo "No Signal-P"
             fi
 
             #Load rnammer results
-            if [ -s ${sample_id}.combined.okay.fa.rnammer.gff ];then
-                Trinotate \$sqlname LOAD_rnammer ${assembly}.rnammer.gff
+            if [ -s \${rnammer} ];then
+                Trinotate \$sqlname LOAD_rnammer \${rnammer}
             else
                 echo "No rnammer results"
             fi
@@ -1330,7 +1422,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- Creating KEGG file from XLS... --\\n"
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,14 | grep "KEGG" | tr "\\`" ";" | grep "KO:K" | sed 's/\\tKEGG/\\t#KEGG/g' | sed 's/KO:/KO:#/g' | cut -f 1,3 -d "#" | tr -d "#" | sed 's/;KO://g' >${sample_id}.KEGG.terms.txt
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 1,14 | grep "KEGG" | tr "\\`" ";" | grep "KO:K" | sed 's/\\tKEGG/\\t#KEGG/g' | sed 's/KO:/KO:#/g' | cut -f 1,3 -d "#" | tr -d "#" >${sample_id}.KEGG.terms.txt
 
             echo -e "\\n-- Done with the KEGG --\\n"
 
@@ -1437,7 +1529,7 @@ if (params.onlyAsm) {
             cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
 
             while read line;do
-                echo ${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
+                echo \${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
             done<all_GOs.txt
 
             cat final_GOs.txt | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
@@ -1923,7 +2015,7 @@ if (params.onlyAsm) {
     }
 
     all_assemblies = Channel.create()
-    assemblies_ch_trinity.mix( assemblies_ch_transabyss, assemblies_ch_spades, assemblies_ch_velvet, assemblies_ch_soap ).groupTuple(by:0).view().into(all_assemblies)
+    assemblies_ch_trinity.mix( assemblies_ch_transabyss, assemblies_ch_spades, assemblies_ch_velvet, assemblies_ch_soap ).groupTuple(by:0,size:5).into(all_assemblies)
 
     process evigene {
 
@@ -1974,18 +2066,18 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3
 
         output:
-            tuple sample_id, file("run_${sample_id}.fa.bus") into busco3_ch
-            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco3_summary, busco3_comp_1 )
+            tuple sample_id, file("run_${sample_id}.TransPi.bus") into busco3_ch
+            tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco3_summary, busco3_comp_1 )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TrasnPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.fa.bus/short_summary_${sample_id}.fa.bus.txt .
+            cp run_${sample_id}.TransPi.bus/short_summary_${sample_id}.TransPi.bus.txt .
             """
     }
 
@@ -2001,17 +2093,17 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
         output:
-            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.Trinity.fa.bus/short_summary_${sample_id}.Trinity.fa.bus.txt .
+            cp run_${sample_id}.Trinity.bus/short_summary_${sample_id}.Trinity.bus.txt .
             """
     }
 
@@ -2029,18 +2121,18 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4
 
         output:
-            tuple sample_id, file("${sample_id}.fa.bus") into busco4_ch
-            tuple sample_id, file("*${sample_id}.fa.bus.txt") into ( busco4_summary, busco4_comp_1 )
+            tuple sample_id, file("${sample_id}.TransPi.bus") into busco4_ch
+            tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco4_summary, busco4_comp_1 )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.fa.bus/short_summary.*.${sample_id}.fa.bus.txt .
+            cp ${sample_id}.TransPi.bus/short_summary.*.${sample_id}.TransPi.bus.txt .
             """
     }
 
@@ -2058,17 +2150,17 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
 
         output:
-            tuple sample_id, file("*${sample_id}.Trinity.fa.bus.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
+            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.Trinity.fa.bus/short_summary.*.${sample_id}.Trinity.fa.bus.txt .
+            cp ${sample_id}.Trinity.bus/short_summary.*.${sample_id}.Trinity.bus.txt .
             """
     }
 
@@ -2084,7 +2176,8 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_transdecoder
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate, transdecoder_ch_diamond_custom )
+            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
+            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
             tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
@@ -2188,6 +2281,9 @@ if (params.onlyAsm) {
         }
     }
 
+    diamond_trinotate = Channel.create()
+    evigene_ch_diamond.mix(transdecoder_ch_diamond).groupTuple(by:0,size:2).into(diamond_trinotate)
+
     process swiss_diamond_trinotate {
 
         label 'big_cpus'
@@ -2195,31 +2291,37 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_diamond
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_diamond
+            tuple sample_id, file(files) from diamond_trinotate
 
         output:
-            tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") into trinotate_ch_diamond
+            tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6") into trinotate_ch_diamondX
+            tuple sample_id, file("${sample_id}.diamond_blastp.outfmt6") into trinotate_ch_diamondP
 
         script:
             """
             swissdb=${params.mypwd}/DBs/diamonddb_swiss/uniprot_sprot.pep
 
+            assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
+            transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
+
             #Diamond (BLAST) Homologies
 
             echo -e "\\n-- Starting with Diamond (blastx) --\\n"
 
-            diamond blastx -d \$swissdb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+            diamond blastx -d \$swissdb -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
 
             echo -e "\\n-- Done with Diamond (blastx) --\\n"
 
             echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
-            diamond blastp -d \$swissdb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+            diamond blastp -d \$swissdb -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
 
             echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
     }
+
+    custom_diamond = Channel.create()
+    evigene_ch_trinotate_custom.mix(transdecoder_ch_diamond_custom).groupTuple(by:0,size:2).into(custom_diamond)
 
     process custom_diamond_trinotate {
 
@@ -2228,27 +2330,30 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate_custom
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_diamond_custom
+            tuple sample_id, file(files) from custom_diamond
 
         output:
-            tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") into trinotate_ch_diamond_custom
+            tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6") into trinotate_ch_diamondX_custom
+            tuple sample_id, file("${sample_id}.custom.diamond_blastp.outfmt6") into trinotate_ch_diamondP_custom
 
         script:
             """
             unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
 
+            assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
+            transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
+
             #Diamond (BLAST) Homologies
 
             echo -e "\\n-- Starting with Diamond (blastx) --\\n"
 
-            diamond blastx -d \$unidb -q ${sample_id}.combined.okay.fa -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+            diamond blastx -d \$unidb -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
 
             echo -e "\\n-- Done with Diamond (blastx) --\\n"
 
             echo -e "\\n-- Starting with Diamond (blastp) --\\n"
 
-            diamond blastp -d \$unidb -q ${sample_id}.combined.okay.fa.transdecoder.pep -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+            diamond blastp -d \$unidb -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
 
             echo -e "\\n-- Done with Diamond (blastp)  --\\n"
             """
@@ -2277,78 +2382,138 @@ if (params.onlyAsm) {
             """
     }
 
-    process signalP_trinotate {
+    if (params.signalP) {
 
-        label 'low_cpus'
+        process signalP_trinotate {
 
-        tag "${sample_id}"
+            label 'low_cpus'
 
-        input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_signalp
+            tag "${sample_id}"
 
-        output:
-            tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp
+            input:
+                tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_signalp
 
-        script:
-            """
-            #signalP to predict signal peptides
+            output:
+                tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp
 
-            echo -e "\\n-- Starting with SignalP --\\n"
+            script:
+                """
+                #signalP to predict signal peptides
 
-            ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.combined.okay.fa.transdecoder.pep
+                echo -e "\\n-- Starting with SignalP --\\n"
 
-            echo -e "\\n-- Done with SignalP --\\n"
-            """
+                ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.combined.okay.fa.transdecoder.pep
+
+                echo -e "\\n-- Done with SignalP --\\n"
+                """
+        }
+    } else {
+
+        process skip_signalP {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp
+
+            output:
+                tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp
+
+            script:
+                """
+                touch ${sample_id}.signalp.out
+                """
+        }
     }
 
-    process tmhmm_trinotate {
+    if (params.tmhmm) {
 
-        label 'low_cpus'
+        process tmhmm_trinotate {
 
-        tag "${sample_id}"
+            label 'low_cpus'
 
-        input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_tmhmm
+            tag "${sample_id}"
 
-        output:
-            tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm
+            input:
+                tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_tmhmm
 
-        script:
-            """
-            #tmHMM to predict transmembrane regions
+            output:
+                tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm
 
-            echo -e "\\n-- Starting with tmHMM --\\n"
+            script:
+                """
+                #tmHMM to predict transmembrane regions
 
-            ${params.tmhmm} --short < ${sample_id}.combined.okay.fa.transdecoder.pep >${sample_id}.tmhmm.out
+                echo -e "\\n-- Starting with tmHMM --\\n"
 
-            echo -e "\\n-- Done with tmHMM --\\n"
-            """
+                ${params.tmhmm} --short < ${sample_id}.combined.okay.fa.transdecoder.pep >${sample_id}.tmhmm.out
+
+                echo -e "\\n-- Done with tmHMM --\\n"
+                """
+        }
+    } else {
+
+        process skip_tmhmm {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm
+
+            output:
+                tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm
+
+            script:
+                """
+                touch ${sample_id}.tmhmm.out
+                """
+        }
     }
 
-    process rnammer_trinotate {
+    if (params.rnammer) {
 
-        label 'low_cpus'
+        process rnammer_trinotate {
 
-        tag "${sample_id}"
+            label 'low_cpus'
 
-        input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_rnammer
+            tag "${sample_id}"
 
-        output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") into trinotate_ch_rnammer
+            input:
+                tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_rnammer
 
-        script:
-            """
-            set +e
-            #RNAMMER to identify rRNA transcripts
+            output:
+                tuple sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") into trinotate_ch_rnammer
 
-            echo -e "\\n-- Starting with RNAMMER --\\n"
+            script:
+                """
+                set +e
+                #RNAMMER to identify rRNA transcripts
 
-            RnammerTranscriptome.pl --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
+                echo -e "\\n-- Starting with RNAMMER --\\n"
 
-            echo -e "\\n-- Done with RNAMMER --\\n"
-            """
+                RnammerTranscriptome.pl --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
+
+                echo -e "\\n-- Done with RNAMMER --\\n"
+                """
+        }
+    } else {
+
+        process skip_rnammer {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(assembly) from evigene_ch_rnammer
+
+            output:
+                tuple sample_id, file("${sample_id}.rnammer.gff") into trinotate_ch_rnammer
+
+            script:
+                """
+                touch ${sample_id}.rnammer.gff
+                """
+        }
     }
+
+    trinotate_ch = Channel.create()
+    evigene_ch_trinotate.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).view().into(trinotate_ch)
 
     process trinotate {
 
@@ -2359,14 +2524,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_trinotate
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_trinotate
-            tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6"), file("${sample_id}.diamond_blastp.outfmt6") from trinotate_ch_diamond
-            tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6"), file("${sample_id}.custom.diamond_blastp.outfmt6") from trinotate_ch_diamond_custom
-            tuple sample_id, file("${sample_id}.TrinotatePFAM.out") from trinotate_ch_hmmer
-            tuple sample_id, file("${sample_id}.signalp.out") from trinotate_ch_signalp
-            tuple sample_id, file("${sample_id}.tmhmm.out") from trinotate_ch_tmhmm
-            tuple sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") from trinotate_ch_rnammer
+            tuple sample_id, file(files) from trinotate_ch
 
         output:
             tuple sample_id, file("${sample_id}.GO.terms.txt") into trinotate_summary
@@ -2375,11 +2533,26 @@ if (params.onlyAsm) {
 
         script:
             """
+            for x in `echo ${files}`;do
+                echo \${x} >>.vars.txt
+            done
+
+            assembly=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
+            transdecoder=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
+            diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
+            diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
+            custom_blastx=\$( cat .vars.txt | grep "${sample_id}.custom.diamond_blastx.outfmt6" )
+            custom_blastp=\$( cat .vars.txt | grep "${sample_id}.custom.diamond_blastp.outfmt6" )
+            pfam=\$( cat .vars.txt | grep "${sample_id}.TrinotatePFAM.out" )
+            signalp=\$( cat .vars.txt | grep "${sample_id}.signalp.out" )
+            tmhmm=\$( cat .vars.txt | grep "${sample_id}.tmhmm.out" )
+            rnammer=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa.rnammer.gff" )
+
             #Generate gene_trans_map
             #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
-            cat ${sample_id}.combined.okay.fa | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
+            cat \${assembly} | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
 
-            paste a.txt a.txt >${sample_id}.combined.okay.fa.gene_trans_map
+            paste a.txt a.txt >\${assembly}.gene_trans_map
 
             #Get Trinotate.sqlite from folder (original)
             cp ${params.Tsql} .
@@ -2387,44 +2560,44 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- Running Trinotate --\\n"
 
-            Trinotate \$sqlname init --gene_trans_map ${sample_id}.combined.okay.fa.gene_trans_map --transcript_fasta ${sample_id}.combined.okay.fa --transdecoder_pep ${sample_id}.combined.okay.fa.transdecoder.pep
+            Trinotate \$sqlname init --gene_trans_map \${assembly}.gene_trans_map --transcript_fasta \${assembly} --transdecoder_pep \${transdecoder}
 
             echo -e "\\n-- Ending run of Trinotate --\\n"
 
             echo -e "\\n-- Loading hits and predictions to sqlite database... --\\n"
 
             #Load protein hits
-            Trinotate \$sqlname LOAD_swissprot_blastp ${sample_id}.diamond_blastp.outfmt6
+            Trinotate \$sqlname LOAD_swissprot_blastp \${diamond_blastp}
 
             #Load transcript hits
-            Trinotate \$sqlname LOAD_swissprot_blastx ${sample_id}.diamond_blastx.outfmt6
+            Trinotate \$sqlname LOAD_swissprot_blastx \${diamond_blastx}
 
             #Load custom protein hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastp.outfmt6 --prog blastp --dbtype ${params.uniname}
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 \${custom_blastp} --prog blastp --dbtype ${params.uniname}
 
             #Load custom transcript hits
-            Trinotate \$sqlname LOAD_custom_blast --outfmt6 ${sample_id}.custom.diamond_blastx.outfmt6 --prog blastx --dbtype ${params.uniname}
+            Trinotate \$sqlname LOAD_custom_blast --outfmt6 \${custom_blastx} --prog blastx --dbtype ${params.uniname}
 
             #Load Pfam domain entries
-            Trinotate \$sqlname LOAD_pfam ${sample_id}.TrinotatePFAM.out
+            Trinotate \$sqlname LOAD_pfam \${pfam}
 
             #Load transmembrane domains
-            if [ -s ${sample_id}.tmhmm.out ];then
-                Trinotate \$sqlname LOAD_tmhmm ${sample_id}.tmhmm.out
+            if [ -s \${tmhmm} ];then
+                Trinotate \$sqlname LOAD_tmhmm \${tmhmm}
             else
                 echo "No transmembrane domains (tmhmm)"
             fi
 
             #Load signal peptide predictions
-            if [ -s ${sample_id}.signalp.out ];then
-                Trinotate \$sqlname LOAD_signalp ${sample_id}.signalp.out
+            if [ -s \${signalp} ];then
+                Trinotate \$sqlname LOAD_signalp \${signalp}
             else
                 echo "No Signal-P"
             fi
 
             #Load rnammer results
-            if [ -s ${sample_id}.combined.okay.fa.rnammer.gff ];then
-                Trinotate \$sqlname LOAD_rnammer ${sample_id}.combined.okay.fa.rnammer.gff
+            if [ -s \${rnammer} ];then
+                Trinotate \$sqlname LOAD_rnammer \${rnammer}
             else
                 echo "No rnammer results"
             fi
@@ -2529,6 +2702,9 @@ if (params.onlyAsm) {
             """
     }
 
+    busco3_sum = Channel.create()
+    busco3_summary.mix(busco3_ch_trinity_sum).groupTuple(by:0,size:2).into(busco3_sum)
+
     process summary_busco3_individual {
 
         tag "${sample_id}"
@@ -2536,22 +2712,26 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_summary
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_ch_trinity_sum
+            tuple sample_id, file(files) from busco3_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3
 
         script:
             """
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V3 \\n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
-            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat \${trans} >>${sample_id}.sum_busco3.txt
             echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
-            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco3.txt
+            cat \${tri} >>${sample_id}.sum_busco3.txt
             """
     }
+
+    busco4_sum = Channel.create()
+    busco4_summary.mix(busco4_ch_trinity_sum).groupTuple(by:0,size:2).into(busco4_sum)
 
     process summary_busco4_individual {
 
@@ -2560,20 +2740,21 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco4_summary
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco4_ch_trinity_sum
+            tuple sample_id, file(files) from busco4_sum
 
         output:
             tuple sample_id, file("${sample_id}.sum_busco4.txt") into final_sum_2v4
 
         script:
             """
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V4 \\n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
-            cat ${sample_id}.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat \${trans} >>${sample_id}.sum_busco4.txt
             echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
-            cat ${sample_id}.Trinity.fa.bus.txt >>${sample_id}.sum_busco4.txt
+            cat \${tri} >>${sample_id}.sum_busco4.txt
             """
     }
 
@@ -2645,6 +2826,9 @@ if (params.onlyAsm) {
             """
     }
 
+    busco3_comp = Channel.create()
+    busco3_comp_1.mix(busco3_comp_2).groupTuple(by:0,size:2).into(busco3_comp)
+
     process get_busco3_comparison {
 
         tag "${sample_id}"
@@ -2652,8 +2836,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.fa.bus.txt") from busco3_comp_1
-            tuple sample_id, file("${sample_id}.Trinity.fa.bus.txt") from busco3_comp_2
+            tuple sample_id, file(files) from busco3_comp
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig
@@ -2661,7 +2844,9 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh ${sample_id}.Trinity.fa.bus.txt ${sample_id}.fa.bus.txt v3
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            bash get_busco_val.sh \${tri} \${trans} v3
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -2675,6 +2860,9 @@ if (params.onlyAsm) {
             """
     }
 
+    busco4_comp = Channel.create()
+    busco4_comp_1.mix(busco4_comp_2).groupTuple(by:0,size:2).into(busco4_comp)
+
     process get_busco4_comparison {
 
         tag "${sample_id}"
@@ -2682,8 +2870,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("{sample_id}.fa.bus.txt") from busco4_comp_1
-            tuple sample_id, file("{sample_id}.Trinity.fa.bus.txt") from busco4_comp_2
+            tuple sample_id, file(files) from busco4_comp
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig
@@ -2691,7 +2878,9 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            bash get_busco_val.sh {sample_id}.Trinity.fa.bus.txt {sample_id}.fa.bus.txt v4
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            bash get_busco_val.sh \${tri} \${trans} v4
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -2724,7 +2913,7 @@ if (params.onlyAsm) {
             cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
 
             while read line;do
-                echo ${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
+                echo \${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
             done<all_GOs.txt
 
             cat final_GOs.txt | tr [a-z] [A-Z] | grep "CELLULAR_COMPONENT" | cut -f 3 -d "^" | sort | uniq -c | sort -nr | head -n 15 | sed 's/^ *//g' \
@@ -2762,10 +2951,10 @@ if (params.onlyAsm) {
         script:
             """
             #get custom blast hits
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 8 | grep [A-Z] | grep "|" | tr "\\`" "\n" | \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 8 | grep [A-Z] | grep "|" | tr "\\`" "\\n" | \
                 cut -f 1 -d "^" | cut -f 3 -d "|" | cut -f 2 -d "_" >a.txt
 
-            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 9 | grep [A-Z] | grep "|" | tr "\\`" "\n" | \
+            cat ${sample_id}.trinotate_annotation_report.xls | cut -f 9 | grep [A-Z] | grep "|" | tr "\\`" "\\n" | \
                 cut -f 1 -d "^" | cut -f 3 -d "|" | cut -f 2 -d "_" >b.txt
 
             cat a.txt b.txt | sort | uniq -c | sort -nr | head -n 20 | awk 'OFS="," {print \$1,\$2}' >${sample_id}_custom_uniprot_hits.txt
@@ -2794,130 +2983,129 @@ if (params.onlyAsm) {
 
 } else if (params.onlyEvi) {
 
-        if (params.nameEvi == "") {
-            println("\n\t\033[0;31mMandatory argument \"nameEvi\" not specified. Argument needed for the \"onlyEvi\" option of TransPi. \n\033[0m")
-            exit 0
-        }
-        //testing
-        println("\n\tRunning Evidential Gene analysis only \n")
+    //testing
+    println("\n\tRunning Evidential Gene analysis only \n")
 
-        Channel
-            .fromPath("${params.workDir}/onlyEvi/*.{fa,fasta}", checkIfExists: true)
-            .collect()
-            .set{ evigene_ch_OE }
+    Channel
+        .fromFilePairs("${workDir}/onlyEvi/*.{fa,fasta}", size: -1, checkIfExists: true)
+        .set{ evigene_ch_OE }
 
-        process evigene_OE {
+    process evigene_OE {
 
-            label 'med_mem'
+        label 'med_mem'
 
-            tag "${params.nameEvi}"
+        tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.combined.okay.fa"
+        publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.combined.okay.fa"
 
-            input:
-                file(assembly) from evigene_ch_OE
+        input:
+            tuple sample_id, file(assembly) from evigene_ch_OE
 
-            output:
-                file("${params.nameEvi}.combined.okay.fa") into ( evigene_ch_busco3_OE, evigene_ch_busco4_OE )
+        output:
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3_OE, evigene_ch_busco4_OE )
 
-            script:
-                def mem_MB=(task.memory.toMega())
-                """
-                echo -e "\\n-- Starting EviGene --\\n"
+        script:
+            def mem_MB=(task.memory.toMega())
+            """
+            echo -e "\\n-- Starting EviGene --\\n"
 
-                cat ${assembly} >${params.nameEvi}.combined.fa
+            cat ${assembly} >${sample_id}.combined.fa
 
-                $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${params.nameEvi}.combined.fa
+            $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
-                echo -e "\\n-- DONE with EviGene --\\n"
+            echo -e "\\n-- DONE with EviGene --\\n"
 
-                cp okayset/${params.nameEvi}.combined.okay.combined.fa ${params.nameEvi}.combined.okay.fa
+            cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
 
-                if [ -d tmpfiles/ ];then
-                    rm -rf tmpfiles/
-                fi
-                """
-        }
+            if [ -d tmpfiles/ ];then
+                rm -rf tmpfiles/
+            fi
+            """
+    }
 
-        process busco3_OE {
+    process busco3_OE {
 
-            label 'med_cpus'
+        label 'med_cpus'
 
-            tag "${params.nameEvi}"
+        tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
+        publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
-            input:
-                file("${params.nameEvi}.combined.okay.fa") from evigene_ch_busco3_OE
+        input:
+            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OE
 
-            output:
-                file("run_${params.nameEvi}.fa.bus") into busco3_ch_OE
-                file("short_summary_${params.nameEvi}.fa.bus.txt") into busco3_summary_OE
+        output:
+            file("*.bus") into busco3_ch_OE
+            file("*.bus.txt") into busco3_summary_OE
 
-            script:
-                """
-                echo -e "\\n-- Starting BUSCO --\\n"
+        script:
+            """
+            echo -e "\\n-- Starting BUSCO --\\n"
 
-                run_BUSCO.py -i ${params.nameEvi}.combined.okay.fa -o ${params.nameEvi}.fa.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-                echo -e "\\n-- DONE with BUSCO --\\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
-                cp run_${params.nameEvi}.fa.bus/short_summary_${params.nameEvi}.fa.bus.txt .
-                """
-        }
+            cp run_${sample_id}.TransPi.bus/short_summary_${sample_id}.TransPi.bus.txt .
+            """
+    }
 
-        process busco4_OE {
+    process busco4_OE {
 
-            conda "${params.cenv}"
+        conda "${params.cenv}"
 
-            label 'med_cpus'
+        label 'med_cpus'
 
-            tag "${params.nameEvi}"
+        tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+        publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
-            input:
-                file("${params.nameEvi}.combined.okay.fa") from evigene_ch_busco4_OE
+        input:
+            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OE
 
-            output:
-                file("${params.nameEvi}.fa.bus") into busco4_ch_OE
-                file("*.${params.nameEvi}.fa.bus.txt") into ( busco4_summary_OE )
+        output:
+            file("*.bus") into busco4_ch_OE
+            file("*.bus.txt") into busco4_summary_OE
 
-            script:
-                """
-                echo -e "\\n-- Starting BUSCO --\\n"
+        script:
+            """
+            echo -e "\\n-- Starting BUSCO --\\n"
 
-                busco -i ${params.nameEvi}.combined.okay.fa -o ${params.nameEvi}.fa.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-                echo -e "\\n-- DONE with BUSCO --\\n"
+            echo -e "\\n-- DONE with BUSCO --\\n"
 
-                cp ${params.nameEvi}.fa.bus/short_summary.*.${params.nameEvi}.fa.bus.txt .
-                """
-        }
+            cp ${sample_id}.TransPi.bus/short_summary.*.${sample_id}.TransPi.bus.txt .
+            """
+    }
 
-        process summary_busco_OE {
+    busco4_comp_OE = Channel.create()
+    busco4_summary_OE.mix(busco3_summary_OE).groupTuple(by:0,size:2).into(busco4_comp_OE)
 
-            tag "${params.nameEvi}"
+    process summary_busco_OE {
 
-            publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+        tag "${sample_id}"
 
-            input:
-                file("*.${params.nameEvi}.fa.bus.txt") from busco4_summary_OE
-                file("short_summary_${params.nameEvi}.fa.bus.txt") from busco3_summary_OE
+        publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
-            output:
-                file("${params.nameEvi}.sum_busco.txt") into final_sum_2v3_OE
+        input:
+            tuple sample_id, file(files) from busco4_comp_OE
 
-            script:
-                """
-                echo -e "Summary of BUSCO V4 \\n" >>${params.nameEvi}.sum_busco.txt
-                echo "-- TransPi BUSCO V4 scores -- " >>${params.nameEvi}.sum_busco.txt
-                cat *.${params.nameEvi}.fa.bus.txt >>${params.nameEvi}.sum_busco.txt
-                echo -e "\\nSummary of BUSCO V3 \\n" >>${params.nameEvi}.sum_busco.txt
-                echo "-- TransPi BUSCO V3 scores -- " >>${params.nameEvi}.sum_busco.txt
-                cat short_summary_${params.nameEvi}.fa.bus.txt >>${params.nameEvi}.sum_busco.txt
-                """
-        }
+        output:
+            file("*.sum_busco.txt") into final_sum_2v3_OE
+
+        script:
+            """
+            trans4=\$( echo $files | tr " " "\\n" | grep "short_summary\\." )
+            trans3=\$( echo $files | tr " " "\\n" | grep "short_summary_" )
+            echo -e "Summary of BUSCO V4 \\n" >>${sample_id}.sum_busco.txt
+            echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco.txt
+            cat \${trans4} >>${sample_id}.sum_busco.txt
+            echo -e "\\nSummary of BUSCO V3 \\n" >>${sample_id}.sum_busco.txt
+            echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco.txt
+            cat \${trans3} >>${sample_id}.sum_busco.txt
+            """
+    }
 
 } else {
     println("\n\t\033[0;31mMandatory argument not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
@@ -3040,7 +3228,7 @@ process get_run_info {
 workflow.onComplete {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
-        + "\n\033[0;32mDone! Open the following report in your browser --> ${params.workDir}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
+        + "\n\033[0;32mDone! Open the following report in your browser --> ${workDir}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
 }
