@@ -2528,7 +2528,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.GO.terms.txt") into trinotate_summary
-            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") into ( trinotate_ch, custom_uniprot_ch )
+            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") into ( trinotate_out_ch, custom_uniprot_ch )
             tuple sample_id, file("*.terms.txt") into other_files
 
         script:
@@ -2901,7 +2901,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch
+            tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_out_ch
 
         output:
             tuple sample_id, file("*.svg"), file("*.pdf"), file("*.txt") into go_fig
