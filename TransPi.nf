@@ -1180,7 +1180,7 @@ if (params.onlyAsm) {
             """
     }
 
-    if (params.signalP) {
+    if (params.withSignalP) {
 
         process signalP_trinotate_OA {
 
@@ -1223,7 +1223,7 @@ if (params.onlyAsm) {
         }
     }
 
-    if (params.tmhmm) {
+    if (params.withTMHMM) {
 
         process tmhmm_trinotate_OA {
 
@@ -1243,7 +1243,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- Starting with tmHMM --\\n"
 
-                ${params.tmh} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
+                ${params.tmhmm} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
 
                 echo -e "\\n-- Done with tmHMM --\\n"
                 """
@@ -1266,7 +1266,7 @@ if (params.onlyAsm) {
         }
     }
 
-    if (params.rnammer) {
+    if (params.withRnammer) {
 
         process rnammer_trinotate_OA {
 
@@ -2382,7 +2382,7 @@ if (params.onlyAsm) {
             """
     }
 
-    if (params.signalP) {
+    if (params.withSignalP) {
 
         process signalP_trinotate {
 
@@ -2425,7 +2425,7 @@ if (params.onlyAsm) {
         }
     }
 
-    if (params.tmhmm) {
+    if (params.withTMHMM) {
 
         process tmhmm_trinotate {
 
@@ -2468,7 +2468,7 @@ if (params.onlyAsm) {
         }
     }
 
-    if (params.rnammer) {
+    if (params.withRnammer) {
 
         process rnammer_trinotate {
 
