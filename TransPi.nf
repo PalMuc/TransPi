@@ -205,6 +205,8 @@ if (params.readsTest) {
         .map{ row -> [ row[0], [ file(row[1][0],checkIfExists: true),file(row[2][0],checkIfExists: true) ] ] }
         .ifEmpty{ exit 1, "params.readsTest was empty - no input files supplied" }
         .into{ reads_ch; reads_qc_ch }
+} else if (params.onlyEvi) {
+    println("\n\tRunning TransPi with your dataset\n")
 } else {
     println("\n\tRunning TransPi with your dataset\n")
     Channel
@@ -256,6 +258,7 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results_OAS
                 tuple sample_id, file("*.filter.fq") into reads_ass_ch_OAS
+                tuple sample_id, file("*.csv") into fastp_csv_OAS
 
             script:
                 """
@@ -264,6 +267,9 @@ if (params.onlyAsm) {
                 fastp -i ${reads[0]} -I ${reads[1]} -o left-${sample_id}.filter.fq -O right-${sample_id}.filter.fq --detect_adapter_for_pe \
                 --average_qual ${params.minQual} --overrepresentation_analysis --html ${sample_id}.fastp.html --json ${sample_id}.fastp.json \
                 --thread ${task.cpus} --report_title ${sample_id}
+
+                bash get_readstats.sh ${sample_id}.fastp.json
+                bash get_readqual.sh ${sample_id}.fastp.json
                 """
         }
     } else {
@@ -547,7 +553,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- DONE with EviGene --\\n"
 
-            cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
+            cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
 
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
@@ -566,6 +572,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1_OAS
+            tuple sample_id, file("${sample_id}.sum_preEG.csv"), file("${sample_id}.sum_EG.csv") into summary_evi_csv_OAS
 
         script:
             """
@@ -591,6 +598,16 @@ if (params.onlyAsm) {
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
 
+            # csv report
+            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+            total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
+            trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
+            soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
+            velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
+            spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
+            transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+
             #Summary of transcripts after EvidentialGenes
             echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
             echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
@@ -612,7 +629,18 @@ if (params.onlyAsm) {
             echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+
+            # csv report after evigene
+            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+            total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
+            trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
+            soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
+            velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
+            spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
+            transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
+            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
             """
+
     }
 
     process busco3_OAS {
@@ -792,6 +820,7 @@ if (params.onlyAsm) {
 
         input:
             tuple sample_id, file(files) from busco3_comp_OAS
+            tuple sample_id, file("*.csv") into busco3_OAS_csv
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig_OAS
@@ -812,6 +841,8 @@ if (params.onlyAsm) {
             Rscript busco_comparison.R ${sample_id}
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
+            # csv
+            cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
 
@@ -826,6 +857,7 @@ if (params.onlyAsm) {
 
         input:
             tuple sample_id, file(files) from busco4_comp_OAS
+            tuple sample_id, file("*.csv") into busco4_OAS_csv
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
@@ -846,6 +878,8 @@ if (params.onlyAsm) {
             Rscript busco_comparison.R ${sample_id}
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
+            # csv
+            cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
 
@@ -986,6 +1020,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
             tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
+            tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
             tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
         script:
@@ -1008,7 +1043,7 @@ if (params.onlyAsm) {
             echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
-            echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
+            echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
@@ -1019,6 +1054,14 @@ if (params.onlyAsm) {
             echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
+            # csv for report
+            echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
+            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
+            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -1059,7 +1102,7 @@ if (params.onlyAsm) {
             echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
-            echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
+            echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
@@ -1083,6 +1126,14 @@ if (params.onlyAsm) {
             echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
             echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+            # csv for report
+            echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
+            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
+            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -1521,6 +1572,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("*.svg"), file("*.pdf"), file("*.txt") into go_fig_OA
+            tuple sample_id, file("*.csv") into go_csv
 
         script:
             """
@@ -1548,6 +1600,10 @@ if (params.onlyAsm) {
             mv GO_cellular.txt ${sample_id}_GO_cellular.txt
             mv GO_biological.txt ${sample_id}_GO_biological.txt
             mv GO_molecular.txt ${sample_id}_GO_molecular.txt
+
+            cat ${sample_id}_GO_cellular.txt | awk '{print \$1","\$2}' >${sample_id}_GO_cellular.csv
+            cat ${sample_id}_GO_biological.txt | awk '{print \$1","\$2}' >${sample_id}_GO_biological.csv
+            cat ${sample_id}_GO_molecular.txt | awk '{print \$1","\$2}' >${sample_id}_GO_molecular.csv
             """
     }
 
@@ -1563,6 +1619,7 @@ if (params.onlyAsm) {
         output:
             tuple sample_id, file("${sample_id}_custom_uniprot_hits.txt") into custom_uniprot_sum_OA
             tuple sample_id, file("${sample_id}_custom_uniprot_hits.svg"), file("${sample_id}_custom_uniprot_hits.pdf") into custom_uniprot_fig_OA
+            tuple sample_id, file("*.csv") into uniprot_OA_csv
 
         script:
             """
@@ -1594,6 +1651,8 @@ if (params.onlyAsm) {
 
             cp ${params.mypwd}/bin/custom_uniprot_hits.R .
             Rscript custom_uniprot_hits.R ${sample_id}
+
+            cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits.csv
             """
     }
 
@@ -1753,6 +1812,7 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results
                 tuple sample_id, file("*.filter.fq") into reads_ass_ch
+                tuple sample_id, file("*.csv") into fastp_csv
 
             script:
                 """
@@ -1761,6 +1821,9 @@ if (params.onlyAsm) {
                 fastp -i ${reads[0]} -I ${reads[1]} -o left-${sample_id}.filter.fq -O right-${sample_id}.filter.fq --detect_adapter_for_pe \
                 --average_qual ${params.minQual} --overrepresentation_analysis --html ${sample_id}.fastp.html --json ${sample_id}.fastp.json \
                 --thread ${task.cpus} --report_title ${sample_id}
+
+                bash get_readstats.sh ${sample_id}.fastp.json
+                bash get_readqual.sh ${sample_id}.fastp.json
                 """
         }
     } else {
@@ -2029,7 +2092,7 @@ if (params.onlyAsm) {
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom )
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
         script:
@@ -2044,8 +2107,8 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- DONE with EviGene --\\n"
 
-            cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
-            cp okayset/${sample_id}.combined.okay.combined.cds ${sample_id}.combined.okay.cds
+            cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
+            cp okayset/*combined.okay*.cds ${sample_id}.combined.okay.cds
 
 
             if [ -d tmpfiles/ ];then
@@ -2073,7 +2136,7 @@ if (params.onlyAsm) {
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TrasnPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
@@ -2179,6 +2242,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
             tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
             tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
+            tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv
             tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
         script:
@@ -2199,7 +2263,7 @@ if (params.onlyAsm) {
             echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
-            echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
+            echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
@@ -2210,6 +2274,14 @@ if (params.onlyAsm) {
             echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
             echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
+            # csv for report
+            echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
+            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
+            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2249,7 +2321,7 @@ if (params.onlyAsm) {
             echo -e "\\n-- Calculating statistics... --\\n"
 
             #Calculate statistics of Transdecoder
-            echo "- Transdecoder (long, with homology) stats for ${sample_id}" >>${sample_id}.transdecoder.stats
+            echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
@@ -2273,6 +2345,14 @@ if (params.onlyAsm) {
             echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
             echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+            # csv for report
+            echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
+            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
+            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2530,6 +2610,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.GO.terms.txt") into trinotate_summary
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") into ( trinotate_out_ch, custom_uniprot_ch )
             tuple sample_id, file("*.terms.txt") into other_files
+            tuple sample_id, file("${sample_id}.KEGG.terms.txt") into kegg_paths
 
         script:
             """
@@ -2653,6 +2734,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1
+            tuple sample_id, file("${sample_id}.sum_preEG.csv"), file("${sample_id}.sum_EG.csv") into summary_evi_csv
 
         script:
             """
@@ -2678,6 +2760,16 @@ if (params.onlyAsm) {
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
 
+            # csv report
+            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+            total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
+            trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
+            soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
+            velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
+            spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
+            transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+
             #Summary of transcripts after EvidentialGenes
             echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
             echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
@@ -2699,6 +2791,16 @@ if (params.onlyAsm) {
             echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+
+            # csv report after evigene
+            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+            total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
+            trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
+            soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
+            velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
+            spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
+            transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
+            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
             """
     }
 
@@ -2840,6 +2942,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig
+            tuple sample_id, file("*.csv") into busco3_csv
 
         script:
             """
@@ -2857,6 +2960,8 @@ if (params.onlyAsm) {
             Rscript busco_comparison.R ${sample_id}
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
+            # csv
+            cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
 
@@ -2874,6 +2979,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig
+            tuple sample_id, file("*.csv") into busco4_csv
 
         script:
             """
@@ -2891,6 +2997,8 @@ if (params.onlyAsm) {
             Rscript busco_comparison.R ${sample_id}
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
+            # csv
+            cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
 
@@ -2904,7 +3012,8 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_out_ch
 
         output:
-            tuple sample_id, file("*.svg"), file("*.pdf"), file("*.txt") into go_fig
+            tuple sample_id, file("*.svg"), file("*.pdf") , file("*.txt") into go_fig
+            tuple sample_id, file("*.csv") into go_csv
 
         script:
             """
@@ -2932,6 +3041,10 @@ if (params.onlyAsm) {
             mv GO_cellular.txt ${sample_id}_GO_cellular.txt
             mv GO_biological.txt ${sample_id}_GO_biological.txt
             mv GO_molecular.txt ${sample_id}_GO_molecular.txt
+
+            cat ${sample_id}_GO_cellular.txt | awk '{print \$1","\$2}' >${sample_id}_GO_cellular.csv
+            cat ${sample_id}_GO_biological.txt | awk '{print \$1","\$2}' >${sample_id}_GO_biological.csv
+            cat ${sample_id}_GO_molecular.txt | awk '{print \$1","\$2}' >${sample_id}_GO_molecular.csv
             """
     }
 
@@ -2947,6 +3060,7 @@ if (params.onlyAsm) {
         output:
             tuple sample_id, file("${sample_id}_custom_uniprot_hits.txt") into custom_uniprot_sum
             tuple sample_id, file("${sample_id}_custom_uniprot_hits.svg"), file("${sample_id}_custom_uniprot_hits.pdf") into custom_uniprot_fig
+            tuple sample_id, file("*.csv") into uniprot_csv
 
         script:
             """
@@ -2978,6 +3092,65 @@ if (params.onlyAsm) {
 
             cp ${params.mypwd}/bin/custom_uniprot_hits.R .
             Rscript custom_uniprot_hits.R ${sample_id}
+
+            cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits.csv
+            """
+    }
+
+    process get_kegg {
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/figures/kegg", mode: "copy", overwrite: true
+
+        input:
+            tuple sample_id, file(kegg) from kegg_paths
+
+        output:
+            tuple sample_id, file("${sample_id}_kegg.svg") into kegg_report
+
+        script:
+            """
+            curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
+            """
+    }
+
+    process get_transcript_dist {
+
+        tag "${sample_id}"
+
+        input:
+            tuple sample_id, file(dist) from evi_dist
+
+        output:
+            tuple sample_id, file("${sample_id}_sizes.txt") into size_dist
+
+        script:
+            """
+            len.py ${dist} >all_transcript_sizes.txt
+            bash get_sizes.sh all_transcript_sizes.txt
+            mv final_sizes.txt ${sample_id}_sizes.txt
+            """
+    }
+
+    report_ch = Channel.create()
+    fastp_csv.join( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:13).into(report_ch)
+
+    process get_report {
+
+        publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
+
+        input:
+            tuple sample_id, file(files) from report_ch
+                .collect()
+
+        output:
+            tuple file("*html") into final_report
+
+        script:
+            """
+            cp ${files} .
+            Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_${sample_id}.html')" ${sample_id}
             """
     }
 
@@ -3015,7 +3188,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- DONE with EviGene --\\n"
 
-            cp okayset/${sample_id}.combined.okay.combined.fa ${sample_id}.combined.okay.fa
+            cp okayset/*combined.okay* ${sample_id}.combined.okay.fa
 
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
@@ -3035,8 +3208,8 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OE
 
         output:
-            file("*.bus") into busco3_ch_OE
-            file("*.bus.txt") into busco3_summary_OE
+            tuple sample_id, file("*.TransPi.bus") into busco3_ch_OE
+            tuple sample_id, file("*.bus.txt") into busco3_summary_OE
 
         script:
             """
@@ -3064,8 +3237,8 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OE
 
         output:
-            file("*.bus") into busco4_ch_OE
-            file("*.bus.txt") into busco4_summary_OE
+            tuple sample_id, file("*.TransPi.bus") into busco4_ch_OE
+            tuple sample_id, file("*.bus.txt") into busco4_summary_OE
 
         script:
             """
