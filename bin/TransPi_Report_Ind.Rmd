@@ -123,7 +123,8 @@ rm *.tmp
 ```
 ```{r EG_plot, echo=FALSE, results='asis'}
 eg=read.csv("EG_plot.csv",header=FALSE)
-peg <- plot_ly(eg, x = ~V1, y = ~V2, type = 'bar', name = 'Before', marker=list(color='#088da5'), opacity=0.8, hovertemplate = paste('Program: %{x}','<br>Number of transcripts: %{y}','<extra></extra>'))
+peg <- plot_ly(eg, x = ~V1, y = ~V2, type = 'bar', name = 'Before', marker=list(color='#088da5', line=list(color = 'black', width = 1)), opacity=0.8,
+               hovertemplate = paste('Program: %{x}','<br>Number of transcripts: %{y}','<extra></extra>'))
 peg <- peg %>% add_trace(y = ~V3, name = 'After', marker=list(color='#e19336'), opacity = 0.8)
 peg <- peg %>% layout(yaxis = list(title = 'Number of transcripts'), barmode = 'group')
 peg <- peg %>% layout(xaxis = list(title = '',categoryorder = "array",categoryarray = ~V1))
