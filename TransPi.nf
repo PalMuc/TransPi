@@ -3134,7 +3134,7 @@ if (params.onlyAsm) {
     }
 
     report_ch = Channel.create()
-    fastp_csv.join( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:13).into(report_ch)
+    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:13).into(report_ch)
 
     process get_report {
 
