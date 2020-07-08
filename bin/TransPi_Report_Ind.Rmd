@@ -1,0 +1,483 @@
+---
+title: "TransPi Report: `r commandArgs(trailingOnly=T)[1]`"
+output:
+  html_document: default
+  pdf_document: default
+date: "Generated on: `r Sys.time()`"
+params:
+  interactive: yes
+  data: !r commandArgs(trailingOnly=T)[2]
+---
+
+<style>
+.rectangle {
+  height: 37px;
+  width: 100%;
+  background-color: #407294;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+      message = FALSE,
+      warning = FALSE,
+      out.width="105%"
+      )
+```
+
+```{r load_libraries, include=FALSE}
+library(ggthemes)
+library(ggplot2)
+library(grid)
+library(plotly)
+library(knitr)
+library(kableExtra) #install.packages("kableExtra")
+library(rmarkdown)
+mycol=c('#088da5','#73cdc8','#ff6f61','#7cb8df','#88b04b','#00a199','#6B5B95','#92A8D1','#b0e0e6','#ff7f50','#088d9b','#E15D44','#e19336')
+```
+
+<br>
+<br>
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;Reads Stats</h2></div>
+<br>
+**Input reads and filtering**
+```{bash reads_stats, include=FALSE}
+cat *_reads_stats.csv >final_reads_stats.csv
+```
+```{r readstats_table, echo=FALSE}
+reads_stats=read.csv("final_reads_stats.csv")
+paged_table(reads_stats,options = list(rows.print = 10))
+```
+<br>
+<br>
+<br>
+**Reads mean quality before filtering**
+```{bash reads_qual, include=FALSE}
+cat *_reads_qual.csv >final_reads_qual.csv
+```
+```{r qual_plot, echo=FALSE}
+rqual=read.csv("final_reads_qual.csv",header=FALSE)
+qp <- plot_ly(x=c(1:rqual[1,1]),y=as.numeric(rqual[2,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
+qp <- qp %>% add_trace(x=c(1:rqual[3,1]), y=as.numeric(rqual[4,]), name="Read2", opacity = .8, line=list(color='#e19336'))
+qp <- qp %>% layout(xaxis=list(title="Base position"))
+qp <- qp %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
+qp <- qp %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
+qp
+```
+<br>
+<br>
+<br>
+<br>
+**Reads mean quality after filtering**
+```{r qual_plot2, echo=FALSE}
+qp2 <- plot_ly(x=c(1:rqual[5,1]),y=as.numeric(rqual[6,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
+qp2 <- qp2 %>% add_trace(x=c(1:rqual[7,1]),y=as.numeric(rqual[8,]), name="Read2", opacity = .8, line=list(color='#e19336'))
+qp2 <- qp2 %>% layout(xaxis=list(title="Base position"))
+qp2 <- qp2 %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
+qp2 <- qp2 %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
+qp2
+```
+
+
+<br>
+<br>
+<br>
+
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;Assemblies Stats</h2></div>
+
+<br>
+
+**Number of transcripts before Evidential Genes**
+```{bash pre_EG, include=FALSE}
+cat *_preEG.csv >preEG.csv
+```
+```{r pre_EG_table, echo=FALSE}
+trans_preEG=read.csv("preEG.csv")
+paged_table(trans_preEG,options = list(rows.print = 10))
+```
+
+<br>
+<br>
+<br>
+
+**Number of transcripts after Evidential Genes**
+```{bash EG, include=FALSE}
+cat *_EG.csv >EG.csv
+```
+```{r EG_table, echo=FALSE, results='asis'}
+trans_EG=read.csv("EG.csv")
+paged_table(trans_EG,options = list(rows.print = 10))
+```
+
+<br>
+<br>
+<br>
+
+**Plot before and after Evidential Gene**
+```{bash EG_final, include=FALSE}
+head -n1 EG.csv | tr "," "\n" >headers.tmp
+tail -n1 preEG.csv | tr "," "\n" >preEG.tmp
+tail -n1 EG.csv | tr "," "\n" >EG.tmp
+paste -d, headers.tmp preEG.tmp EG.tmp >EG_plot.csv
+rm *.tmp
+```
+```{r EG_plot, echo=FALSE, results='asis'}
+eg=read.csv("EG_plot.csv",header=FALSE)
+peg <- plot_ly(eg, x = ~V1, y = ~V2, type = 'bar', name = 'Before', marker=list(color='#088da5'), opacity=0.8, hovertemplate = paste('Program: %{x}','<br>Number of transcripts: %{y}','<extra></extra>'))
+peg <- peg %>% add_trace(y = ~V3, name = 'After', marker=list(color='#e19336'), opacity = 0.8)
+peg <- peg %>% layout(yaxis = list(title = 'Number of transcripts'), barmode = 'group')
+peg <- peg %>% layout(xaxis = list(title = '',categoryorder = "array",categoryarray = ~V1))
+peg <- peg %>% layout(legend = list(x=10,y=.5))
+peg
+```
+
+<br>
+<br>
+<br>
+<br>
+
+**Transcript length distribution**
+```{bash trans_len, include=FALSE}
+cat *_sizes.txt >final_sizes.txt
+```
+```{r trans_len_plot, echo=FALSE, results='asis'}
+tlen=read.delim("final_sizes.txt", sep = "\t", header = FALSE)
+
+gg=ggplot(tlen,aes(x=tlen$V2))+
+    coord_flip()+theme_bw()+
+    geom_histogram(aes(y = ..count..), binwidth = 100, colour = "#1F3552", fill = "#96ceba")+
+    #stat_bin(geom = "text", aes(label=..count..),binwidth = 100, hjust=-.8)+
+    scale_x_continuous(name = "Transcripts sizes (100bp incrememnt)",breaks = seq(0, 2500, 100),limits=c(150, 2550))+
+    scale_y_continuous(name = "Number of transcripts")
+
+tlp <- plot_ly(tlen, x=~V2, type="histogram", xbins=list(start='200',end='2500', size= '100'), marker=list(color='#088da5', line=list(color = 'black',
+               width = 1)), hovertemplate = paste('Size range: %{x}','<br>Number of transcripts: %{y}','<extra></extra>'), opacity = 0.7)
+tlp <- tlp %>% layout(yaxis = list(title = "Number of transcripts"))
+tlp <- tlp %>% layout(xaxis = list(title = "Transcripts sizes (100bp incrememnt)"))
+tlp
+```
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;BUSCO</h2></div>
+
+<br>
+
+### - Using BUSCO V3
+
+<br>
+<br>
+
+```{bash busco3, echo=FALSE}
+cat *_busco3.csv >final_busco3.csv
+```
+```{r busco3_plot, echo=FALSE}
+bus=read.csv("final_busco3.csv", header=FALSE)
+MYSPEC=as.character(t(bus[1,]))
+MYPERC=as.numeric(t(bus[2,]))
+MYVAL=as.numeric(t(bus[3,]))
+######################################
+
+# Edit from the orginal BUSCO plot script
+
+######################################
+#
+# BUSCO summary figure
+# @version 3.0.0
+# @since BUSCO 2.0.0
+#
+# Copyright (c) 2016-2017, Evgeny Zdobnov (ez@ezlab.org)
+# Licensed under the MIT license. See LICENSE.md file.
+#
+######################################
+my_colors <- c("#0e9aa7", "#96ceba", "#ffcc5c", "#ff6f69")
+# Bar height ratio
+my_bar_height <- 0.55
+# Legend
+my_title <- "BUSCO Assessment Results - TransPi vs Trinity"
+# Font
+my_family <- "sans"
+my_size_ratio <- 1
+species <- c(MYSPEC)
+species <- factor(species)
+species <- factor(species,levels(species)[c(length(levels(species)):1)]) # reorder your species here just by changing the values in the vector :
+percentage <- c(MYPERC)
+values <- c(MYVAL)
+######################################
+# Code to produce the graph
+labsize = 1
+if (length(levels(species)) > 10){
+  labsize = 0.66
+}
+category <- c(rep(c("Single","Duplicated","Fragmented","Missing"),c(1)))
+category <-factor(category)
+#category = factor(category,levels(category)[c(4,1,2,3)])
+category = factor(category,levels(category)[(c(4,1,2,3))])
+df = data.frame(species,percentage,values,category)
+figure <- ggplot()+
+  geom_bar(aes(y = percentage, x = species, fill = category), data = df, stat="identity", width=my_bar_height,position = position_stack(reverse=TRUE)) +
+  coord_flip() + theme_gray(base_size = 8) + scale_y_continuous(labels = c("0","20","40","60","80","100"), breaks = c(0,20,40,60,80,100))+
+  theme_gray(base_size = 8) + scale_y_continuous(labels = c("0","20","40","60","80","100"), breaks = c(0,20,40,60,80,100)) +
+  scale_fill_manual(values = my_colors,labels =c(" Complete (C) and single-copy (S)  ", " Complete (C) and duplicated (D)",
+                                                 " Fragmented (F)  ", " Missing (M)")) +
+  xlab("") + ylab("\n%BUSCOs") +
+  theme(plot.title = element_text(family=my_family, colour = "black", size = rel(2.2)*my_size_ratio, face = "bold")) +
+  theme(legend.position="top",legend.title = element_blank()) +
+  theme(legend.text = element_text(family=my_family, size = rel(1.2)*my_size_ratio)) +
+  theme(panel.background = element_rect(color="#FFFFFF", fill="white")) +
+  theme(panel.grid.minor = element_blank()) +
+  theme(panel.grid.major = element_blank()) +
+  theme(axis.text.y = element_text(family=my_family, colour = "black", size = rel(1.66)*my_size_ratio,face="italic")) +
+  theme(axis.text.x = element_text(family=my_family, colour = "black", size = rel(1.66)*my_size_ratio)) +
+  theme(axis.line = element_line(size=1*my_size_ratio, colour = "black")) +
+  theme(axis.ticks.length = unit(.85, "cm")) +
+  theme(axis.ticks.y = element_line(colour="white", size = 0)) +
+  theme(axis.ticks.x = element_line(colour="#222222")) +
+  theme(axis.ticks.length = unit(0.4, "cm")) +
+  theme(axis.title.x = element_text(family=my_family, size=rel(1.2)*my_size_ratio)) +
+  guides(fill = guide_legend(override.aes = list(colour = NULL))) +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+for(i in rev(c(1:length(levels(species))))){
+  detailed_values <- values[species==species[species==levels(species)[i]]]
+  total_buscos <- sum(detailed_values)
+  figure <- figure +
+    annotate("text", label=paste("C:", detailed_values[1] + detailed_values[2], " [S:", detailed_values[1], ", D:", detailed_values[2], "], F:", detailed_values[3], ", M:", detailed_values[4], ", n:", total_buscos, sep=" "),
+             y=30, x = i, size = labsize*3*my_size_ratio, colour = "black", hjust=0, family=my_family)
+}
+bp <-ggplotly(figure)
+bp <- bp %>% layout(title = "BUSCO Results - TransPi vs Trinity")
+bp <- bp %>% layout(legend = list(x=10,y=.5))
+bp
+```
+
+<br>
+<br>
+<br>
+<br>
+
+### - Using BUSCO V4
+
+<br>
+<br>
+
+```{bash busco4, echo=FALSE}
+cat *_busco4.csv >final_busco4.csv
+```
+```{r busco4_plot, echo=FALSE}
+bus=read.csv("final_busco4.csv",header=FALSE)
+MYSPEC=as.character(t(bus[1,]))
+MYPERC=as.numeric(t(bus[2,]))
+MYVAL=as.numeric(t(bus[3,]))
+######################################
+
+# Edit from the orginal BUSCO plot script
+
+######################################
+#
+# BUSCO summary figure
+# @version 3.0.0
+# @since BUSCO 2.0.0
+#
+# Copyright (c) 2016-2017, Evgeny Zdobnov (ez@ezlab.org)
+# Licensed under the MIT license. See LICENSE.md file.
+#
+######################################
+my_colors <- c("#0e9aa7", "#96ceba", "#ffcc5c", "#ff6f69")
+# Bar height ratio
+my_bar_height <- 0.55
+# Legend
+my_title <- "BUSCO Assessment Results - TransPi vs Trinity"
+# Font
+my_family <- "sans"
+my_size_ratio <- 1
+species <- c(MYSPEC)
+species <- factor(species)
+species <- factor(species,levels(species)[c(length(levels(species)):1)]) # reorder your species here just by changing the values in the vector :
+percentage <- c(MYPERC)
+values <- c(MYVAL)
+######################################
+# Code to produce the graph
+labsize = 1
+if (length(levels(species)) > 10){
+  labsize = 0.66
+}
+category <- c(rep(c("Single","Duplicated","Fragmented","Missing"),c(1)))
+category <-factor(category)
+#category = factor(category,levels(category)[c(4,1,2,3)])
+category = factor(category,levels(category)[(c(4,1,2,3))])
+df = data.frame(species,percentage,values,category)
+figure <- ggplot()+
+  geom_bar(aes(y = percentage, x = species, fill = category), data = df, stat="identity", width=my_bar_height,position = position_stack(reverse=TRUE)) +
+  coord_flip() + theme_gray(base_size = 8) + scale_y_continuous(labels = c("0","20","40","60","80","100"), breaks = c(0,20,40,60,80,100))+
+  theme_gray(base_size = 8) + scale_y_continuous(labels = c("0","20","40","60","80","100"), breaks = c(0,20,40,60,80,100)) +
+  scale_fill_manual(values = my_colors,labels =c(" Complete (C) and single-copy (S)  ", " Complete (C) and duplicated (D)",
+                                                 " Fragmented (F)  ", " Missing (M)")) +
+  xlab("") + ylab("\n%BUSCOs") +
+  theme(plot.title = element_text(family=my_family, colour = "black", size = rel(2.2)*my_size_ratio, face = "bold")) +
+  theme(legend.position="top",legend.title = element_blank()) +
+  theme(legend.text = element_text(family=my_family, size = rel(1.2)*my_size_ratio)) +
+  theme(panel.background = element_rect(color="#FFFFFF", fill="white")) +
+  theme(panel.grid.minor = element_blank()) +
+  theme(panel.grid.major = element_blank()) +
+  theme(axis.text.y = element_text(family=my_family, colour = "black", size = rel(1.66)*my_size_ratio,face="italic")) +
+  theme(axis.text.x = element_text(family=my_family, colour = "black", size = rel(1.66)*my_size_ratio)) +
+  theme(axis.line = element_line(size=1*my_size_ratio, colour = "black")) +
+  theme(axis.ticks.length = unit(.85, "cm")) +
+  theme(axis.ticks.y = element_line(colour="white", size = 0)) +
+  theme(axis.ticks.x = element_line(colour="#222222")) +
+  theme(axis.ticks.length = unit(0.4, "cm")) +
+  theme(axis.title.x = element_text(family=my_family, size=rel(1.2)*my_size_ratio)) +
+  guides(fill = guide_legend(override.aes = list(colour = NULL))) +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+for(i in rev(c(1:length(levels(species))))){
+  detailed_values <- values[species==species[species==levels(species)[i]]]
+  total_buscos <- sum(detailed_values)
+  figure <- figure +
+    annotate("text", label=paste("C:", detailed_values[1] + detailed_values[2], " [S:", detailed_values[1], ", D:", detailed_values[2], "], F:", detailed_values[3], ", M:", detailed_values[4], ", n:", total_buscos, sep=" "),
+             y=30, x = i, size = labsize*3*my_size_ratio, colour = "black", hjust=0, family=my_family)
+}
+bp <-ggplotly(figure)
+bp <- bp %>% layout(title = "BUSCO Results - TransPi vs Trinity")
+bp <- bp %>% layout(legend = list(x=10,y=.5))
+bp
+```
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;ORFs</h2></div>
+
+<br>
+
+**Summary of the Transdecoder run**
+
+```{bash transdecoder, include=FALSE}
+cat *.transdecoder.csv >final_transdecoder.csv
+```
+```{r trandecoder_table, echo=FALSE, results='asis'}
+paged_table(read.csv("final_transdecoder.csv"),options = list(rows.print = 10))
+```
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;Gene Ontologies</h2></div>
+
+<br>
+<br>
+```{bash go1, echo=FALSE}
+cat *_cellular.csv >final_GO_cellular.csv
+```
+```{r go_plots1, echo=FALSE}
+#go_sample_name=params$data
+dataCC=read.delim("final_GO_cellular.csv", header = F, sep = "\t")
+pcel <- plot_ly(dataCC,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#ff8f66',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
+                hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
+pcel <- pcel %>% layout(yaxis=list(showticklabels=TRUE))
+pcel <- pcel %>% layout(yaxis=list(autorange="reversed"))
+pcel <- pcel %>% layout(yaxis = list(title = '',categoryorder = "array",categoryarray = ~V2))
+pcel <- pcel %>% layout(xaxis = list(title = 'Number of sequences'))
+pcel <- pcel %>% layout(font = list(size=10))
+pcel <- pcel %>% layout(title = list(text='Cellular Component GOs',x=.7))
+pcel
+```
+<br>
+<br>
+<br>
+<br>
+```{bash go2, echo=FALSE}
+cat *_molecular.csv >final_GO_molecular.csv
+```
+```{r go_plots2, echo=FALSE}
+dataMF=read.delim("final_GO_molecular.csv", header = F, sep = "\t")
+pmol <- plot_ly(dataMF,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#b0e0e6',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
+                hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
+pmol <- pmol %>% layout(yaxis=list(showticklabels=TRUE))
+pmol <- pmol %>% layout(yaxis=list(autorange="reversed"))
+pmol <- pmol %>% layout(yaxis = list(title = '',categoryorder = "array",categoryarray = ~V2))
+pmol <- pmol %>% layout(xaxis = list(title = 'Number of sequences'))
+pmol <- pmol %>% layout(font = list(size=10))
+pmol <- pmol %>% layout(title = list(text='Molecular Function GOs',x=.7))
+pmol
+```
+<br>
+<br>
+<br>
+<br>
+```{bash go3, echo=FALSE}
+cat *_biological.csv >final_GO_biological.csv
+```
+```{r go_plots3, echo=FALSE}
+dataBP=read.delim("final_GO_biological.csv", header = F, sep = "\t")
+pbio <- plot_ly(dataBP,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#88B04B',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
+                hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
+pbio <- pbio %>% layout(yaxis=list(showticklabels=TRUE))
+pbio <- pbio %>% layout(yaxis=list(autorange="reversed"))
+pbio <- pbio %>% layout(yaxis = list(title = '',categoryorder = "array",categoryarray = ~V2))
+pbio <- pbio %>% layout(xaxis = list(title = 'Number of sequences'))
+pbio <- pbio %>% layout(font = list(size=10))
+pbio <- pbio %>% layout(title = list(text='Biological Processes GOs',x=.7))
+pbio
+```
+<br>
+<br>
+<br>
+<br>
+
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;UniProt</h2></div>
+
+<br>
+<br>
+
+```{bash custom_uniprot, echo=FALSE}
+cat *_custom_uniprot_hits.txt >final_custom_uniprot_hits.csv
+```
+```{r custom_uniprot_plot, echo=FALSE}
+dataUni=read.csv("final_custom_uniprot_hits.csv", header=F)
+p3 <- plot_ly(dataUni,x=~V1, y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#0e9aa7',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
+              hovertemplate = paste('Species: %{y}','<br>Number of hits: %{x}','<extra></extra>'))
+p3 <- p3 %>% layout(yaxis=list(showticklabels=TRUE))
+p3 <- p3 %>% layout(yaxis=list(autorange="reversed"))
+p3 <- p3 %>% layout(yaxis = list(title = '',categoryorder = "array",categoryarray = ~V2))
+p3 <- p3 %>% layout(xaxis = list(title = 'Number of sequences'))
+p3 <- p3 %>% layout(font = list(size=10))
+p3 <- p3 %>% layout(title = list(text='UniProt Species Hits',x=.7))
+p3
+```
+
+<br>
+<br>
+<br>
+<br>
+
+<div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;KEGG Pathways</h2></div>
+
+<br>
+<br>
+
+```{bash pathways, echo=FALSE}
+cat *.svg >final.svg
+```
+```{r pathways_plot, echo=FALSE}
+knitr::include_graphics("final.svg")
+```
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
