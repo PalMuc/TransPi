@@ -29,3 +29,7 @@ dependencies:
   - multiqc=1.8
   - fastp=0.20.1
   - jq=1.6
+  - r-plotly=4.9.2.1
+  - r-knitr=1.29
+  - r-rmarkdown=2.3
+  - r-kableextra=1.1.0
