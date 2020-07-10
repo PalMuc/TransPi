@@ -2156,7 +2156,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
         output:
-            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+            tuple sample_id, file("*${sample_id}.Trinity.bus.txt"), file("*${sample_id}.Trinity.bus") into ( busco3_ch_trinity_sum, busco3_comp_2 )
 
         script:
             """
@@ -2213,7 +2213,7 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
 
         output:
-            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
+            tuple sample_id, file("*${sample_id}.Trinity.bus.txt"), file("*${sample_id}.Trinity.bus") into ( busco4_ch_trinity_sum, busco4_comp_2 )
 
         script:
             """
@@ -2560,7 +2560,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_rnammer
 
             output:
-                tuple sample_id, file("${sample_id}.combined.okay.fa.rnammer.gff") into trinotate_ch_rnammer
+                tuple sample_id, file("${sample_id}.rnammer.gff") into trinotate_ch_rnammer
 
             script:
                 """
@@ -2570,6 +2570,8 @@ if (params.onlyAsm) {
                 echo -e "\\n-- Starting with RNAMMER --\\n"
 
                 RnammerTranscriptome.pl --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
+
+                mv ${sample_id}.combined.okay.fa.rnammer.gff ${sample_id}.rnammer.gff
 
                 echo -e "\\n-- Done with RNAMMER --\\n"
                 """
@@ -2627,7 +2629,7 @@ if (params.onlyAsm) {
             pfam=\$( cat .vars.txt | grep "${sample_id}.TrinotatePFAM.out" )
             signalp=\$( cat .vars.txt | grep "${sample_id}.signalp.out" )
             tmhmm=\$( cat .vars.txt | grep "${sample_id}.tmhmm.out" )
-            rnammer=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa.rnammer.gff" )
+            rnammer=\$( cat .vars.txt | grep "${sample_id}.rnammer.gff" )
 
             #Generate gene_trans_map
             #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
@@ -2734,7 +2736,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1
-            tuple sample_id, file("${sample_id}.sum_preEG.csv"), file("${sample_id}.sum_EG.csv") into summary_evi_csv
+            tuple sample_id, file("*.csv") into summary_evi_csv
 
         script:
             """
@@ -3134,7 +3136,7 @@ if (params.onlyAsm) {
     }
 
     report_ch = Channel.create()
-    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:13).into(report_ch)
+    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0, size:13).into(report_ch)
 
     process get_report {
 
@@ -3145,7 +3147,7 @@ if (params.onlyAsm) {
                 .collect()
 
         output:
-            tuple file("*html") into final_report
+            file("*html") into final_report
 
         script:
             """
