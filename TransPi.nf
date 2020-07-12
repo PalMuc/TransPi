@@ -3113,7 +3113,8 @@ if (params.onlyAsm) {
 
         script:
             """
-            curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
+            curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" \
+            -d "default_radius=5" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
             """
     }
 
@@ -3136,14 +3137,14 @@ if (params.onlyAsm) {
     }
 
     report_ch = Channel.create()
-    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0, size:13).into(report_ch)
+    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report).groupTuple(by:0,size:9).flatten().toList().view().into(report_ch)
 
     process get_report {
 
         publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
 
         input:
-            tuple sample_id, file(files) from report_ch
+            file(files) from report_ch
                 .collect()
 
         output:
@@ -3151,8 +3152,10 @@ if (params.onlyAsm) {
 
         script:
             """
-            cp ${files} .
-            Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_${sample_id}.html')" ${sample_id}
+            sample_id=\$( cat input.1 )
+            cp ${params.mypwd}/bin/TransPi_Report_Ind.Rmd .
+            cat SRR7716079_150bp_R_GO_cellular.csv
+            Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
             """
     }
 
