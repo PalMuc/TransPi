@@ -382,7 +382,7 @@ cat *_cellular.csv >final_GO_cellular.csv
 ```
 ```{r go_plots1, echo=FALSE}
 #go_sample_name=params$data
-dataCC=read.delim("final_GO_cellular.csv", header = F, sep = "\t")
+dataCC=read.csv("final_GO_cellular.csv", header = F)
 pcel <- plot_ly(dataCC,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#ff8f66',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
                 hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
 pcel <- pcel %>% layout(yaxis=list(showticklabels=TRUE))
@@ -401,7 +401,7 @@ pcel
 cat *_molecular.csv >final_GO_molecular.csv
 ```
 ```{r go_plots2, echo=FALSE}
-dataMF=read.delim("final_GO_molecular.csv", header = F, sep = "\t")
+dataMF=read.csv("final_GO_molecular.csv", header = F)
 pmol <- plot_ly(dataMF,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#b0e0e6',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
                 hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
 pmol <- pmol %>% layout(yaxis=list(showticklabels=TRUE))
@@ -420,7 +420,7 @@ pmol
 cat *_biological.csv >final_GO_biological.csv
 ```
 ```{r go_plots3, echo=FALSE}
-dataBP=read.delim("final_GO_biological.csv", header = F, sep = "\t")
+dataBP=read.csv("final_GO_biological.csv", header = F)
 pbio <- plot_ly(dataBP,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#88B04B',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
                 hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
 pbio <- pbio %>% layout(yaxis=list(showticklabels=TRUE))
@@ -442,7 +442,7 @@ pbio
 <br>
 
 ```{bash custom_uniprot, echo=FALSE}
-cat *_custom_uniprot_hits.txt >final_custom_uniprot_hits.csv
+cat *_custom_uniprot_hits.csv >final_custom_uniprot_hits.csv
 ```
 ```{r custom_uniprot_plot, echo=FALSE}
 dataUni=read.csv("final_custom_uniprot_hits.csv", header=F)
