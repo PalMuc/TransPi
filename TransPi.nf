@@ -599,14 +599,14 @@ if (params.onlyAsm) {
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
 
             # csv report
-            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
             total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
 
             #Summary of transcripts after EvidentialGenes
             echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
@@ -631,14 +631,14 @@ if (params.onlyAsm) {
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
 
             # csv report after evigene
-            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
             total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
-            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
             """
 
     }
@@ -830,7 +830,7 @@ if (params.onlyAsm) {
             set +e
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            bash get_busco_val.sh \${tri} \${trans} v3
+            bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -868,7 +868,7 @@ if (params.onlyAsm) {
             set +e
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            bash get_busco_val.sh \${tri} \${trans} v4
+            bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -2765,14 +2765,14 @@ if (params.onlyAsm) {
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
 
             # csv report
-            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
             total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
 
             #Summary of transcripts after EvidentialGenes
             echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
@@ -2797,14 +2797,14 @@ if (params.onlyAsm) {
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
 
             # csv report after evigene
-            echo "Sample,Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
             total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
-            echo "${sample_id},\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
             """
     }
 
@@ -2953,7 +2953,7 @@ if (params.onlyAsm) {
             set +e
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            bash get_busco_val.sh \${tri} \${trans} v3
+            bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
@@ -2991,7 +2991,7 @@ if (params.onlyAsm) {
             set +e
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            bash get_busco_val.sh \${tri} \${trans} v4
+            bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
