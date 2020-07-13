@@ -842,7 +842,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
             # csv
-            sed -i 's/$/\n/g' final_*
+            sed -i 's/\$/\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
@@ -880,7 +880,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
             # csv
-            sed -i 's/$/\n/g' final_*
+            sed -i 's/\$/\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
@@ -2965,7 +2965,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
             # csv
-            sed -i 's/$/\n/g' final_*
+            sed -i 's/\$/\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
@@ -3003,7 +3003,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
             # csv
-            sed -i 's/$/\n/g' final_*
+            sed -i 's/\$/\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
