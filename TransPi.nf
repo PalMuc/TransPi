@@ -820,10 +820,10 @@ if (params.onlyAsm) {
 
         input:
             tuple sample_id, file(files) from busco3_comp_OAS
-            tuple sample_id, file("*.csv") from busco3_OAS_csv
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig_OAS
+            tuple sample_id, file("*.csv") into busco3_OAS_csv
 
         script:
             """
@@ -858,11 +858,11 @@ if (params.onlyAsm) {
 
         input:
             tuple sample_id, file(files) from busco4_comp_OAS
-            tuple sample_id, file("*.csv") into busco4_OAS_csv
 
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
-
+            tuple sample_id, file("*.csv") into busco4_OAS_csv
+            
         script:
             """
             set +e
