@@ -842,7 +842,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
@@ -862,7 +862,7 @@ if (params.onlyAsm) {
         output:
             tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
             tuple sample_id, file("*.csv") into busco4_OAS_csv
-            
+
         script:
             """
             set +e
@@ -880,7 +880,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
@@ -1060,10 +1060,10 @@ if (params.onlyAsm) {
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
             total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
+            echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -1132,10 +1132,10 @@ if (params.onlyAsm) {
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
             total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
+            echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2280,10 +2280,10 @@ if (params.onlyAsm) {
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
             total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
+            echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2351,10 +2351,10 @@ if (params.onlyAsm) {
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
             total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
             complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
             internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-            echo "${sample_id},\${total},\${complete},\${5prime},\${3prime},\${internal}" >>${sample_id}.transdecoder.csv
+            echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
 
@@ -2965,7 +2965,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
@@ -3003,7 +3003,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
