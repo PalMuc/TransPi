@@ -2597,7 +2597,7 @@ if (params.onlyAsm) {
     }
 
     trinotate_ch = Channel.create()
-    evigene_ch_trinotate.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).view().into(trinotate_ch)
+    evigene_ch_trinotate.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).into(trinotate_ch)
 
     process trinotate {
 
@@ -3048,9 +3048,9 @@ if (params.onlyAsm) {
             mv GO_biological.txt ${sample_id}_GO_biological.txt
             mv GO_molecular.txt ${sample_id}_GO_molecular.txt
 
-            cat ${sample_id}_GO_cellular.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_cellular.csv
-            cat ${sample_id}_GO_biological.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_biological.csv
-            cat ${sample_id}_GO_molecular.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_molecular.csv
+            cat ${sample_id}_GO_cellular.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_cellular.csv
+            cat ${sample_id}_GO_biological.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_biological.csv
+            cat ${sample_id}_GO_molecular.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_molecular.csv
             """
     }
 
@@ -3117,7 +3117,8 @@ if (params.onlyAsm) {
 
         script:
             """
-            curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" \
+            awk '{print \$2}' ${kegg} >kegg_only
+            curl -X POST --data-urlencode "selection@kegg_only" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" \
             -d "default_radius=5" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
             """
     }
@@ -3141,7 +3142,7 @@ if (params.onlyAsm) {
     }
 
     report_ch = Channel.create()
-    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report).groupTuple(by:0,size:9).flatten().toList().view().into(report_ch)
+    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report).groupTuple(by:0,size:9).into(report_ch)
 
     process get_report {
 
@@ -3149,17 +3150,24 @@ if (params.onlyAsm) {
 
         input:
             file(files) from report_ch
-                .collect()
+                .flatten().toList()
 
         output:
             file("*html") into final_report
 
         script:
             """
-            sample_id=\$( cat input.1 )
             cp ${params.mypwd}/bin/TransPi_Report_Ind.Rmd .
-            cat SRR7716079_150bp_R_GO_cellular.csv
-            Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
+            for x in `ls -1 input.*`;do
+                echo \${x}
+                sample_id=\$( cat \${x} )
+                mkdir \${sample_id} && cd \$sample_id
+                cp ../\${sample_id}{.,_}* .
+                cp ../TransPi_Report_Ind.Rmd .
+                Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
+                cp TransPi_Report_\${sample_id}.html ../
+                cd ..
+            done
             """
     }
 
