@@ -186,17 +186,56 @@ if (params.help) {
     exit 0
 }
 
-log.info """\
-        =========================================
-        TransPi - Transcriptome Analysis Pipeline
-        =========================================
-        TransPi Installation:       ${params.mypwd}
-        Reads Length:               ${params.max_rd_len}
-        Kmers:                      ${params.k}
-        Working Directory:          ${workDir}
-        Uniprot DB:                 ${params.uniprot}
-        Busco DB:                   ${params.busco4db}
-        """.stripIndent()
+def hasExtension(it, extension) {
+    it.toString().toLowerCase().endsWith(extension.toLowerCase())
+}
+
+if (params.all) {
+    log.info """\
+            =========================================
+            TransPi - Transcriptome Analysis Pipeline
+            =========================================
+            TransPi Installation:       ${params.mypwd}
+            Results Directory:          ${params.outDir}
+            Working Directory:          ${workDir}
+            Reads Length:               ${params.max_rd_len}
+            Kmers:                      ${params.k}
+            Uniprot DB:                 ${params.uniprot}
+            Busco DB:                   ${params.busco4db}
+            """.stripIndent()
+} else if (params.onlyAnn) {
+    log.info """\
+            =========================================
+            TransPi - Transcriptome Analysis Pipeline
+            =========================================
+            TransPi Installation:       ${params.mypwd}
+            Results Directory:          ${params.outDir}
+            Working Directory:          ${workDir}
+            Uniprot DB:                 ${params.uniprot}
+            """.stripIndent()
+} else if (params.onlyAsm) {
+    log.info """\
+            =========================================
+            TransPi - Transcriptome Analysis Pipeline
+            =========================================
+            TransPi Installation:       ${params.mypwd}
+            Results Directory:          ${params.outDir}
+            Working Directory:          ${workDir}
+            Reads Length:               ${params.max_rd_len}
+            Kmers:                      ${params.k}
+            Busco DB:                   ${params.busco4db}
+            """.stripIndent()
+} else if (params.onlyEvi){
+    log.info """\
+            =========================================
+            TransPi - Transcriptome Analysis Pipeline
+            =========================================
+            TransPi Installation:       ${params.mypwd}
+            Results Directory:          ${params.outDir}
+            Working Directory:          ${workDir}
+            Busco DB:                   ${params.busco4db}
+            """.stripIndent()
+}
 
 if (params.readsTest) {
     println("\n\tRunning TransPi with TEST dataset\n")
@@ -205,13 +244,13 @@ if (params.readsTest) {
         .map{ row -> [ row[0], [ file(row[1][0],checkIfExists: true),file(row[2][0],checkIfExists: true) ] ] }
         .ifEmpty{ exit 1, "params.readsTest was empty - no input files supplied" }
         .into{ reads_ch; reads_qc_ch }
-} else if (params.onlyEvi) {
-    println("\n\tRunning TransPi with your dataset\n")
 } else {
     println("\n\tRunning TransPi with your dataset\n")
-    Channel
-        .fromFilePairs("${params.reads}", checkIfExists: true)
-        .into{ reads_ch; reads_qc_ch }
+    if ( params.all || params.onlyAsm ) {
+        Channel
+            .fromFilePairs("${params.reads}", checkIfExists: true)
+            .into{ reads_ch; reads_qc_ch }
+    }
 }
 
 if (params.onlyAsm) {
@@ -1855,7 +1894,6 @@ if (params.onlyAsm) {
         reads_ch
             .set{ reads_ass_ch }
         fastp_results = Channel.empty()
-        reads_ass_ch = Channel.empty()
         fastp_csv = Channel.empty()
     }
 
@@ -1867,12 +1905,15 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
+            publishDir "${workDir}/${params.outdir}/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq"
+
             input:
                 tuple sample_id, file(reads) from reads_ass_ch
 
             output:
-                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss )
+                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi )
+                tuple sample_id, file("${sample_id}_R1.norm.fq"), file("${sample_id}_R2.norm.fq") into ( save_reads )
 
             script:
                 //def mem=(task.memory)
@@ -1927,27 +1968,52 @@ if (params.onlyAsm) {
                 """
             }
         }
+    }
 
-    } else {
+    if (params.skipFilter && params.skipNormalization) {
 
-        process uncompress_reads {
+        if (hasExtension(params.reads, 'gz')) {
 
-            label 'low_cpus'
+            process uncompress_reads {
 
-            tag "${sample_id}"
+                label 'low_cpus'
 
-            input:
-                tuple sample_id, file(reads) from reads_ass_ch
+                tag "${sample_id}"
 
-            output:
-                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss )
+                input:
+                    tuple sample_id, file(reads) from reads_ass_ch
 
-            script:
-                """
-                echo ${sample_id}
-                zcat ${reads[0]} >left-${sample_id}.fq &
-                zcat ${reads[1]} >right-${sample_id}.fq
-                """
+                output:
+                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
+
+                script:
+                    """
+                    echo ${sample_id}
+                    zcat ${reads[0]} >left-${sample_id}.fq &
+                    zcat ${reads[1]} >right-${sample_id}.fq
+                    """
+            }
+        } else {
+
+            process rename_reads {
+
+                label 'low_cpus'
+
+                tag "${sample_id}"
+
+                input:
+                    tuple sample_id, file(reads) from reads_ass_ch
+
+                output:
+                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
+
+                script:
+                    """
+                    echo ${sample_id}
+                    cat ${reads[0]} >left-${sample_id}.fq &
+                    cat ${reads[1]} >right-${sample_id}.fq
+                    """
+            }
         }
     }
 
@@ -2175,7 +2241,7 @@ if (params.onlyAsm) {
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt )
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt, rna_quast_ch )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
         script:
@@ -2198,6 +2264,33 @@ if (params.onlyAsm) {
                 rm -rf tmpfiles/
             fi
         	"""
+    }
+
+    // check groupTuple
+    reads_rna_quast.mix( rna_quast_ch ).groupTuple(by:0).view().into( rna_quast )
+
+    process rna_quast {
+
+        label 'med_mem'
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true
+
+        input:
+            tuple sample_id, file(files) from rna_quast.collect()
+
+        output:
+            tuple sample_id, file("${sample_id}.rna_quast") from rna_quast_ch
+
+        script:
+            """
+            echo ${files} | tr " " "\\n" >list.txt
+            assembly=\$( cat list.txt | grep ".combined.okay.fa" )
+            r1=\$( cat list.txt | grep "left-" )
+            r2=\$( cat list.txt | grep "right-" )
+            rnaQUAST.py --transcripts \${assembly} -1 \${r1} -2 \${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
+            """
     }
 
     if (params.filterSpecies) {
@@ -2323,7 +2416,7 @@ if (params.onlyAsm) {
                 	file(database) from diamond_output
 
             	output:
-            	   file("*.fasta")
+            	   file("*.fasta") into psytrans
 
                 script:
                 	"""
@@ -2335,11 +2428,11 @@ if (params.onlyAsm) {
             println("\n\t\033[0;31mNeed to provide a host and symbiont sequence. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
             exit 0
         }
-
     }
 
     if (params.allBuscos) {
 
+        // estimate the number of files
         busco3_all = Channel.create()
         assemblies_ch_soap_busco3.mix( assemblies_ch_velvet_busco3, assemblies_ch_spades_busco3, assemblies_ch_transabyss_busco3, assemblies_ch_trinity_busco3 ).groupTuple(by:0,size:5).into(busco3_all)
 
@@ -2416,8 +2509,6 @@ if (params.onlyAsm) {
                 """
         }
 
-        // Collect all busco3
-
         process busco4_all_summary {
 
             publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true
@@ -2428,12 +2519,10 @@ if (params.onlyAsm) {
 
             script:
                 """
-
+                #python script here
                 """
 
         }
-
-        // Collect all busco4
 
         process busco4_all_summary {
 
@@ -2445,7 +2534,7 @@ if (params.onlyAsm) {
 
             script:
                 """
-
+                #python script here
                 """
 
         }
@@ -2465,7 +2554,7 @@ if (params.onlyAsm) {
 
                 script:
                     """
-
+                    SOS_busco.py
                     """
 
             }
@@ -3520,24 +3609,27 @@ if (params.onlyAsm) {
     report_ch = Channel.create()
     fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report).groupTuple(by:0,size:9).flatten().toList().view().into(report_ch)
 
-    process get_report {
+    if (!params.skipReport) {
 
-        publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
+        process get_report {
 
-        input:
-            file(files) from report_ch
-                .collect()
+            publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
 
-        output:
-            file("*html") into final_report
+            input:
+                file(files) from report_ch
+                    .collect()
 
-        script:
-            """
-            sample_id=\$( cat input.1 )
-            cp ${params.mypwd}/bin/TransPi_Report_Ind.Rmd .
-            cat SRR7716079_150bp_R_GO_cellular.csv
-            Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
-            """
+            output:
+                file("*html") into final_report
+
+            script:
+                """
+                sample_id=\$( cat input.1 )
+                cp ${params.mypwd}/bin/TransPi_Report_Ind.Rmd .
+                cat SRR7716079_150bp_R_GO_cellular.csv
+                Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
+                """
+        }
     }
 
 } else if (params.onlyEvi) {
