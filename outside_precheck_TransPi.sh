@@ -3,7 +3,7 @@ export mypwd="$1"
 os_c() {
     if [ -f /etc/os-release ];then
         echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
-        curl -o Anaconda3-2020.02-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+        curl -o Anaconda3-2020.07-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh
     else
         echo -e "\n\t\e[31m -- ERROR: Are you in a Linux system? Please check requirements and rerun the pre-check --\e[39m\n"
         exit 0
@@ -38,10 +38,16 @@ conda_c() {
                 fi
             elif [ "$check_env" -eq 1 ];then
                 echo -e "\n\t -- TransPi environment is installed and ready to be used --\n"
+            else
+                echo -e "\n\t\e[31m -- ERROR: TransPi environment could not be determined --\e[39m\n"
+                exit 0
             fi
+        else
+            echo -e "\n\t\e[31m -- ERROR: Conda is installed but version seems to be lower than 4.8 --\e[39m\n"
+            exit 0
         fi
     else
-        echo -e "\n\t -- Conda is not intalled. Please install Anaconda (https://www.anaconda.com) and rerun this script --\n"
+        echo -e "\n\t -- Conda is not intalled --\n"
         echo -e -n "\n\t    Do you want to install Anaconda? (y,n,exit): "
         read ans
         case $ans in
@@ -440,7 +446,7 @@ uniprot_c () {
     fi
 }
 java_c () {
-	export NXF_VER=20.01.0-edge && curl -s https://get.nextflow.io | bash 2>.error_nextflow
+	export NXF_VER=20.07.01 && curl -s https://get.nextflow.io | bash 2>.error_nextflow
 	check_err=$( head -n 1 .error_nextflow | grep -c "java: command not found" )
 	if [ $check_err -eq 1 ];then
 		echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement for Nextflow --\e[39m\n"
@@ -455,7 +461,7 @@ nextflow_c () {
     if [ $check_next -eq 1 ];then
         echo -e "\n\t -- Nextflow is installed -- \n"
     elif [ $check_next -eq 0 ];then
-	check_next=$( ./nextflow info | head -n 1 | wc -l )
+	    check_next=$( ./nextflow info | head -n 1 | wc -l )
         if [ $check_next -eq 1 ];then
             echo -e "\n\t -- Nextflow is installed -- \n"
 	    else
