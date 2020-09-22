@@ -1120,11 +1120,11 @@ if (params.onlyAsm) {
             echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
             # csv for report
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
+            complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
+            n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
             echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
@@ -1192,11 +1192,11 @@ if (params.onlyAsm) {
             echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             # csv for report
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
+            complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
+            n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
             echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
@@ -2744,11 +2744,11 @@ if (params.onlyAsm) {
             echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
             # csv for report
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
+            complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
+            n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
             echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
@@ -2815,11 +2815,11 @@ if (params.onlyAsm) {
             echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
             # csv for report
             echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-            total=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-            complete=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-            n5prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            n3prime=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            internal=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+            total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
+            complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
+            n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+            n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+            internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
             echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
             echo -e "\\n-- Done with statistics --\\n"
