@@ -1393,7 +1393,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file(assembly) from assembly_ch_rnammer_OA
 
             output:
-                tuple sample_id, file("*.rnammer.gff") into trinotate_ch_rnammer_OA
+                tuple sample_id, file("${sample_id}.rnammer.gff") into trinotate_ch_rnammer_OA
 
             script:
                 """
@@ -1453,7 +1453,7 @@ if (params.onlyAsm) {
             done
 
             assembly=\$( cat .vars.txt | grep "${sample_id}_asssembly.fasta" )
-            transdecoder=\$( cat .vars.txt | grep "${sample_id}.fasta.transdecoder.pep" )
+            transdecoder=\$( cat .vars.txt | grep -E "${sample_id}.*.transdecoder.pep" )
             diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
             diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
             custom_blastx=\$( cat .vars.txt | grep "${sample_id}.custom.diamond_blastx.outfmt6" )
