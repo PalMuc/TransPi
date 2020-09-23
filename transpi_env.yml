@@ -33,3 +33,4 @@ dependencies:
   - r-knitr=1.29
   - r-rmarkdown=2.3
   - r-kableextra=1.1.0
+  - pandas-1.1.2
