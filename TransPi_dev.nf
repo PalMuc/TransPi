@@ -832,8 +832,8 @@ if (params.onlyAsm) {
 
         script:
             """
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
@@ -860,8 +860,8 @@ if (params.onlyAsm) {
 
         script:
             """
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus4.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus4.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
@@ -2267,6 +2267,7 @@ if (params.onlyAsm) {
     }
 
     // check groupTuple
+    rna_quast = Channel.create()
     reads_rna_quast.mix( evigene_ch_rna_quast ).groupTuple(by:0, size:3).view().into( rna_quast )
 
     process rna_quast {
@@ -2449,10 +2450,11 @@ if (params.onlyAsm) {
             publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true
 
             input:
-                tuple sample_id, file(files) from busco3_all_OAS
+                tuple sample_id, file(files) from busco3_all
 
             output:
                 tuple sample_id, file("*.bus3") into busco3_all_ch
+                tuple sample_id, file("*.Trinity.bus3.txt") into busco3_ch_trinity_sum
                 tuple sample_id, file("*.txt"), file("*.tsv") into busco3_all_sum_ch
                 tuple sample_id, file("${sample_id}_all_busco3.tsv"), file("${sample_id}_all_assemblers.fa") into busco3_all_tsv
 
@@ -2500,6 +2502,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.bus4") into busco4_all_ch
+                tuple sample_id, file("*.Trinity.bus4.txt") into busco4_ch_trinity_sum
                 tuple sample_id, file("*.txt"), file("*.tsv") into busco4_all_sum_ch
                 tuple sample_id, file("${sample_id}_all_busco4.tsv"), file("${sample_id}_all_assemblers.fa") into busco4_all_tsv
 
@@ -2545,7 +2548,7 @@ if (params.onlyAsm) {
 
                 output:
                     tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco3_sum
-                    tuple sample_id, file("*_table.tsv") busco3_heatmap
+                    tuple sample_id, file("*_table.tsv") into busco3_heatmap
 
                 script:
                     """
@@ -2590,8 +2593,8 @@ if (params.onlyAsm) {
                     tuple sample_id, file(all_busco), file(assembly) from busco4_all_tsv
 
                 output:
-                    tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco3_sum
-                    tuple sample_id, file("*_table.tsv") busco4_heatmap
+                    tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco4_sum
+                    tuple sample_id, file("*_table.tsv") into busco4_heatmap
 
                 script:
                     """
@@ -3343,8 +3346,8 @@ if (params.onlyAsm) {
 
         script:
             """
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V3 \\n" >>${sample_id}.sum_busco3.txt
             echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
@@ -3371,8 +3374,8 @@ if (params.onlyAsm) {
 
         script:
             """
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus4.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus4.txt" )
             #Summary of BUSCO scores for the final_assemblies
             echo -e "Summary of BUSCO V4 \\n" >>${sample_id}.sum_busco4.txt
             echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
@@ -3738,18 +3741,18 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OE
 
         output:
-            tuple sample_id, file("*.TransPi.bus") into busco3_ch_OE
-            tuple sample_id, file("*.bus.txt") into busco3_summary_OE
+            tuple sample_id, file("*.TransPi.bus3") into busco3_ch_OE
+            tuple sample_id, file("*.bus3.txt") into busco3_summary_OE
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.TransPi.bus/short_summary_${sample_id}.TransPi.bus.txt .
+            cp run_${sample_id}.TransPi.bus3/short_summary_${sample_id}.TransPi.bus3.txt .
             """
     }
 
@@ -3767,18 +3770,18 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OE
 
         output:
-            tuple sample_id, file("*.TransPi.bus") into busco4_ch_OE
-            tuple sample_id, file("*.bus.txt") into busco4_summary_OE
+            tuple sample_id, file("*.TransPi.bus4") into busco4_ch_OE
+            tuple sample_id, file("*.bus4.txt") into busco4_summary_OE
 
         script:
             """
             echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus4 -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
             echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.TransPi.bus/short_summary.*.${sample_id}.TransPi.bus.txt .
+            cp ${sample_id}.TransPi.bus4/short_summary.*.${sample_id}.TransPi.bus4.txt .
             """
     }
 
