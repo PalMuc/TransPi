@@ -1995,7 +1995,7 @@ if (params.onlyAsm) {
             }
         } else {
 
-            process rename_reads {
+            process create_readsfile {
 
                 label 'low_cpus'
 
@@ -2241,7 +2241,7 @@ if (params.onlyAsm) {
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt, rna_quast_ch )
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt, evigene_ch_rna_quast )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
         script:
@@ -2267,7 +2267,7 @@ if (params.onlyAsm) {
     }
 
     // check groupTuple
-    reads_rna_quast.mix( rna_quast_ch ).groupTuple(by:0).view().into( rna_quast )
+    reads_rna_quast.mix( evigene_ch_rna_quast ).groupTuple(by:0, size:3).view().into( rna_quast )
 
     process rna_quast {
 
@@ -2278,10 +2278,10 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file(files) from rna_quast.collect()
+            tuple sample_id, file(files) from rna_quast
 
         output:
-            tuple sample_id, file("${sample_id}.rna_quast") from rna_quast_ch
+            tuple sample_id, file("${sample_id}.rna_quast") into rna_quast_sum
 
         script:
             """
