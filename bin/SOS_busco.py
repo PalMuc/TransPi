@@ -1,167 +1,94 @@
-
-
-############################################## SOS BUSCO #####################################################
-
-
-#Import required stuff
-
 import pandas as pd
 import Bio
 from Bio import SeqIO
-from functools import reduce
 import argparse
-import csv
+from functools import reduce
+import numpy as np
+import math
+import sys
 from collections import Counter
 
-#Three arguments are required:
-
-#   1) a table with busco scores. First row has to be the header in the 5 following columns (Busco id  Status  sequence legnth  score)
-#   2) a fasta file from which to extract the sequences. The sequence name has to match with the sequence name in --input_busco_table.
-#   3) an integer n. This is the number of BUSCO genes that are present in the database used for the analysis.
-
-#   4) OPTIONAL: to be 'rescued' a busco hit has to be - by default - present in at least 3 assemblers outputs.
-#      It is possible however to change this value (between 1 and 5) by sepcifying the -min option. 
-
 parser = argparse.ArgumentParser(usage='', description='')
-parser.add_argument('-input_busco_table', dest='input_busco_table', required = True)
-parser.add_argument('-input_fasta', dest='input_fasta', required = True)
-parser.add_argument('-n_genes', dest='genes_number', type=int, required = True)
-parser.add_argument('-min', dest='min_assemblers', type=int, required = False)
+parser.add_argument('-input_file_busco', dest='input_file_busco',required=True)
+parser.add_argument('-input_file_fasta', dest='input_file_fasta',required=True)
+parser.add_argument('-min', dest='min_num_assembler', type=float, required=True)
+parser.add_argument('-kmers',dest='kmers',required=True)
 
 args = parser.parse_args()
 
 
+assemblers_names = ['SOAP','SPADES','TransABySS','Velvet']
 
-#Stores the number of genes present in the Busco database used for the analysis.
+all_missing_list = []
+list_of_databases = []
+final_list = []
 
-n = args.genes_number
+Busco_to_save = []
 
-# The busco scores table is imported and converted to a pandas dataframe.
-
-input_database = pd.read_csv(args.input_busco_table, sep='\t', header=0)
-
-# For duplicated entries only the first match is kept. This is done to have each database contain the same number (n) of entries.
-
-unique_database = input_database.groupby((input_database['Busco id'] !=input_database['Busco id'].shift()).cumsum().values).first()
+with open(args.input_file_busco) as input_busco_file:
 
 
-# Split the input busco table into 'assembler-specific' dataframes. From each of these, missing Busco IDs are extracted.
-# IDs for Busco genes which are missing is converted to list.
 
-SOAP_database = unique_database[:n]
-SOAP_missing = SOAP_database[SOAP_database.Status.eq('Missing')].iloc[:,0].tolist()
-
-
-SPADES_database = unique_database[n:n*2]
-SPADES_missing = SPADES_database[SPADES_database.Status.eq('Missing')].iloc[:,0].tolist()
+    kmers_list = args.kmers.strip().split(',')
+    nr_of_kmers = (len(kmers_list)*4+2)
+    column_names = [(assembler + '_' + kmer) for assembler,kmer in zip(assemblers_names,kmers_list) for kmer in kmers_list]
+    column_names.insert(3*len(kmers_list) ,'Trinity')
+    column_names.insert(len(column_names),'Transpi')
+    column_names.insert(0,'Busco ID')
 
 
-TransABySS_database = unique_database[n*2:n*3]
-TransABySS_missing = TransABySS_database[TransABySS_database.Status.eq('Missing')].iloc[:,0].tolist()
+    busco_df = pd.read_csv(input_busco_file, sep=',',header=0,names=['Busco_id','Status','Sequence','Score','Length'])
+    busco_unique = busco_df.groupby((busco_df['Busco_id'] !=busco_df['Busco_id'].shift()).cumsum().values).first()
+
+    busco_tables = np.array_split(busco_unique, nr_of_kmers)
+    transpi_table = busco_tables[nr_of_kmers-1]
 
 
-Trinity_database = unique_database[n*3:n*4]
-Trinity_missing = Trinity_database[Trinity_database.Status.eq('Missing')].iloc[:,0].tolist()
+
+    for table in busco_tables:
+        busco_missing = table[table.Status.eq('Missing')].iloc[:,0].tolist()
+        all_missing_list.extend(busco_missing)
+        missing_Busco = list(dict.fromkeys(all_missing_list))
+
+    for table in busco_tables:
+        final_df = table[table['Busco_id'].isin(missing_Busco)].iloc[:, 0:2]
+        final_list.append(final_df)
 
 
-Velvet_database = unique_database[n*4:n*5]
-Velvet_missing = Velvet_database[Velvet_database.Status.eq('Missing')].iloc[:,0].tolist()
 
-TransPi_database = unique_database[n*5:n*6]
-TransPi_missing = TransPi_database[TransPi_database.Status.eq('Missing')].iloc[:,0].tolist()
+    comparison_table = reduce(lambda left,right: pd.merge(left,right,on='Busco_id'), final_list)
+    comparison_table.columns = column_names
+    transpi_table = comparison_table[(comparison_table['Transpi'] == 'Missing')]
 
-
-#Missing Busco ID from each assembler output are combined in a single list and duplicates are removed.
-
-all_missing_Busco = SOAP_missing + SPADES_missing + TransABySS_missing + Trinity_missing + Velvet_missing + TransPi_missing
-missing_Busco = list(dict.fromkeys(all_missing_Busco))
-
-# For each Busco entry missing in one assembler, the 'status' (e.g., 'complete', 'fragmented',etc) is determined for other assemblers.
-# Column name is changed from 'status' to assembler name. This is done to produce  'Busco_comparison_table.csv'
-
-SOAP_final = SOAP_database[SOAP_database['Busco id'].isin(missing_Busco)].iloc[:, 0:2]
-SOAP_final.columns = ['SOAP' if x=='Status' else x for x in SOAP_final.columns]
-
-SPADES_final = SPADES_database[SPADES_database['Busco id'].isin(missing_Busco)].iloc[:, 0:2]
-SPADES_final.columns = ['SPADES' if x=='Status' else x for x in SPADES_final.columns]
-
-TransABySS_final = TransABySS_database[TransABySS_database['Busco id'].isin(missing_Busco)].iloc[:, 0:2]
-TransABySS_final.columns = ['TransABySS' if x=='Status' else x for x in TransABySS_final.columns]
-
-Trinity_final = Trinity_database[Trinity_database['Busco id'].isin(missing_Busco)].iloc[:, 0:2]
-Trinity_final.columns = ['Trinity' if x=='Status' else x for x in Trinity_final.columns]
-
-Velvet_final = Velvet_database[Velvet_database['Busco id'].isin(missing_Busco)].iloc[:, 0:2]
-Velvet_final.columns = ['Velvet' if x=='Status' else x for x in Velvet_final.columns]
-
-TransPi_final = TransPi_database[TransPi_database['Busco id'].isin(missing_Busco)].iloc[:, 0:2]
-TransPi_final.columns = ['TransPi' if x=='Status' else x for x in TransPi_final.columns]
+    comparison_table.to_csv('Complete_comparison_table',sep='\t',index=False)
+    transpi_table.to_csv('Transpi_comparison_table',sep='\t',index=False)
 
 
-#The output 'Busco_comparison_table' is computed.
-
-dataframes = [SOAP_final, SPADES_final, TransABySS_final, Trinity_final, Velvet_final, TransPi_final]
-comparison_table = reduce(lambda left,right: pd.merge(left,right,on='Busco id'), dataframes)
-
-# Determines if Busco entries - missing in Transpi - have a corresponding 'complete' match in other assemblers outputs.
-# Matches are converted to list
-
-rescued_from_SOAP = comparison_table[(comparison_table.TransPi =='Missing') & (comparison_table.SOAP == 'Complete')].iloc[:,0].tolist()
-rescued_from_SPADES = comparison_table[(comparison_table.TransPi =='Missing') & (comparison_table.SPADES == 'Complete')].iloc[:,0].tolist()
-rescued_from_TransABySS = comparison_table[(comparison_table.TransPi =='Missing') & (comparison_table.TransABySS == 'Complete')].iloc[:,0].tolist()
-rescued_from_trinity = comparison_table[(comparison_table.TransPi =='Missing') & (comparison_table.Trinity == 'Complete')].iloc[:,0].tolist()
-rescued_from_Velvet = comparison_table[(comparison_table.TransPi =='Missing') & (comparison_table.Velvet == 'Complete')].iloc[:,0].tolist()
-
-all_seqs_to_save = []
-
-# If matches are present in each assembler 'list' store (for each match) the Busco id, sequence id, score in list 'all_seqs_to_save'
-
-if len(rescued_from_SOAP) != 0:
-    for i in rescued_from_SOAP:
-        SOAP_seqs = (i,SOAP_database[SOAP_database['Busco id'] == i].iloc[:,2])
-        all_seqs_to_save.append(SOAP_seqs)
-
-if len(rescued_from_SPADES) != 0:
-        for i in rescued_from_trinity:
-            SPADES_seqs = (i,SPADES_database['Sequence'].loc[SPADES_database['Busco id'] == i].values[0],SPADES_database['Score'].loc[SPADES_database['Busco id'] == i].values[0])
-            all_seqs_to_save.append(SPADES_seqs)
-
-if len(rescued_from_TransABySS) != 0:
-        for i in rescued_from_TransABySS:
-            TransABySS_seqs = (i,TransABySS_database['Sequence'].loc[TransABySS_database['Busco id'] == i].values[0],TransABySS_database['Score'].loc[TransABySS_database['Busco id'] == i].values[0])
-            all_seqs_to_save.append(TransABySS_seqs)
+    BUSCO_to_rescue =  transpi_table[(transpi_table == 'Complete').any(axis=1)].iloc[:,0].tolist()
 
 
-if len(rescued_from_trinity) != 0:
-        for i in rescued_from_trinity:
-            trinity_seqs = (i,Trinity_database['Sequence'].loc[Trinity_database['Busco id'] == i].values[0],Trinity_database['Score'].loc[Trinity_database['Busco id'] == i].values[0])
-            all_seqs_to_save.append(trinity_seqs)
 
-if len(rescued_from_Velvet) != 0:
-    for i in rescued_from_Velvet:
-        Velvet_seqs = (i,Velvet_database['Sequence'].loc[Velvet_database['Busco id'] == i].values[0],Velvet_database['Score'].loc[Velvet_database['Busco id'] == i].values[0])
-        all_seqs_to_save.append(Velvet_seqs)
+    if len(BUSCO_to_rescue) == 0:
+        sys.exit(0)
 
+    elif len(BUSCO_to_rescue) != 0:
+        for table in busco_tables[:-1]:
+            for i in BUSCO_to_rescue:
+                seqs = (i,table['Sequence'].loc[table['Busco_id'] == i].values[0],table['Score'].loc[table['Busco_id'] == i].values[0])
+                Busco_to_save.append(seqs)
 
-#The next section makes sure that only Busco with matches in at least 3 different assemblers are rescued.
-#Matches that satisfy this criteria are appended to the list 'seqs_to_save'
-
-flat_list = [i[0] for i in all_seqs_to_save]
+potential_seqs = [t for t in Busco_to_save if not any(isinstance(n, float) and math.isnan(n) for n in t)]
+flat_list = [i[0] for i in potential_seqs]
 busco_count = Counter(flat_list)
 
-if args.min_assemblers:
-
-    busco_to_save = [k for k, v in busco_count.items() if v >= args.min_assemblers]
-
-else:
-
-    busco_to_save = [k for k, v in busco_count.items() if v >= 3]
 
 
-seqs_to_save = [item for item in all_seqs_to_save if item[0] in busco_to_save]
+min_number = nr_of_kmers * args.min_num_assembler
+busco_to_save = [k for k, v in busco_count.items() if v >= min_number]
 
-#Data is sorted based on the busco score and duplicates are removed. This makes sure that, if a sequence can be retrieved from multiple
-#assemblers output, the one with the highest score is considered.
+
+
+seqs_to_save = [item for item in potential_seqs if item[0] in busco_to_save]
 
 seqs_to_save.sort(key= lambda x: x[2], reverse=True)
 
@@ -173,22 +100,17 @@ for busco_id, sequence, score in seqs_to_save:
          checked.add(busco_id)
          unique_seqs_list.append((busco_id,sequence))
 
-#Finally, the IDs for the sequences to rescue are inserted in the list 'sequences_IDs_to_rescue'
-
-sequences_IDs_to_rescue = [ x[1] for x in unique_seqs_list]
-
-
 #The fasta file is parsed with Biopython SeqIO.parse. And target sequences are extracted.
 
+sequences_IDs_to_rescue = [ x[1] for x in unique_seqs_list]
 fasta_to_extract = []
 
-for seqrecord in SeqIO.parse(args.input_fasta, 'fasta'):
+for seqrecord in SeqIO.parse(args.input_file_fasta, 'fasta'):
     if seqrecord.id in sequences_IDs_to_rescue:
         fasta_to_extract.append(seqrecord)
 
 #Output files are written.
 
-comparison_table.to_csv('Busco_comparison_table.csv',index=False)
 
 with open('sequences_to_add.fasta','w') as outputh:
     SeqIO.write(fasta_to_extract,outputh,'fasta')
