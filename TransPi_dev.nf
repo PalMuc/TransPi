@@ -890,8 +890,8 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
             bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
@@ -928,8 +928,8 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus4.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus4.txt" )
             bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
@@ -2454,7 +2454,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.bus3") into busco3_all_ch
-                tuple sample_id, file("*.Trinity.bus3.txt") into busco3_ch_trinity_sum
+                tuple sample_id, file("*.Trinity.bus3.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
                 tuple sample_id, file("*.txt"), file("*.tsv") into busco3_all_sum_ch
                 tuple sample_id, file("${sample_id}_all_busco3.tsv"), file("${sample_id}_all_assemblers.fa") into busco3_all_tsv
 
@@ -2502,7 +2502,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.bus4") into busco4_all_ch
-                tuple sample_id, file("*.Trinity.bus4.txt") into busco4_ch_trinity_sum
+                tuple sample_id, file("*.Trinity.bus4.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
                 tuple sample_id, file("*.txt"), file("*.tsv") into busco4_all_sum_ch
                 tuple sample_id, file("${sample_id}_all_busco4.tsv"), file("${sample_id}_all_assemblers.fa") into busco4_all_tsv
 
@@ -3472,8 +3472,8 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
             bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
@@ -3510,8 +3510,8 @@ if (params.onlyAsm) {
         script:
             """
             set +e
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus4.txt" )
+            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus4.txt" )
             bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
             cp ${params.mypwd}/bin/busco_comparison.R .
             a=\$( cat final_spec )
