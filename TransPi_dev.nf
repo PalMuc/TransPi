@@ -285,7 +285,7 @@ if (params.onlyAsm) {
 
         process fastp_OAS {
 
-            label 'med_cpus' // check this later
+            label 'med_cpus'
 
             tag "${sample_id}"
 
@@ -1864,7 +1864,7 @@ if (params.onlyAsm) {
 
         process fastp {
 
-            label 'med_cpus' // check this later
+            label 'med_cpus'
 
             tag "${sample_id}"
 
@@ -2430,9 +2430,13 @@ if (params.onlyAsm) {
         }
     }
 
+    def slist="${params.k}".split(',').collect{it as int}
+    def m=slist.size()
+    def n=4*m+1
+
     if (params.allBuscos) {
 
-        // estimate the number of files
+        // estimate the number of files, either 5 or n
         busco3_all = Channel.create()
         assemblies_ch_soap_busco3.mix( assemblies_ch_velvet_busco3, assemblies_ch_spades_busco3, assemblies_ch_transabyss_busco3, assemblies_ch_trinity_busco3 ).groupTuple(by:0,size:5).into(busco3_all)
 
@@ -2450,6 +2454,7 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("*.bus3") into busco3_all_ch
                 tuple sample_id, file("*.txt"), file("*.tsv") into busco3_all_sum_ch
+                tuple sample_id, file("${sample_id}_all_busco3.tsv"), file("${sample_id}_all_assemblers.fa") into busco3_all_tsv
 
             script:
                 """
@@ -2467,6 +2472,13 @@ if (params.onlyAsm) {
                     echo -e "\\n-- DONE with BUSCO --\\n"
 
                 done
+
+                echo "Busco_id,Status,Sequence,Score,Length" >.header.txt
+                cat full_table_*.tsv | grep -v "#" | tr "\t" "," >.busco_names.txt
+                cat .header.txt .busco_names.txt >${sample_id}_all_busco3.tsv
+                rm .header.txt .busco_names.txt
+
+                cat *.fa >${sample_id}_all_assemblers.fa
                 """
         }
 
@@ -2484,11 +2496,12 @@ if (params.onlyAsm) {
             publishDir "${workDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true
 
             input:
-                tuple sample_id, file(files) from busco4_all_OAS
+                tuple sample_id, file(files) from busco4_all
 
             output:
                 tuple sample_id, file("*.bus4") into busco4_all_ch
                 tuple sample_id, file("*.txt"), file("*.tsv") into busco4_all_sum_ch
+                tuple sample_id, file("${sample_id}_all_busco4.tsv"), file("${sample_id}_all_assemblers.fa") into busco4_all_tsv
 
             script:
                 """
@@ -2506,57 +2519,109 @@ if (params.onlyAsm) {
                     echo -e "\\n-- DONE with BUSCO --\\n"
 
                 done
-                """
-        }
 
-        process busco4_all_summary {
+                echo "Busco_id,Status,Sequence,Score,Length" >.header.txt
+                cat full_table_*.tsv | grep -v "#" | tr "\t" "," >.busco_names.txt
+                cat .header.txt .busco_names.txt >${sample_id}_all_busco4.tsv
+                rm .header.txt .busco_names.txt
 
-            publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true
-
-            input:
-                file(busco3) from busco3_all_sum_ch
-                    .collect()
-
-            script:
-                """
-                #python script here
-                """
-
-        }
-
-        process busco4_all_summary {
-
-            publishDir "${workDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true
-
-            input:
-                file(busco4) from busco4_all_sum_ch
-                    .collect()
-
-            script:
-                """
-                #python script here
-                """
-
-        }
-
-        process heatmap {
-
-            script:
-                """
-
+                cat *.fa >${sample_id}_all_assemblers.fa
                 """
         }
 
         // default perhaps
         if (params.rescueBusco) {
 
-            process rescue_busco {
+            process rescue_busco3 {
+
+                label 'exlow_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/rescue_busco3", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
+
+                input:
+                    tuple sample_id, file(all_busco), file(assembly) from busco3_all_tsv
+
+                output:
+                    tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco3_sum
+                    tuple sample_id, file("*_table.tsv") busco3_heatmap
 
                 script:
                     """
-                    SOS_busco.py
+                    SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
+                    mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
+                    mv Transpi_comparison_table ${sample_id}_Transpi_comparison_table.tsv
+                    mv sequences_to_add.fasta ${sample_id}_sequences_to_add.fasta
                     """
 
+            }
+
+            process heatmap_busco3 {
+
+                label 'exlow_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/rescue_busco3", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
+
+                input:
+                    tuple sample_id, file(all_busco3) from busco3_heatmap
+
+                output:
+                    tuple sample_id, file("*.png"), file("*.pdf") into heatmap_busco3_sum
+
+                script:
+                    """
+                    cp ${params.mypwd}/bin/heatmap_busco.R .
+                    Rscript heatmap_busco.R ${sample_id}
+                    """
+            }
+
+            process rescue_busco4 {
+
+                label 'exlow_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/rescue_busco4", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
+
+                input:
+                    tuple sample_id, file(all_busco), file(assembly) from busco4_all_tsv
+
+                output:
+                    tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco3_sum
+                    tuple sample_id, file("*_table.tsv") busco4_heatmap
+
+                script:
+                    """
+                    SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
+                    mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
+                    mv Transpi_comparison_table ${sample_id}_Transpi_comparison_table.tsv
+                    mv sequences_to_add.fasta ${sample_id}_sequences_to_add.fasta
+                    """
+
+            }
+
+            process heatmap_busco4 {
+
+                label 'exlow_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/rescue_busco4", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
+
+                input:
+                    tuple sample_id, file(all_busco4) from busco4_heatmap
+
+                output:
+                    tuple sample_id, file("*.png"), file("*.pdf") into heatmap_busco4_sum
+
+                script:
+                    """
+                    cp ${params.mypwd}/bin/heatmap_busco.R .
+                    Rscript heatmap_busco.R ${sample_id}
+                    """
             }
         }
 
@@ -2620,19 +2685,6 @@ if (params.onlyAsm) {
                 """
         }
 
-    }
-
-    // default perhaps
-    if (params.rescueBusco) {
-
-        process rescue_busco {
-
-            script:
-                """
-
-                """
-
-        }
     }
 
     process busco3 {
@@ -3089,7 +3141,7 @@ if (params.onlyAsm) {
             done
 
             assembly=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
-            transdecoder=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
+            transdecoder=\$( cat .vars.txt | grep -E "${sample_id}.*.transdecoder.pep" )
             diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
             diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
             custom_blastx=\$( cat .vars.txt | grep "${sample_id}.custom.diamond_blastx.outfmt6" )
