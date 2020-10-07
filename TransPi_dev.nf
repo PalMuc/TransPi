@@ -334,7 +334,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS )
-                tuple sample_id, file("${sample_id}_R1.norm.fq"), file("${sample_id}_R2.norm.fq") into ( save_reads )
+                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_reads )
 
             script:
                 //def mem=(task.memory)
@@ -381,7 +381,7 @@ if (params.onlyAsm) {
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
                 gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq 
+                gzip --force ${sample_id}_R2.norm.fq
                 """
             }
         }
@@ -1926,7 +1926,7 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi )
-                tuple sample_id, file("${sample_id}_R1.norm.fq"), file("${sample_id}_R2.norm.fq") into ( save_reads )
+                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_reads )
 
             script:
                 //def mem=(task.memory)
