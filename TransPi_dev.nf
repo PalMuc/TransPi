@@ -327,11 +327,14 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
+            publishDir "${workDir}/${params.outdir}/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq"
+
             input:
                 tuple sample_id, file(reads) from reads_ass_ch_OAS
 
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS )
+                tuple sample_id, file("${sample_id}_R1.norm.fq"), file("${sample_id}_R2.norm.fq") into ( save_reads )
 
             script:
                 //def mem=(task.memory)
@@ -348,8 +351,14 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- DONE with Normalization --\\n"
 
-                mv left.norm.fq left-"${sample_id}".norm.fq
-                mv right.norm.fq right-"${sample_id}".norm.fq
+                cp left.norm.fq left-"${sample_id}".norm.fq
+                cp right.norm.fq right-"${sample_id}".norm.fq
+
+                mv left.norm.fq ${sample_id}_R1.norm.fq
+                mv right.norm.fq ${sample_id}_R2.norm.fq
+
+                gzip --force ${sample_id}_R1.norm.fq &
+                gzip --force ${sample_id}_R2.norm.fq
                 """
             } else {
                 """
@@ -365,10 +374,14 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- DONE with Normalization --\\n"
 
-                mv left.norm.fq left-"${sample_id}".norm.fq
-                mv right.norm.fq right-"${sample_id}".norm.fq
+                cp left.norm.fq left-"${sample_id}".norm.fq
+                cp right.norm.fq right-"${sample_id}".norm.fq
 
-                rm left-${sample_id}.fq right-${sample_id}.fq
+                mv left.norm.fq ${sample_id}_R1.norm.fq
+                mv right.norm.fq ${sample_id}_R2.norm.fq
+
+                gzip --force ${sample_id}_R1.norm.fq &
+                gzip --force ${sample_id}_R2.norm.fq 
                 """
             }
         }
@@ -1937,9 +1950,7 @@ if (params.onlyAsm) {
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
                 gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq &
-
-                rm left-"${sample_id}".norm.fq right-"${sample_id}".norm.fq
+                gzip --force ${sample_id}_R2.norm.fq
                 """
             } else {
                 """
@@ -1962,9 +1973,7 @@ if (params.onlyAsm) {
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
                 gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq &
-
-                rm left-"${sample_id}".norm.fq right-"${sample_id}".norm.fq
+                gzip --force ${sample_id}_R2.norm.fq
                 """
             }
         }
