@@ -1936,10 +1936,10 @@ if (params.onlyAsm) {
                 mv left.norm.fq ${sample_id}_R1.norm.fq
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
-                gzip ${sample_id}_R1.norm.fq &
-                gzip ${sample_id}_R2.norm.fq &
+                gzip --force ${sample_id}_R1.norm.fq &
+                gzip --force ${sample_id}_R2.norm.fq &
 
-                rm left-${sample_id}.fq right-${sample_id}.fq
+                rm left-"${sample_id}".norm.fq right-"${sample_id}".norm.fq
                 """
             } else {
                 """
@@ -1961,10 +1961,10 @@ if (params.onlyAsm) {
                 mv left.norm.fq ${sample_id}_R1.norm.fq
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
-                gzip ${sample_id}_R1.norm.fq &
-                gzip ${sample_id}_R2.norm.fq &
+                gzip --force ${sample_id}_R1.norm.fq &
+                gzip --force ${sample_id}_R2.norm.fq &
 
-                rm left-${sample_id}.fq right-${sample_id}.fq
+                rm left-"${sample_id}".norm.fq right-"${sample_id}".norm.fq
                 """
             }
         }
