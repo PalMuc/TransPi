@@ -2484,8 +2484,8 @@ if (params.onlyAsm) {
 
                     run_BUSCO.py -i \${name}.fa -o \${name}.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
 
-                    cp \${name}.bus3/short* .
-                    cp \${name}.bus3/full_table_* .
+                    cp run_\${name}.bus3/short* .
+                    cp run_\${name}.bus3/full_table_* .
 
                     echo -e "\\n-- DONE with BUSCO --\\n"
 
