@@ -2469,16 +2469,25 @@ if (params.onlyAsm) {
 
             script:
                 """
-                echo "$files" | tr " " "\\n" | awk -F ".fa" '{print \$1}' >list.txt
+                cat input.1 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >list.txt
+                cat input.2 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
+                cat input.3 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
+                cat input.4 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
+
+                for x in `cat list.txt`;do
+                    ln -s \$x \$( basename \$x )
+                done
 
                 for x in `cat list.txt`;do
 
+                    name=\$( basename \$x .fa )
+
                     echo -e "\\n-- Starting BUSCO --\\n"
 
-                    run_BUSCO.py -i \${x}.fa -o \${x}.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
+                    run_BUSCO.py -i \${name}.fa -o \${name}.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
 
-                    cp \${x}.bus3/short* .
-                    cp \${x}.bus3/full_table_* .
+                    cp \${name}.bus3/short* .
+                    cp \${name}.bus3/full_table_* .
 
                     echo -e "\\n-- DONE with BUSCO --\\n"
 
@@ -2517,16 +2526,25 @@ if (params.onlyAsm) {
 
             script:
                 """
-                echo "$files" | tr " " "\\n" | awk -F ".fa" '{print \$1}' >list.txt
+                cat input.1 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >list.txt
+                cat input.2 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
+                cat input.3 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
+                cat input.4 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
+
+                for x in `cat list.txt`;do
+                    ln -s \$x \$( basename \$x )
+                done
 
                 for x in `cat list.txt`;do
 
+                    name=\$( basename \$x .fa )
+
                     echo -e "\\n-- Starting BUSCO --\\n"
 
-                    busco -i \${x}.fa -o \${x}.bus4 -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+                    busco -i \${name}.fa -o \${name}.bus4 -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-                    cp \${x}.bus4/short_summary.* .
-                    cp \${x}.bus4/run_*/full_table.tsv full_table_\${x}.tsv
+                    cp \${name}.bus4/short_summary.* .
+                    cp \${name}.bus4/run_*/full_table.tsv full_table_\${x}.tsv
 
                     echo -e "\\n-- DONE with BUSCO --\\n"
 
