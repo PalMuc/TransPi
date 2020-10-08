@@ -2277,7 +2277,7 @@ if (params.onlyAsm) {
 
     // check groupTuple
     rna_quast = Channel.create()
-    reads_rna_quast.mix( evigene_ch_rna_quast ).groupTuple(by:0, size:3).view().into( rna_quast )
+    reads_rna_quast.join( evigene_ch_rna_quast ).into( rna_quast )
 
     process rna_quast {
 
@@ -2288,18 +2288,14 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file(files) from rna_quast
+            tuple sample_id, file(r1), file(r2), file(assembly) from rna_quast
 
         output:
             tuple sample_id, file("${sample_id}.rna_quast") into rna_quast_sum
 
         script:
             """
-            echo ${files} | tr " " "\\n" >list.txt
-            assembly=\$( cat list.txt | grep ".combined.okay.fa" )
-            r1=\$( cat list.txt | grep "left-" )
-            r2=\$( cat list.txt | grep "right-" )
-            rnaQUAST.py --transcripts \${assembly} -1 \${r1} -2 \${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
+            rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
             """
     }
 
@@ -2478,6 +2474,8 @@ if (params.onlyAsm) {
                     ln -s \$x \$( basename \$x )
                 done
 
+                find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print $2}' >>list.txt
+
                 for x in `cat list.txt`;do
 
                     name=\$( basename \$x .fa )
@@ -2535,6 +2533,8 @@ if (params.onlyAsm) {
                     ln -s \$x \$( basename \$x )
                 done
 
+                find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print $2}' >>list.txt
+
                 for x in `cat list.txt`;do
 
                     name=\$( basename \$x .fa )
@@ -2544,7 +2544,7 @@ if (params.onlyAsm) {
                     busco -i \${name}.fa -o \${name}.bus4 -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
                     cp \${name}.bus4/short_summary.* .
-                    cp \${name}.bus4/run_*/full_table.tsv full_table_\${x}.tsv
+                    cp \${name}.bus4/run_*/full_table.tsv full_table_\${name}.tsv
 
                     echo -e "\\n-- DONE with BUSCO --\\n"
 
@@ -2786,7 +2786,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_transdecoder
+            tuple sample_id, file(assembly) from evigene_ch_transdecoder
 
         output:
             tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
@@ -2800,13 +2800,13 @@ if (params.onlyAsm) {
             """
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-            TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa
+            TransDecoder.LongOrfs -t ${assembly}
 
             echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
             echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-            TransDecoder.Predict -t ${sample_id}.combined.okay.fa
+            TransDecoder.Predict -t ${assembly}
 
             echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
@@ -2844,11 +2844,11 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-            TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa
+            TransDecoder.LongOrfs -t ${assembly}
 
             echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
-            fname=${sample_id}.combined.okay.fa
+            fname=${assembly}
 
             echo -e "\\n-- Starting Diamond (blastp) --\\n"
 
@@ -2864,7 +2864,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-            TransDecoder.Predict -t ${sample_id}.combined.okay.fa --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
+            TransDecoder.Predict -t ${assembly} --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
 
             echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
