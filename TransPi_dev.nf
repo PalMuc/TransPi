@@ -2474,7 +2474,7 @@ if (params.onlyAsm) {
                     ln -s \$x \$( basename \$x )
                 done
 
-                find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print $2}' >>list.txt
+                find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print \$2}' >>list.txt
 
                 for x in `cat list.txt`;do
 
@@ -2533,7 +2533,7 @@ if (params.onlyAsm) {
                     ln -s \$x \$( basename \$x )
                 done
 
-                find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print $2}' >>list.txt
+                find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print \$2}' >>list.txt
 
                 for x in `cat list.txt`;do
 
