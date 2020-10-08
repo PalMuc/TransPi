@@ -2800,13 +2800,13 @@ if (params.onlyAsm) {
             """
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-            TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa"
+            TransDecoder.LongOrfs -t ${sample_id}.combined.okay.fa
 
             echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
             echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-            TransDecoder.Predict -t ${sample_id}.combined.okay.fa"
+            TransDecoder.Predict -t ${sample_id}.combined.okay.fa
 
             echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
