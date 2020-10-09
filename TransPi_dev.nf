@@ -2684,6 +2684,8 @@ if (params.onlyAsm) {
     // default perhaps
     if (params.rescueBusco) {
 
+        rescue_busco3_ch=Channel.create()
+        rescue_busco4_ch=Channel.create()
         busco3_transpi_tsv.join( busco3_all_tsv ).view().into( rescue_busco3_ch )
         busco4_transpi_tsv.join( busco4_all_tsv ).view().into( rescue_busco4_ch )
 
