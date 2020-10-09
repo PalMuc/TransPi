@@ -1925,7 +1925,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
-                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi )
+                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
                 tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_reads )
 
             script:
@@ -1994,6 +1994,7 @@ if (params.onlyAsm) {
 
                 output:
                     tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
+                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
 
                 script:
                     """
@@ -2015,6 +2016,7 @@ if (params.onlyAsm) {
 
                 output:
                     tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
+                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
 
                 script:
                     """
@@ -2434,6 +2436,62 @@ if (params.onlyAsm) {
             println("\n\t\033[0;31mNeed to provide a host and symbiont sequence. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
             exit 0
         }
+
+    // mapping
+        if (params.mapping) {
+
+            if (params.symbiont) {
+
+                File file2 = new File("${params.symbiont}")
+                String symbiontPath = file2.getCanonicalPath()
+                symbiont_sequences = file(symbiontPath)
+
+                process mapping_reads {
+
+                    label 'med_cpus'
+
+                    tag "${sample_id}"
+
+                	publishDir "${workDir}/${params.outdir}/mapping_output/", mode: "copy", overwrite: true
+
+                	input:
+                        file(symbiont) from symbiont_sequences
+                        tuple sample_id, file(r1), file(r2) from mapping_symbiont
+
+                	output:
+                	   tuple sample_id, file("${sample_id}.symbiont.sam") into clean_reads_ch
+
+                    script:
+                    	"""
+                    	bowtie2-build ${symbiont} symbiont.db --threads ${task.cpus}
+                        bowtie2 -x symbiont.db -1 ${r1} -2 ${r2} --no-unal -p ${task.cpus} -S ${sample_id}.symbiont.sam
+                    	"""
+
+                }
+
+                process clean_reads {
+
+                    label 'med_cpus'
+
+                    tag "${sample_id}"
+
+                    publishDir "${workDir}/${params.outdir}/mapping_output/", mode: "copy", overwrite: true
+
+                    input:
+                        tuple sample_id, file("${sample_id}.symbiont.sam") from clean_reads_ch
+
+                    output:
+                       file("*.fasta") into ch_FINISH
+
+                    script:
+                        """
+                        clean_seqs.py ${sample_id}.symbiont.sam
+                        """
+
+                }
+            }
+        }
+    //
     }
 
     def slist="${params.k}".split(',').collect{it as int}
