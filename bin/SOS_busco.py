@@ -30,7 +30,7 @@ with open(args.input_file_busco) as input_busco_file:
 
     kmers_list = args.kmers.strip().split(',')
     nr_of_kmers = (len(kmers_list)*4+2)
-    column_names = [(assembler + '_' + kmer) for assembler,kmer in zip(assemblers_names,kmers_list) for kmer in kmers_list]
+    column_names = [(assembler + '_' + kmer) for assembler in assemblers_names for kmer in kmers_list]
     column_names.insert(3*len(kmers_list) ,'Trinity')
     column_names.insert(len(column_names),'Transpi')
     column_names.insert(0,'Busco ID')
