@@ -4,7 +4,7 @@ sample_name=args[1]
 library(plotly)
 library(reshape2)
 
-csv=read.csv("octo2.csv", header=TRUE, sep="\t")
+csv=read.csv(sample_name, header=TRUE, sep="\t")
 
 csv <- data.frame(lapply(csv, function(x) {gsub("Complete", "3", x)}))
 csv <- data.frame(lapply(csv, function(x) {gsub("Duplicated", "2", x)}))
@@ -21,7 +21,7 @@ fig <- plot_ly(c,x=~variable, y=~Busco.ID, z=~value, colorscale=colz, reversesca
 fig <- fig %>% layout(xaxis=list(title="", showline = TRUE, mirror = TRUE),
               yaxis=list(title="BUSCO ID", tickmode="auto", nticks=length(csv$Busco.ID),
               tickfont=list(size=8), showline = TRUE, mirror = TRUE))
-fig 
+fig
 
 orca(fig, paste(sample_name,"_TransPi_BUSCO.png",sep=""))
 orca(fig, paste(sample_name,"_TransPi_BUSCO.pdf",sep=""))
