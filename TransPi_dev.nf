@@ -2270,7 +2270,6 @@ if (params.onlyAsm) {
             cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
             cp okayset/*combined.okay*.cds ${sample_id}.combined.okay.cds
 
-
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
             fi
