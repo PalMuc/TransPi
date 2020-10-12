@@ -32,7 +32,7 @@ with open(args.input_file_busco) as input_busco_file:
     nr_of_kmers = (len(kmers_list)*4+2)
     column_names = [(assembler + '_' + kmer) for assembler in assemblers_names for kmer in kmers_list]
     column_names.insert(3*len(kmers_list) ,'Trinity')
-    column_names.insert(len(column_names),'Transpi')
+    column_names.insert(len(column_names),'TransPi')
     column_names.insert(0,'Busco ID')
 
     busco_df = pd.read_csv(input_busco_file, sep=',',header=0,names=['Busco_id','Status','Sequence','Score','Length'])
@@ -52,10 +52,10 @@ with open(args.input_file_busco) as input_busco_file:
 
     comparison_table = reduce(lambda left,right: pd.merge(left,right,on='Busco_id'), final_list)
     comparison_table.columns = column_names
-    transpi_table = comparison_table[(comparison_table['Transpi'] == 'Missing')]
+    transpi_table = comparison_table[(comparison_table['TransPi'] == 'Missing')]
 
     comparison_table.to_csv('Complete_comparison_table',sep='\t',index=False)
-    transpi_table.to_csv('Transpi_comparison_table',sep='\t',index=False)
+    transpi_table.to_csv('TransPi_comparison_table',sep='\t',index=False)
 
     BUSCO_to_rescue =  transpi_table[(transpi_table == 'Complete').any(axis=1)].iloc[:,0].tolist()
 
