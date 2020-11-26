@@ -523,366 +523,369 @@ if (params.onlyAsm) {
             """
     }
 
-    all_assemblies = Channel.create()
-    assemblies_ch_trinity_OAS.mix( assemblies_ch_transabyss_OAS, assemblies_ch_spades_OAS, assemblies_ch_velvet_OAS, assemblies_ch_soap_OAS ).groupTuple(by:0,size:5).into(all_assemblies)
-
-    process evigene_OAS {
-
-        label 'med_mem'
-
-        tag "${sample_id}"
-
-        publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
-
-        input:
-            tuple sample_id, file(assemblies) from all_assemblies
-
-        output:
-            tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS )
-            tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary_OAS
-
-        script:
-            def mem_MB=(task.memory.toMega())
-
-            """
-            echo -e "\\n-- Starting EviGene --\\n"
-
-            cat ${assemblies} >${sample_id}.combined.fa
-
-            $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
-
-            echo -e "\\n-- DONE with EviGene --\\n"
-
-            cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
-
-            if [ -d tmpfiles/ ];then
-                rm -rf tmpfiles/
-            fi
-            """
-    }
-
-    process summary_evigene_individual_OAS {
-
-        tag "${sample_id}"
-
-        publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
-
-        input:
-            tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary_OAS
-
-        output:
-            tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1_OAS
-            tuple sample_id, file("${sample_id}.sum_preEG.csv"), file("${sample_id}.sum_EG.csv") into summary_evi_csv_OAS
-
-        script:
-            """
-            #Summary of total number of transcripts
-            echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
-            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_preEG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+    if (!params.skipEvi) {
+
+        all_assemblies = Channel.create()
+        assemblies_ch_trinity_OAS.mix( assemblies_ch_transabyss_OAS, assemblies_ch_spades_OAS, assemblies_ch_velvet_OAS, assemblies_ch_soap_OAS ).groupTuple(by:0,size:5).into(all_assemblies)
+
+        process evigene_OAS {
+
+            label 'med_mem'
+
+            tag "${sample_id}"
+
+            publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
+
+            input:
+                tuple sample_id, file(assemblies) from all_assemblies
+
+            output:
+                tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS )
+                tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary_OAS
+
+            script:
+                def mem_MB=(task.memory.toMega())
+
+                """
+                echo -e "\\n-- Starting EviGene --\\n"
+
+                cat ${assemblies} >${sample_id}.combined.fa
+
+                $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
+
+                echo -e "\\n-- DONE with EviGene --\\n"
+
+                cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
+
+                if [ -d tmpfiles/ ];then
+                    rm -rf tmpfiles/
+                fi
+                """
+        }
+
+        process summary_evigene_individual_OAS {
+
+            tag "${sample_id}"
+
+            publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+
+            input:
+                tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary_OAS
+
+            output:
+                tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1_OAS
+                tuple sample_id, file("${sample_id}.sum_preEG.csv"), file("${sample_id}.sum_EG.csv") into summary_evi_csv_OAS
+
+            script:
+                """
+                #Summary of total number of transcripts
+                echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
+                echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_preEG.txt
+                echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+                echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+                echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+                echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+                echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+                echo -e "\\t Trans-ABySS" >>${sample_id}.sum_preEG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
 
-            # csv report
-            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
-            total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
-            trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
-            soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
-            velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
-            spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
-            transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+                # csv report
+                echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+                total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
+                trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
+                soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
+                velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
+                spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
+                transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+                echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
 
-            #Summary of transcripts after EvidentialGenes
-            echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
-            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+                #Summary of transcripts after EvidentialGenes
+                echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
+                echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
+                echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
+                num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+                echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
+                num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+                echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
+                num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+                echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
+                num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+                echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
+                num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+                echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
+                num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+                echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
 
-            # csv report after evigene
-            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
-            total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
-            trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
-            soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
-            velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
-            spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
-            transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
-            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
-            """
+                # csv report after evigene
+                echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+                total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
+                trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
+                soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
+                velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
+                spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
+                transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
+                echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
+                """
 
-    }
+        }
 
-    process busco3_OAS {
+        process busco3_OAS {
 
-        label 'med_cpus'
+            label 'med_cpus'
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OAS
+            input:
+                tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OAS
 
-        output:
-            tuple sample_id, file("run_${sample_id}.TransPi.bus") into busco3_ch
-            tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco3_summary_OAS, busco3_comp_1_OAS )
+            output:
+                tuple sample_id, file("run_${sample_id}.TransPi.bus") into busco3_ch
+                tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco3_summary_OAS, busco3_comp_1_OAS )
 
-        script:
-            """
-            echo -e "\\n-- Starting BUSCO --\\n"
+            script:
+                """
+                echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+                run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-            echo -e "\\n-- DONE with BUSCO --\\n"
+                echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.TransPi.bus/short_summary_${sample_id}.TransPi.bus.txt .
-            """
-    }
+                cp run_${sample_id}.TransPi.bus/short_summary_${sample_id}.TransPi.bus.txt .
+                """
+        }
 
-    process busco3_tri_OAS {
+        process busco3_tri_OAS {
 
-        label 'med_cpus'
+            label 'med_cpus'
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OAS
+            input:
+                tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OAS
 
-        output:
-            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco3_ch_trinity_sum_OAS, busco3_comp_2_OAS )
+            output:
+                tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco3_ch_trinity_sum_OAS, busco3_comp_2_OAS )
 
-        script:
-            """
-            echo -e "\\n-- Starting BUSCO --\\n"
+            script:
+                """
+                echo -e "\\n-- Starting BUSCO --\\n"
 
-            run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco3db} -m tran -c ${task.cpus}
+                run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco3db} -m tran -c ${task.cpus}
 
-            echo -e "\\n-- DONE with BUSCO --\\n"
+                echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp run_${sample_id}.Trinity.bus/short_summary_${sample_id}.Trinity.bus.txt .
-            """
-    }
+                cp run_${sample_id}.Trinity.bus/short_summary_${sample_id}.Trinity.bus.txt .
+                """
+        }
 
-    process busco4_OAS {
+        process busco4_OAS {
 
-        conda "${params.cenv}"
+            conda "${params.cenv}"
 
-        label 'med_cpus'
+            label 'med_cpus'
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OAS
+            input:
+                tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OAS
 
-        output:
-            tuple sample_id, file("${sample_id}.TransPi.bus") into busco4_ch
-            tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco4_summary_OAS, busco4_comp_1_OAS )
+            output:
+                tuple sample_id, file("${sample_id}.TransPi.bus") into busco4_ch
+                tuple sample_id, file("*${sample_id}.TransPi.bus.txt") into ( busco4_summary_OAS, busco4_comp_1_OAS )
 
-        script:
-            """
-            echo -e "\\n-- Starting BUSCO --\\n"
+            script:
+                """
+                echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+                busco -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-            echo -e "\\n-- DONE with BUSCO --\\n"
+                echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.TransPi.bus/short_summary.*.${sample_id}.TransPi.bus.txt .
-            """
-    }
+                cp ${sample_id}.TransPi.bus/short_summary.*.${sample_id}.TransPi.bus.txt .
+                """
+        }
 
-    process busco4_tri_OAS {
+        process busco4_tri_OAS {
 
-        conda "${params.cenv}"
+            conda "${params.cenv}"
 
-        label 'med_cpus'
+            label 'med_cpus'
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity_OAS
+            input:
+                tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity_OAS
 
-        output:
-            tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco4_ch_trinity_sum_OAS, busco4_comp_2_OAS )
+            output:
+                tuple sample_id, file("*${sample_id}.Trinity.bus.txt") into ( busco4_ch_trinity_sum_OAS, busco4_comp_2_OAS )
 
-        script:
-            """
-            echo -e "\\n-- Starting BUSCO --\\n"
+            script:
+                """
+                echo -e "\\n-- Starting BUSCO --\\n"
 
-            busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
+                busco -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus -l ${params.busco4db} -m tran -c ${task.cpus} --offline
 
-            echo -e "\\n-- DONE with BUSCO --\\n"
+                echo -e "\\n-- DONE with BUSCO --\\n"
 
-            cp ${sample_id}.Trinity.bus/short_summary.*.${sample_id}.Trinity.bus.txt .
-            """
-    }
+                cp ${sample_id}.Trinity.bus/short_summary.*.${sample_id}.Trinity.bus.txt .
+                """
+        }
 
-    busco3_sum_OAS = Channel.create()
-    busco3_summary_OAS.mix(busco3_ch_trinity_sum_OAS).groupTuple(by:0,size:2).into(busco3_sum_OAS)
+        busco3_sum_OAS = Channel.create()
+        busco3_summary_OAS.mix(busco3_ch_trinity_sum_OAS).groupTuple(by:0,size:2).into(busco3_sum_OAS)
 
-    process summary_busco3_individual_OAS {
+        process summary_busco3_individual_OAS {
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file(files) from busco3_sum_OAS
+            input:
+                tuple sample_id, file(files) from busco3_sum_OAS
 
-        output:
-            tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3_OAS
+            output:
+                tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3_OAS
 
-        script:
-            """
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            #Summary of BUSCO scores for the final_assemblies
-            echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
-            echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
-            cat \${trans} >>${sample_id}.sum_busco3.txt
-            echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
-            cat \${tri} >>${sample_id}.sum_busco3.txt
-            """
-    }
+            script:
+                """
+                tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+                trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+                #Summary of BUSCO scores for the final_assemblies
+                echo -e "Summary of BUSCO V3 \n" >>${sample_id}.sum_busco3.txt
+                echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
+                cat \${trans} >>${sample_id}.sum_busco3.txt
+                echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
+                cat \${tri} >>${sample_id}.sum_busco3.txt
+                """
+        }
 
-    busco4_sum_OAS = Channel.create()
-    busco4_summary_OAS.mix(busco4_ch_trinity_sum_OAS).groupTuple(by:0,size:2).into(busco4_sum_OAS)
+        busco4_sum_OAS = Channel.create()
+        busco4_summary_OAS.mix(busco4_ch_trinity_sum_OAS).groupTuple(by:0,size:2).into(busco4_sum_OAS)
 
-    process summary_busco4_individual_OAS {
+        process summary_busco4_individual_OAS {
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file(files) from busco4_sum_OAS
+            input:
+                tuple sample_id, file(files) from busco4_sum_OAS
 
-        output:
-            tuple sample_id, file("${sample_id}.sum_busco4.txt") into final_sum_2v4_OAS
+            output:
+                tuple sample_id, file("${sample_id}.sum_busco4.txt") into final_sum_2v4_OAS
 
-        script:
-            """
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            #Summary of BUSCO scores for the final_assemblies
-            echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
-            echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
-            cat \${trans} >>${sample_id}.sum_busco4.txt
-            echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
-            cat \${tri} >>${sample_id}.sum_busco4.txt
-            """
-    }
+            script:
+                """
+                tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+                trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+                #Summary of BUSCO scores for the final_assemblies
+                echo -e "Summary of BUSCO V4 \n" >>${sample_id}.sum_busco4.txt
+                echo "-- TransPi BUSCO V4 scores -- " >>${sample_id}.sum_busco4.txt
+                cat \${trans} >>${sample_id}.sum_busco4.txt
+                echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
+                cat \${tri} >>${sample_id}.sum_busco4.txt
+                """
+        }
 
-    busco3_comp_OAS = Channel.create()
-    busco3_comp_1_OAS.mix(busco3_comp_2_OAS).groupTuple(by:0,size:2).into(busco3_comp_OAS)
+        busco3_comp_OAS = Channel.create()
+        busco3_comp_1_OAS.mix(busco3_comp_2_OAS).groupTuple(by:0,size:2).into(busco3_comp_OAS)
 
-    process get_busco3_comparison_OAS {
+        process get_busco3_comparison_OAS {
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file(files) from busco3_comp_OAS
+            input:
+                tuple sample_id, file(files) from busco3_comp_OAS
 
-        output:
-            tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig_OAS
-            tuple sample_id, file("*.csv") into busco3_OAS_csv
+            output:
+                tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig_OAS
+                tuple sample_id, file("*.csv") into busco3_OAS_csv
 
-        script:
-            """
-            set +e
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
-            cp ${params.mypwd}/bin/busco_comparison.R .
-            a=\$( cat final_spec )
-            sed -i "s/MYSPEC/\${a}/" busco_comparison.R
-            b=\$( cat final_perc )
-            sed -i "s/MYPERC/\${b}/" busco_comparison.R
-            c=\$( cat final_num )
-            sed -i "s/MYVAL/\${c}/" busco_comparison.R
-            Rscript busco_comparison.R ${sample_id}
-            mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
-            mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
-            # csv
-            sed -i 's/\$/\\n/g' final_*
-            cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
-            """
-    }
+            script:
+                """
+                set +e
+                tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+                trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+                bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
+                cp ${params.mypwd}/bin/busco_comparison.R .
+                a=\$( cat final_spec )
+                sed -i "s/MYSPEC/\${a}/" busco_comparison.R
+                b=\$( cat final_perc )
+                sed -i "s/MYPERC/\${b}/" busco_comparison.R
+                c=\$( cat final_num )
+                sed -i "s/MYVAL/\${c}/" busco_comparison.R
+                Rscript busco_comparison.R ${sample_id}
+                mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
+                mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
+                # csv
+                sed -i 's/\$/\\n/g' final_*
+                cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
+                """
+        }
 
-    busco4_comp_OAS = Channel.create()
-    busco4_comp_1_OAS.mix(busco4_comp_2_OAS).groupTuple(by:0,size:2).into(busco4_comp_OAS)
+        busco4_comp_OAS = Channel.create()
+        busco4_comp_1_OAS.mix(busco4_comp_2_OAS).groupTuple(by:0,size:2).into(busco4_comp_OAS)
 
-    process get_busco4_comparison_OAS {
+        process get_busco4_comparison_OAS {
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file(files) from busco4_comp_OAS
+            input:
+                tuple sample_id, file(files) from busco4_comp_OAS
 
-        output:
-            tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
-            tuple sample_id, file("*.csv") into busco4_OAS_csv
+            output:
+                tuple sample_id, file("${sample_id}_BUSCO4_comparison.pdf"), file("${sample_id}_BUSCO4_comparison.svg") into busco4_fig_OAS
+                tuple sample_id, file("*.csv") into busco4_OAS_csv
 
-        script:
-            """
-            set +e
-            tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
-            trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
-            bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
-            cp ${params.mypwd}/bin/busco_comparison.R .
-            a=\$( cat final_spec )
-            sed -i "s/MYSPEC/\${a}/" busco_comparison.R
-            b=\$( cat final_perc )
-            sed -i "s/MYPERC/\${b}/" busco_comparison.R
-            c=\$( cat final_num )
-            sed -i "s/MYVAL/\${c}/" busco_comparison.R
-            Rscript busco_comparison.R ${sample_id}
-            mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
-            mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
-            # csv
-            sed -i 's/\$/\\n/g' final_*
-            cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
-            """
+            script:
+                """
+                set +e
+                tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus.txt" )
+                trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus.txt" )
+                bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
+                cp ${params.mypwd}/bin/busco_comparison.R .
+                a=\$( cat final_spec )
+                sed -i "s/MYSPEC/\${a}/" busco_comparison.R
+                b=\$( cat final_perc )
+                sed -i "s/MYPERC/\${b}/" busco_comparison.R
+                c=\$( cat final_num )
+                sed -i "s/MYVAL/\${c}/" busco_comparison.R
+                Rscript busco_comparison.R ${sample_id}
+                mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
+                mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
+                # csv
+                sed -i 's/\$/\\n/g' final_*
+                cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
+                """
+        }
     }
 
 } else if (params.onlyAnn) {
