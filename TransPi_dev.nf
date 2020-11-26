@@ -196,7 +196,7 @@ if (params.all) {
             TransPi - Transcriptome Analysis Pipeline
             =========================================
             TransPi Installation:       ${params.mypwd}
-            Results Directory:          ${params.outDir}
+            Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
             Reads Length:               ${params.max_rd_len}
             Kmers:                      ${params.k}
@@ -209,7 +209,7 @@ if (params.all) {
             TransPi - Transcriptome Analysis Pipeline
             =========================================
             TransPi Installation:       ${params.mypwd}
-            Results Directory:          ${params.outDir}
+            Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
             Uniprot DB:                 ${params.uniprot}
             """.stripIndent()
@@ -219,7 +219,7 @@ if (params.all) {
             TransPi - Transcriptome Analysis Pipeline
             =========================================
             TransPi Installation:       ${params.mypwd}
-            Results Directory:          ${params.outDir}
+            Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
             Reads Length:               ${params.max_rd_len}
             Kmers:                      ${params.k}
@@ -231,7 +231,7 @@ if (params.all) {
             TransPi - Transcriptome Analysis Pipeline
             =========================================
             TransPi Installation:       ${params.mypwd}
-            Results Directory:          ${params.outDir}
+            Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
             Busco DB:                   ${params.busco4db}
             """.stripIndent()
@@ -296,8 +296,9 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results_OAS
-                tuple sample_id, file("*.filter.fq") into reads_ass_ch_OAS
+                tuple sample_id, file("*.${sample_id}.filter.fq") into reads_ass_ch_OAS
                 tuple sample_id, file("*.csv") into fastp_csv_OAS
+                tuple sample_id, file("${sample_id}_R1.filter.fq.gz"), file("${sample_id}_R2.filter.fq.gz") into save_filter_reads
 
             script:
                 """
@@ -309,8 +310,37 @@ if (params.onlyAsm) {
 
                 bash get_readstats.sh ${sample_id}.fastp.json
                 bash get_readqual.sh ${sample_id}.fastp.json
+
+                cp left-${sample_id}.filter.fq ${sample_id}_R1.filter.fq
+                cp right-${sample_id}.filter.fq ${sample_id}_R2.filter.fq
+
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.filter.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.filter.fq
                 """
         }
+
+        if (params.saveReads) {
+
+            process save_filter_reads_OAS {
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/saveReads/filtering", mode: "copy", overwrite: true, pattern: "*_R{1,2}.filter.fq.gz"
+
+                input:
+                    tuple sample_id, file(r1), file(r2) from save_filter_reads
+
+                output:
+                    tuple sample_id, file("*.filter.fq.gz") into save_filter_reads_out
+
+                script:
+                    """
+                    cat $r1 >${sample_id}_R1.filter.fq.gz
+                    cat $r2 >${sample_id}_R2.filter.fq.gz
+                    """
+            }
+        }
+
     } else {
         reads_ch
             .set{ reads_ass_ch_OAS }
@@ -327,14 +357,12 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq"
-
             input:
                 tuple sample_id, file(reads) from reads_ass_ch_OAS
 
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS )
-                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_reads )
+                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_norm_reads )
 
             script:
                 //def mem=(task.memory)
@@ -357,8 +385,8 @@ if (params.onlyAsm) {
                 mv left.norm.fq ${sample_id}_R1.norm.fq
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
-                gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
                 """
             } else {
                 """
@@ -380,15 +408,38 @@ if (params.onlyAsm) {
                 mv left.norm.fq ${sample_id}_R1.norm.fq
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
-                gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
                 """
             }
         }
 
-    } else {
+        if (params.saveReads) {
 
-        process uncompress_reads_OAS {
+            process save_norm_reads_OAS {
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/saveReads/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq.gz"
+
+                input:
+                    tuple sample_id, file(r1), file(r2) from save_norm_reads
+
+                output:
+                    tuple sample_id, file("*.norm.fq.gz") into save_norm_reads_out
+
+                script:
+                    """
+                    cat $r1 >${sample_id}_R1.norm.fq.gz
+                    cat $r2 >${sample_id}_R2.norm.fq.gz
+                    """
+            }
+        }
+    }
+
+    if (params.skipFilter && params.skipNormalization) {
+
+        process prepare_reads_OAS {
 
             label 'low_cpus'
 
@@ -398,14 +449,23 @@ if (params.onlyAsm) {
                 tuple sample_id, file(reads) from reads_ass_ch_OAS
 
             output:
-                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS )
+                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS, reads_rna_quast_OAS )
+                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( mapping_reads_trinity_OAS, mapping_reads_evi_OAS )
 
             script:
+            if (hasExtension(params.reads, 'gz')) {
                 """
                 echo ${sample_id}
                 zcat ${reads[0]} >left-${sample_id}.fq &
                 zcat ${reads[1]} >right-${sample_id}.fq
                 """
+            } else {
+                """
+                echo ${sample_id}
+                cat ${reads[0]} >left-${sample_id}.fq &
+                cat ${reads[1]} >right-${sample_id}.fq
+                """
+            }
         }
     }
 
@@ -613,7 +673,7 @@ if (params.onlyAsm) {
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS )
+            tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS, evigene_ch_rna_quast_OAS )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary_OAS
 
         script:
@@ -633,6 +693,30 @@ if (params.onlyAsm) {
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
             fi
+            """
+    }
+
+    // check groupTuple
+    rna_quast = Channel.create()
+    reads_rna_quast_OAS.join( evigene_ch_rna_quast_OAS ).into( rna_quast_OAS )
+
+    process rna_quast_OAS {
+
+        label 'med_mem'
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true
+
+        input:
+            tuple sample_id, file(r1), file(r2), file(assembly) from rna_quast_OAS
+
+        output:
+            tuple sample_id, file("${sample_id}.rna_quast") into rna_quast_sum_OAS
+
+        script:
+            """
+            rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
             """
     }
 
@@ -1888,8 +1972,9 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results
-                tuple sample_id, file("*.filter.fq") into reads_ass_ch
+                tuple sample_id, file("*.${sample_id}.filter.fq") into reads_ass_ch
                 tuple sample_id, file("*.csv") into fastp_csv
+                tuple sample_id, file("${sample_id}_R1.filter.fq.gz"), file("${sample_id}_R2.filter.fq.gz") into save_filter_reads
 
             script:
                 """
@@ -1901,8 +1986,37 @@ if (params.onlyAsm) {
 
                 bash get_readstats.sh ${sample_id}.fastp.json
                 bash get_readqual.sh ${sample_id}.fastp.json
+
+                cp left-${sample_id}.filter.fq ${sample_id}_R1.filter.fq
+                cp right-${sample_id}.filter.fq ${sample_id}_R2.filter.fq
+
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.filter.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.filter.fq
                 """
         }
+
+        if (params.saveReads) {
+
+            process save_filter_reads {
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/saveReads/filtering", mode: "copy", overwrite: true, pattern: "*_R{1,2}.filter.fq.gz"
+
+                input:
+                    tuple sample_id, file(r1), file(r2) from save_filter_reads
+
+                output:
+                    tuple sample_id, file("*.filter.fq.gz") into save_filter_reads_out
+
+                script:
+                    """
+                    cat $r1 >${sample_id}_R1.filter.fq.gz
+                    cat $r2 >${sample_id}_R2.filter.fq.gz
+                    """
+            }
+        }
+
     } else {
         reads_ch
             .set{ reads_ass_ch }
@@ -1918,15 +2032,13 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq"
-
             input:
                 tuple sample_id, file(reads) from reads_ass_ch
 
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
-                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_reads )
+                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_norm_reads )
 
             script:
                 //def mem=(task.memory)
@@ -1949,8 +2061,8 @@ if (params.onlyAsm) {
                 mv left.norm.fq ${sample_id}_R1.norm.fq
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
-                gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
                 """
             } else {
                 """
@@ -1972,58 +2084,63 @@ if (params.onlyAsm) {
                 mv left.norm.fq ${sample_id}_R1.norm.fq
                 mv right.norm.fq ${sample_id}_R2.norm.fq
 
-                gzip --force ${sample_id}_R1.norm.fq &
-                gzip --force ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
                 """
+            }
+        }
+
+        if (params.saveReads) {
+
+            process save_norm_reads {
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/saveReads/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq.gz"
+
+                input:
+                    tuple sample_id, file(r1), file(r2) from save_norm_reads
+
+                output:
+                    tuple sample_id, file("*.norm.fq.gz") into save_norm_reads_out
+
+                script:
+                    """
+                    cat $r1 >${sample_id}_R1.norm.fq.gz
+                    cat $r2 >${sample_id}_R2.norm.fq.gz
+                    """
             }
         }
     }
 
     if (params.skipFilter && params.skipNormalization) {
 
-        if (hasExtension(params.reads, 'gz')) {
+        process prepare_reads {
 
-            process uncompress_reads {
+            label 'low_cpus'
 
-                label 'low_cpus'
+            tag "${sample_id}"
 
-                tag "${sample_id}"
+            input:
+                tuple sample_id, file(reads) from reads_ass_ch
 
-                input:
-                    tuple sample_id, file(reads) from reads_ass_ch
+            output:
+                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
+                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
 
-                output:
-                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
-                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
-
-                script:
-                    """
-                    echo ${sample_id}
-                    zcat ${reads[0]} >left-${sample_id}.fq &
-                    zcat ${reads[1]} >right-${sample_id}.fq
-                    """
-            }
-        } else {
-
-            process create_readsfile {
-
-                label 'low_cpus'
-
-                tag "${sample_id}"
-
-                input:
-                    tuple sample_id, file(reads) from reads_ass_ch
-
-                output:
-                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
-                    tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
-
-                script:
-                    """
-                    echo ${sample_id}
-                    cat ${reads[0]} >left-${sample_id}.fq &
-                    cat ${reads[1]} >right-${sample_id}.fq
-                    """
+            script:
+            if (hasExtension(params.reads, 'gz')) {
+                """
+                echo ${sample_id}
+                zcat ${reads[0]} >left-${sample_id}.fq &
+                zcat ${reads[1]} >right-${sample_id}.fq
+                """
+            } else {
+                """
+                echo ${sample_id}
+                cat ${reads[0]} >left-${sample_id}.fq &
+                cat ${reads[1]} >right-${sample_id}.fq
+                """
             }
         }
     }
@@ -2320,8 +2437,6 @@ if (params.onlyAsm) {
 
                 label 'med_cpus'
 
-                tag "${sample_id}"
-
             	input:
             	   file(host) from host_sequences
 
@@ -2329,16 +2444,20 @@ if (params.onlyAsm) {
             	   file("updated_host.fasta") into updated_host
 
                 script:
+                if (hasExtension(host_sequences, 'gz')) {
+                    """
+                	zcat ${host} | awk '{if (\$1 ~ /^ *>/ ) {print substr(\$1,0,1)"species1_" substr(\$1,2,length(\$1))} else {print \$1} }' >updated_host.fasta
                 	"""
-                	awk '{if (\$1 ~ /^ *>/ ) {print substr(\$1,0,1)"species1_" substr(\$1,2,length(\$1))} else {print \$1} } ' < ${host} >updated_host.fasta
+                } else {
                 	"""
+                	awk '{if (\$1 ~ /^ *>/ ) {print substr(\$1,0,1)"species1_" substr(\$1,2,length(\$1))} else {print \$1} }' < ${host} >updated_host.fasta
+                	"""
+                }
             }
 
             process update_symbio_ids {
 
                 label 'med_cpus'
-
-                tag "${sample_id}"
 
                 input:
                     file(symbiont) from symbiont_sequences
@@ -2347,16 +2466,20 @@ if (params.onlyAsm) {
                     file("updated_symbio.fasta") into updated_symbiont
 
                 script:
+                if (hasExtension(symbiont_sequences, 'gz')) {
                     """
-                    awk '{if (\$1 ~ /^ *>/ ) {print substr(\$1,0,1)"species2_" substr(\$1,2,length(\$1))} else {print \$1} } ' < ${symbiont} >updated_symbio.fasta
+                    zcat ${symbiont} | awk '{if (\$1 ~ /^ *>/ ) {print substr(\$1,0,1)"species2_" substr(\$1,2,length(\$1))} else {print \$1} }' >updated_symbio.fasta
                     """
+                } else {
+                    """
+                    awk '{if (\$1 ~ /^ *>/ ) {print substr(\$1,0,1)"species2_" substr(\$1,2,length(\$1))} else {print \$1} }' < ${symbiont} >updated_symbio.fasta
+                    """
+                }
             }
 
             process concatenate_sets {
 
                 label 'med_cpus'
-
-                tag "${sample_id}"
 
             	input:
                 	file(host) from updated_host
@@ -2374,8 +2497,6 @@ if (params.onlyAsm) {
             process create_diamond_db {
 
                 label 'med_cpus'
-
-                tag "${sample_id}"
 
             	input:
             	   file(seqs) from file_for_database
@@ -2396,7 +2517,7 @@ if (params.onlyAsm) {
                 tag "${sample_id}"
 
             	input:
-                	file(transcriptome) from transcriptome_sequences1
+                	tuple sample_id, file(transcriptome) from transcriptome_sequences1
                 	file(database) from diamond_db
 
             	output:
@@ -2417,9 +2538,9 @@ if (params.onlyAsm) {
             	publishDir "${workDir}/${params.outdir}/psytrans_output/", mode: "copy", overwrite: true
 
             	input:
-                	file(transcriptome) from transcriptome_sequences2
+                	tuple sample_id, file(transcriptome) from transcriptome_sequences2
                 	file(host) from updated_host
-                	file(symbiont) from updated_symbio
+                	file(symbiont) from updated_symbiont
                 	file(database) from diamond_output
 
             	output:
@@ -2461,10 +2582,18 @@ if (params.onlyAsm) {
                 	   tuple sample_id, file("${sample_id}.symbiont.sam") into clean_reads_ch
 
                     script:
+                    if (hasExtension(symbiont_sequences, 'gz')) {
+                        """
+                        zcat ${symbiont} >symbiont.seqs
+                    	bowtie2-build symbiont.seqs symbiont.db --threads ${task.cpus}
+                        bowtie2 -x symbiont.db -1 ${r1} -2 ${r2} --no-unal -p ${task.cpus} -S ${sample_id}.symbiont.sam
                     	"""
+                    } else {
+                        """
                     	bowtie2-build ${symbiont} symbiont.db --threads ${task.cpus}
                         bowtie2 -x symbiont.db -1 ${r1} -2 ${r2} --no-unal -p ${task.cpus} -S ${sample_id}.symbiont.sam
                     	"""
+                    }
 
                 }
 
@@ -2759,7 +2888,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco3_sum
-                tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TranPi_comparison_table.tsv") into busco3_heatmap
+                tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TransPi_comparison_table.tsv") into busco3_heatmap
 
             script:
                 """
@@ -2806,7 +2935,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco4_sum
-                tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TranPi_comparison_table.tsv") into busco4_heatmap
+                tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TransPi_comparison_table.tsv") into busco4_heatmap
 
             script:
                 """
