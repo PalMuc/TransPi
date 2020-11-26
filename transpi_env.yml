@@ -34,4 +34,6 @@ dependencies:
   - r-rmarkdown=2.3
   - r-kableextra=1.1.0
   - r-reshape2=1.4.4
-  - pandas-1.1.2
+  - pandas=1.1.2
+  #- plotly-orca=3.4.2 not working properly
+  - pigz=2.3.4
