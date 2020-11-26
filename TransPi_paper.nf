@@ -542,7 +542,7 @@ if (params.onlyAsm) {
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
             echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
-            num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
+            num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
             echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
 
             # csv report after evigene
