@@ -15,3 +15,4 @@ results/
 sqlite_db/
 .varfile.sh
 .nextflow*
+.DS_Store
