@@ -3208,7 +3208,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- DONE with EviGene --\\n"
 
-            cp okayset/*combined.okay* ${sample_id}.combined.okay.fa
+            cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
 
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
