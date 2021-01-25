@@ -3901,7 +3901,6 @@ if (params.onlyAsm) {
                 """
                 sample_id=\$( cat input.1 )
                 cp ${params.mypwd}/bin/TransPi_Report_Ind.Rmd .
-                cat SRR7716079_150bp_R_GO_cellular.csv
                 Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
                 """
         }
