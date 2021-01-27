@@ -2479,7 +2479,7 @@ if (params.onlyAsm) {
 
             process concatenate_sets {
 
-                label 'med_cpus'
+                label 'exlow_cpus'
 
             	input:
                 	file(host) from updated_host
@@ -2496,7 +2496,7 @@ if (params.onlyAsm) {
 
             process create_diamond_db {
 
-                label 'med_cpus'
+                label 'low_mem'
 
             	input:
             	   file(seqs) from file_for_database
