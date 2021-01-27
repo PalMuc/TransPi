@@ -296,7 +296,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results_OAS
-                tuple sample_id, file("*.${sample_id}.filter.fq") into reads_ass_ch_OAS
+                tuple sample_id, file("*${sample_id}.filter.fq") into reads_ass_ch_OAS
                 tuple sample_id, file("*.csv") into fastp_csv_OAS
                 tuple sample_id, file("${sample_id}_R1.filter.fq.gz"), file("${sample_id}_R2.filter.fq.gz") into save_filter_reads
 
