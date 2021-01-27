@@ -2868,26 +2868,26 @@ if (params.onlyAsm) {
     }
 
     // default perhaps
-    if (params.rescueBusco) {
+    if (params.buscoDist && params.allBuscos) {
 
-        rescue_busco3_ch=Channel.create()
-        rescue_busco4_ch=Channel.create()
-        busco3_transpi_tsv.join( busco3_all_tsv ).view().into( rescue_busco3_ch )
-        busco4_transpi_tsv.join( busco4_all_tsv ).view().into( rescue_busco4_ch )
+        busco3_dist_ch=Channel.create()
+        busco4_dist_ch=Channel.create()
+        busco3_transpi_tsv.join( busco3_all_tsv ).view().into( busco3_dist_ch )
+        busco4_transpi_tsv.join( busco4_all_tsv ).view().into( busco4_dist_ch )
 
-        process rescue_busco3 {
+        process busco3_dist {
 
             label 'exlow_cpus'
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/rescue_busco3", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
+            publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
 
             input:
-                tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from rescue_busco3_ch
+                tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from busco3_dist_ch
 
             output:
-                tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco3_sum
+                tuple sample_id, file("*.fasta"), file("*_table.tsv") into busco3_dist_sum
                 tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TransPi_comparison_table.tsv") into busco3_heatmap
 
             script:
@@ -2896,7 +2896,7 @@ if (params.onlyAsm) {
                 SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
                 mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
                 mv TransPi_comparison_table ${sample_id}_TransPi_comparison_table.tsv
-                mv sequences_to_add.fasta ${sample_id}_sequences_to_add.fasta
+                mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO3.fasta
                 """
 
         }
@@ -2907,7 +2907,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/rescue_busco3", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
+            publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
 
             input:
                 tuple sample_id, file(comp_table), file(transpi_table) from busco3_heatmap
@@ -2922,19 +2922,19 @@ if (params.onlyAsm) {
                 """
         }
 
-        process rescue_busco4 {
+        process busco4_dist {
 
             label 'exlow_cpus'
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/rescue_busco4", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
+            publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
 
             input:
-                tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from rescue_busco4_ch
+                tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from busco4_dist_ch
 
             output:
-                tuple sample_id, file("*.fasta"), file("*_table.tsv") into rescue_busco4_sum
+                tuple sample_id, file("*.fasta"), file("*_table.tsv") into busco4_dist_sum
                 tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TransPi_comparison_table.tsv") into busco4_heatmap
 
             script:
@@ -2943,7 +2943,7 @@ if (params.onlyAsm) {
                 SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
                 mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
                 mv TransPi_comparison_table ${sample_id}_TransPi_comparison_table.tsv
-                mv sequences_to_add.fasta ${sample_id}_sequences_to_add.fasta
+                mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
                 """
 
         }
@@ -2954,7 +2954,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/rescue_busco4", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
+            publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
 
             input:
                 tuple sample_id, file(comp_table), file(transpi_table) from busco4_heatmap
@@ -2968,6 +2968,10 @@ if (params.onlyAsm) {
                 Rscript heatmap_busco.R ${sample_id} $comp_table $transpi_table
                 """
         }
+
+    } else {
+        println("\n\t\033[0;31mMandatory argument not specified (--buscoDist or --allBuscos). For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        exit 0
     }
 
     process transdecoder {
