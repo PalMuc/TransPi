@@ -16,3 +16,4 @@ sqlite_db/
 .varfile.sh
 .nextflow*
 .DS_Store
+cbs-dtu-tools.tar.gz
