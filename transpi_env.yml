@@ -38,3 +38,4 @@ dependencies:
   #- plotly-orca=3.4.2 not working properly
   - pigz=2.3.4
   - libsvm
+  - sortmerna=4.2.0
