@@ -672,9 +672,6 @@ get_var () {
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
     echo "Tsql=$mypwd/DBs/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
-    echo "rnam=$mypwd/cbs-dtu-tools/rnammer/rnammer" >>${mypwd}/.varfile.sh
-    echo "tmhmm=$mypwd/cbs-dtu-tools/tmhmm-2.0c/bin/tmhmm" >>${mypwd}/.varfile.sh
-    echo "signalp=$mypwd/cbs-dtu-tools/signalp-4.1/signalp" >>${mypwd}/.varfile.sh
     echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
@@ -691,9 +688,8 @@ get_var () {
     echo -e "\t PFAM last update:\t $pfdate"
     echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
-    cat template.nextflow.config | sed -e "s|mypwd|mypwd=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
+    cat template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|reads=|reads=\"${mypwd}|" -e "s|rnam|rnam=\"${rnam}\"|" -e "s|tmhmm|tmhmm=\"${tmhmm}\"|" -e "s|signalp|signalp=\"${signalp}\"|" \
         -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
 }
