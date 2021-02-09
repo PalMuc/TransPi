@@ -30,7 +30,8 @@ read_c() {
     fi
 }
 os_c() {
-    if [ -f /etc/os-release ];then
+    OS="$(uname)"
+    if [ "$OS" == "Linux" ]; then
         echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
         curl -o Anaconda3-2020.02-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
     else
@@ -469,7 +470,7 @@ uniprot_c () {
     fi
 }
 java_c () {
-	export NXF_VER=20.01.0-edge && curl -s https://get.nextflow.io | bash 2>.error_nextflow
+	export NXF_VER=20.10.0 && curl -s https://get.nextflow.io | bash 2>.error_nextflow
 	check_err=$( head -n 1 .error_nextflow | grep -c "java: command not found" )
 	if [ $check_err -eq 1 ];then
 		echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement for Nextflow --\e[39m\n"
@@ -646,49 +647,6 @@ pfam_c() {
         fi
     fi
 }
-cbs_c () {
-    #rnammer
-    cd cbs-dtu-tools/rnammer/
-    name=$( pwd )
-    sed -i "s|/home/ubuntu/pipe/rnammer|$name|g" rnammer
-    cd ..
-    #signalP
-    cd signalp-4.1/
-    name=$( pwd )
-    sed -i "s|/home/ubuntu/pipe/signalp-4.1|$name|g" signalp
-    cd ..
-}
-#later to be removed or to scripts directory
-cbs_dtu_c () {
-    cd $mypwd
-    if [ -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
-        echo -e "\n\t -- Preparing scripts of CBS-DTU -- \n"
-        echo -e "\n\t -- Uncompressing files -- \n"
-        tar -xvf cbs-dtu-tools.tar.gz
-        cbs_c
-    elif [ -f cbs-dtu-tools.tar.gz ] && [ -d cbs-dtu-tools/ ];then
-        cbs_c
-    elif [ ! -f cbs-dtu-tools.tar.gz ] && [ ! -d cbs-dtu-tools/ ];then
-        echo -e "\n\t\e[31m -- ERROR: Please make sure the cbs-dtu-tools.tar.gz is available. Then rerun the pre-check  --\e[39m\n"
-        exit 0
-    fi
-}
-util_c () {
-    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " | tr -d "\"" )
-    if [ -f ${cpath}/bin/RnammerTranscriptome.pl ];then
-        sed -i "s|RealBin/util|RealBin|g" ${cpath}/bin/RnammerTranscriptome.pl
-    else
-        echo -e "\n\t -- Cannot find the TransPi environment -- \n"
-        echo -e -n "\n\t    Provide the PATH of TransPi environment (Examples: /home/bioinf/anaconda3/envs/TransPi ,  ~/tools/anaconda3/.conda/envs/TransPi): "
-        read ans
-        if [ -f ${ans}/bin/RnammerTranscriptome.pl ];then
-            sed -i "s|RealBin/util|RealBin|g" ${ans}/bin/RnammerTranscriptome.pl
-        else
-            echo -e "\n\t -- Wrong PATH given for TransPi environment --\n"
-            util_c
-        fi
-    fi
-}
 #temporary for buscoV4
 bus_env4 () {
     echo -e "\n\t -- Creating BUSCO V4 environment --\n"
@@ -706,7 +664,6 @@ bus4 () {
 }
 get_var () {
     cd $mypwd
-    #echo "=$mypwd/" >${mypwd}/.varfile.sh
     echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
     echo "busco4db=$mypwd/DBs/busco_db/$busna" >>${mypwd}/.varfile.sh
     echo "uniname=$unina" >>${mypwd}/.varfile.sh
@@ -718,7 +675,7 @@ get_var () {
     echo "rnam=$mypwd/cbs-dtu-tools/rnammer/rnammer" >>${mypwd}/.varfile.sh
     echo "tmhmm=$mypwd/cbs-dtu-tools/tmhmm-2.0c/bin/tmhmm" >>${mypwd}/.varfile.sh
     echo "signalp=$mypwd/cbs-dtu-tools/signalp-4.1/signalp" >>${mypwd}/.varfile.sh
-    #echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
@@ -729,7 +686,7 @@ get_var () {
     echo -e "\t Pipeline PATH:\t\t $mypwd"
     echo -e "\t BUSCO V4 database:\t $busco4db"
     echo -e "\t UNIPROT database:\t $uniprot"
-    #echo -e "\t UNIPROT last update:\t $unpdate"
+    echo -e "\t UNIPROT last update:\t $unpdate"
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t PFAM last update:\t $pfdate"
     echo -e "\t SQL DB last update: \t $dbdate"
@@ -744,14 +701,14 @@ get_var () {
 if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
     echo -e "\n\t Script for checking the requirements of TransPi \n"
     echo -e "\t Usage:\n\n\t\t bash precheck_TransPi.sh WORK_PATH \n"
-    echo -e "\n\t\t WORK_PATH = PATH to run TransPi and download the requirements \n\n\t\t Example: /home/bioinf/run/ \n"
+    echo -e "\t\t\t WORK_PATH = PATH to download requirements and databases used by TransPi \n\n\t\t\t Example: /home/bioinf/run/ \n"
     exit 0
 elif [ ! -d "$mypwd" ];then
     echo -e "\n\t -- Please provide a valid PATH to run TransPi -- \n"
     exit 0
 elif [ -d "$mypwd" ];then
     cd $mypwd
-    read_c
+    #read_c
     conda_c
     dir_c
     bus_c
@@ -760,8 +717,6 @@ elif [ -d "$mypwd" ];then
     evi_c
     buildsql_c
     pfam_c
-    cbs_dtu_c
-    util_c
     bus4
     echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
     get_var
