@@ -1,66 +1,95 @@
 #!/usr/bin/env nextflow
-
 /*
 ========================================================================================
                                     TransPi
 ========================================================================================
-                       Transcriptomes Analysis Pipeline
-                       Author: Ramon E. Rivera-Vicens
-                       Version: 1.0 (dev)
+                       Transcriptome Analysis Pipeline
+                       Author: Ramón E. Rivera-Vicéns
+                       GitHub: rivera10
 ----------------------------------------------------------------------------------------
 */
 
 def helpMessage() {
     log.info """
-    ==========================================
-    TransPi - Transcriptome Analysis Pipeline
-    ==========================================
+    ==================================================
+      TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
+    ==================================================
 
-        Steps:
-            1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
-            2- Run TransPi
+    Steps:
+        1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+        2- Run TransPi
 
-            Usage:
+        Usage:
+            nextflow run TransPi.nf TransPi_analysis_option other_options
 
-                nextflow run TransPi.nf --all (other_options_here)
+            Example usage:
+                nextflow run TransPi.nf --all --reads "/PATH/TO/READS/*_R[1,2].fastq.gz" --k 25,41,53 --maxReadLen 75
 
-        Mandatory arguments (--all or --onlyAsm or --onlyEvi or --onlyAnn):
+        Manadatory arguments:
+            --all                   Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.)
+                                    This option also requires arguments --reads and --k
+                                    Example:
+                                        --reads "/home/ubuntu/TransPi/reads/*_R[1,2].fastq.gz" --k 25,35,55,75,85
+                                        NOTE: Use of quotes is needed for the reads PATH. Kmer list depends on read length.
 
-                --all           Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.)
+            --onlyAsm               Run only the Assemblies and EvidentialGene analysis
+                                    This option also requires arguments --reads and --k
 
-                --onlyAsm       Run only the Assemblies and EvidentialGene analysis (testing)
+            --onlyEvi               Run only the Evidential Gene analysis
+                                    Transcriptome expected to be in a directory called "onlyEvi"
 
-                --onlyEvi       Run only the Evidential Gene analysis (testing)
-
-                --onlyAnn       Run only the Annotation analysis (starting from a final assembly)
+            --onlyAnn               Run only the Annotation analysis (starting from a final assembly)
+                                    Transcriptome expected to be in a directory called "onlyAnn"
 
         Other options:
+            -with-conda             To run with a local conda installation (generated with the precheck) and not installed by nextflow
+                                    This is the preferred method of running TransPi
+                                    Example:
+                                        nextflow run transpi.nf --all -with-conda /home/ubuntu/anaconda3/envs/TransPi
 
-                -with-conda     To run with a local conda installation (generated with the precheck) and not installed by nextflow
-                                This is the preferred method of running TransPi
+            -profile                Configuration profile to use. Can use multiple (comma separated)
+                                    Available:
+                                        test (Run TransPi with test dataset)
+                                        conda (Not recommended, not all programs are installed by conda. Use the precheck)
+                                        docker (Run TransPi with a docker container with all the neccesary tools)
+                                        singularity (Run TransPi with a singularity container with all the neccesary tools)
 
-                                Example:
-                                    nextflow run transpi.nf --all -with-conda /home/ubuntu/anaconda3/envs/TransPi
+            --help                  Display this message
+            --fullHelp              Display more options and examples for running TransPi
 
-                -profile        Configuration profile to use. Can use multiple (comma separated)
+        Output options:
+            --outdir 	            Name of output directory. Example: --outdir Sponges_150. Default "results"
+            -w, -work 	            Name of working directory. Example: -work Sponges_work. Only one dash is needed for -work since it is a nextflow function.
+            --tracedir              Name for directory to save pipeline trace files. Default "pipeline_info"
 
-                                Available:
-                                    test (ready - Run TransPi with test dataset)
-                                    conda (ready - Not recommended, not all programs are installed by conda. Use the precheck)
-                                    docker (in development - Run TransPi with a docker container with all the neccesary tools)
-                                    singularity (in development - Run TransPi with a singularity container with all the neccesary tools)
+        Additional analyses:
+            --filterSpecies         Perform psytrans filtering of transcriptome. Requires options --host and --symbiont
+            --host 	                Host (or similar) protein file.
+            --symbiont     	        Symbionts (or similar) protein files
+            --psyval       	        Psytrans value to train model. Default "160"
+            --allBuscos       	    Run BUSCO analysis in all assemblies
+            --rescueBusco 	        Generate BUSCO distribution analysis
+            --minPerc        	    Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
+            --shortTransdecoder     Run Transdecoder without the homology searches
+            --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+            --withTMHMM 	        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+            --withRnammer 	        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
 
-                --help          Display this message
+        Skip options:
+            --skipEvi 	            Skip EvidentialGene run in --onlyAsm option. Default "false"
+            --skipQC 	            Skip FastQC step. Default "false"
+            --skipFilter 	        Skip fastp filtering step. Default "false"
+            --skipReport 	        Skip generation of final TransPi report. Default "false"
 
-                --fullHelp      Display more options and examples for running TransPi
-
+        Others:
+            --minQual 	             Minimum quality score for fastp filtering. Default "25"
     """.stripIndent()
 }
 def fullHelpMessage() {
     log.info """
-    ==========================================
-    TransPi - Transcriptome Analysis Pipeline
-    ==========================================
+    ==================================================
+      TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
+    ==================================================
 
         Steps:
             1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
@@ -190,47 +219,66 @@ def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
 }
 
+def checkArgs() {
+    if (!params.k) {
+        println("\n\t\033[0;31mKmer list not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        exit 0
+    }
+    if (!params.reads) {
+        println("\n\t\033[0;31mReads mandatory argument not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        exit 0
+    }
+    if (!params.maxReadLen) {
+        println("\n\t\033[0;31mMax read length argument not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        exit 0
+    }
+}
+
 if (params.all) {
     log.info """\
-            =========================================
-            TransPi - Transcriptome Analysis Pipeline
-            =========================================
-            TransPi Installation:       ${params.mypwd}
+            ==================================================
+              TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
+            ==================================================
+            TransPi Installation:       ${params.pipeInstall}
+            Reads Directory:            ${params.reads}
+            Read Length:                ${params.maxReadLen}
+            Kmers:                      ${params.k}
             Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
-            Reads Length:               ${params.max_rd_len}
-            Kmers:                      ${params.k}
             Uniprot DB:                 ${params.uniprot}
             Busco DB:                   ${params.busco4db}
             """.stripIndent()
+    checkArgs()
 } else if (params.onlyAnn) {
     log.info """\
-            =========================================
-            TransPi - Transcriptome Analysis Pipeline
-            =========================================
-            TransPi Installation:       ${params.mypwd}
+            ==================================================
+              TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
+            ==================================================
+            TransPi Installation:       ${params.pipeInstall}
             Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
             Uniprot DB:                 ${params.uniprot}
             """.stripIndent()
 } else if (params.onlyAsm) {
     log.info """\
-            =========================================
-            TransPi - Transcriptome Analysis Pipeline
-            =========================================
-            TransPi Installation:       ${params.mypwd}
+            ==================================================
+              TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
+            ==================================================
+            TransPi Installation:       ${params.pipeInstall}
+            Reads Directory:            ${params.reads}
+            Read Length:                ${params.maxReadLen}
+            Kmers:                      ${params.k}
             Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
-            Reads Length:               ${params.max_rd_len}
-            Kmers:                      ${params.k}
             Busco DB:                   ${params.busco4db}
             """.stripIndent()
+    checkArgs()
 } else if (params.onlyEvi){
     log.info """\
-            =========================================
-            TransPi - Transcriptome Analysis Pipeline
-            =========================================
-            TransPi Installation:       ${params.mypwd}
+            ==================================================
+              TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
+            ==================================================
+            TransPi Installation:       ${params.pipeInstall}
             Results Directory:          ${params.outdir}
             Working Directory:          ${workDir}
             Busco DB:                   ${params.busco4db}
@@ -255,7 +303,6 @@ if (params.readsTest) {
 
 if (params.onlyAsm) {
 
-    //testing
     println("\n\tRunning assemblies and Evidential Gene analysis only \n")
 
     if (!params.skipQC) {
@@ -511,7 +558,7 @@ if (params.onlyAsm) {
         script:
             """
             echo -e "\\n-- Generating SOAP config file --\\n"
-            echo "max_rd_len="${params.max_rd_len} >>config.txt
+            echo "maxReadLen="${params.maxReadLen} >>config.txt
             echo "[LIB]" >>config.txt
             echo "rd_len_cutof="${params.rd_len_cutof} >>config.txt
             #echo "avg_ins="${params.avg_ins} >>config.txt
@@ -990,7 +1037,7 @@ if (params.onlyAsm) {
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
             bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
-            cp ${params.mypwd}/bin/busco_comparison.R .
+            cp ${params.pipeInstall}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
             b=\$( cat final_perc )
@@ -1028,7 +1075,7 @@ if (params.onlyAsm) {
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus4.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus4.txt" )
             bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
-            cp ${params.mypwd}/bin/busco_comparison.R .
+            cp ${params.pipeInstall}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
             b=\$( cat final_perc )
@@ -1055,7 +1102,7 @@ if (params.onlyAsm) {
     process custom_diamond_db_OA {
         script:
             """
-            cd ${params.mypwd}
+            cd ${params.pipeInstall}
             echo -e "-- Checking if Diamond database folder is present --\\n"
             if [ ! -d DBs/diamonddb_custom/ ];then
                 echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
@@ -1085,7 +1132,7 @@ if (params.onlyAsm) {
     process hmmer_db_OA {
         script:
             """
-            cd ${params.mypwd}
+            cd ${params.pipeInstall}
             echo -e "-- Checking if HMMER database folder is present --\\n"
             if [ -d DBs/hmmerdb/ ];then
                 echo -e "-- Folder is present. Checking if HMMER database is built --\\n"
@@ -1106,21 +1153,21 @@ if (params.onlyAsm) {
     process swiss_diamond_db_OA {
         script:
             """
-            cd ${params.mypwd}/DBs/sqlite_db
+            cd ${params.pipeInstall}/DBs/sqlite_db
             if [ -e uniprot_sprot.pep ];then
-                cd ${params.mypwd}
+                cd ${params.pipeInstall}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
                     echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
                     cd DBs/diamonddb_swiss
-                    cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
+                    cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
                     diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                     export swissdb=`pwd`/uniprot_sprot.pep
                 elif [ -d DBs/diamonddb_swiss/ ];then
                     cd DBs/diamonddb_swiss
                     if [ ! -e uniprot_sprot.pep.dmnd ];then
                         echo -e "-- Diamond database not present, creating one --\\n"
-                        cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
+                        cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
                         diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                         export swissdb=`pwd`/uniprot_sprot.pep
                     elif [ -e uniprot_sprot.pep.dmnd ];then
@@ -1129,7 +1176,7 @@ if (params.onlyAsm) {
                     fi
                 fi
             elif [ ! -e uniprot_sprot.pep ];then
-                cd ${params.mypwd}
+                cd ${params.pipeInstall}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
                     echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
@@ -1232,7 +1279,7 @@ if (params.onlyAsm) {
             """
             cp ${assembly} ${sample_id}_asssembly.fasta
 
-            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
+            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
 
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
@@ -1318,7 +1365,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            swissdb=${params.mypwd}/DBs/diamonddb_swiss/uniprot_sprot.pep
+            swissdb=${params.pipeInstall}/DBs/diamonddb_swiss/uniprot_sprot.pep
 
             #Diamond (BLAST) Homologies
 
@@ -1351,7 +1398,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
+            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
 
             #Diamond (BLAST) Homologies
 
@@ -1737,7 +1784,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            cp ${params.mypwd}/bin/GO_plots.R .
+            cp ${params.pipeInstall}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
 
@@ -1795,7 +1842,7 @@ if (params.onlyAsm) {
 
             rm a.txt b.txt
 
-            cp ${params.mypwd}/conf/uni_tax.txt .
+            cp ${params.pipeInstall}/conf/uni_tax.txt .
             cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits
 
             while read line;do
@@ -1810,7 +1857,7 @@ if (params.onlyAsm) {
             rm ${sample_id}_custom_uniprot_hits.txt uni_tax.txt
             mv ${sample_id}_custom_uniprot_hits ${sample_id}_custom_uniprot_hits.txt
 
-            cp ${params.mypwd}/bin/custom_uniprot_hits.R .
+            cp ${params.pipeInstall}/bin/custom_uniprot_hits.R .
             Rscript custom_uniprot_hits.R ${sample_id}
 
             cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits.csv
@@ -1824,7 +1871,7 @@ if (params.onlyAsm) {
     process custom_diamond_db {
         script:
             """
-            cd ${params.mypwd}
+            cd ${params.pipeInstall}
             echo -e "-- Checking if Diamond database folder is present --\\n"
             if [ ! -d DBs/diamonddb_custom/ ];then
                 echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
@@ -1854,7 +1901,7 @@ if (params.onlyAsm) {
     process hmmer_db {
         script:
             """
-            cd ${params.mypwd}
+            cd ${params.pipeInstall}
             echo -e "-- Checking if HMMER database folder is present --\\n"
             if [ -d DBs/hmmerdb/ ];then
                 echo -e "-- Folder is present. Checking if HMMER database is built --\\n"
@@ -1875,21 +1922,21 @@ if (params.onlyAsm) {
     process swiss_diamond_db {
         script:
             """
-            cd ${params.mypwd}/DBs/sqlite_db
+            cd ${params.pipeInstall}/DBs/sqlite_db
             if [ -e uniprot_sprot.pep ];then
-                cd ${params.mypwd}
+                cd ${params.pipeInstall}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
                     echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
                     cd DBs/diamonddb_swiss
-                    cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
+                    cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
                     diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                     export swissdb=`pwd`/uniprot_sprot.pep
                 elif [ -d DBs/diamonddb_swiss/ ];then
                     cd DBs/diamonddb_swiss
                     if [ ! -e uniprot_sprot.pep.dmnd ];then
                         echo -e "-- Diamond database not present, creating one --\\n"
-                        cp ${params.mypwd}/DBs/sqlite_db/uniprot_sprot.pep .
+                        cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
                         diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
                         export swissdb=`pwd`/uniprot_sprot.pep
                     elif [ -e uniprot_sprot.pep.dmnd ];then
@@ -1898,7 +1945,7 @@ if (params.onlyAsm) {
                     fi
                 fi
             elif [ ! -e uniprot_sprot.pep ];then
-                cd ${params.mypwd}
+                cd ${params.pipeInstall}
                 if [ ! -d DBs/diamonddb_swiss/ ];then
                     echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
                     mkdir -p DBs/diamonddb_swiss
@@ -2188,7 +2235,7 @@ if (params.onlyAsm) {
         script:
             """
             echo -e "\\n-- Generating SOAP config file --\\n"
-            echo "max_rd_len="${params.max_rd_len} >>config.txt
+            echo "maxReadLen="${params.maxReadLen} >>config.txt
             echo "[LIB]" >>config.txt
             echo "rd_len_cutof="${params.rd_len_cutof} >>config.txt
             #echo "avg_ins="${params.avg_ins} >>config.txt
@@ -2549,7 +2596,9 @@ if (params.onlyAsm) {
                 script:
                 	"""
                 	mkdir temp
-                	psytrans.py ${transcriptome} -A ${host} -B ${symbio} -b ${database} -t temp -n ${params.psyval}
+                	psytrans.py ${transcriptome} -A ${host} -B ${symbiont} -b ${database} -t temp -n ${params.psyval}
+                    mv species1_${transcriptome} ${sample_id}_only.fasta
+                    mv species2_${transcriptome} ${sample_id}_removed.fasta
                 	"""
             }
         } else {
@@ -2917,7 +2966,7 @@ if (params.onlyAsm) {
 
             script:
                 """
-                cp ${params.mypwd}/bin/heatmap_busco.R .
+                cp ${params.pipeInstall}/bin/heatmap_busco.R .
                 Rscript heatmap_busco.R ${sample_id} $comp_table $transpi_table
                 """
         }
@@ -2964,7 +3013,7 @@ if (params.onlyAsm) {
 
             script:
                 """
-                cp ${params.mypwd}/bin/heatmap_busco.R .
+                cp ${params.pipeInstall}/bin/heatmap_busco.R .
                 Rscript heatmap_busco.R ${sample_id} $comp_table $transpi_table
                 """
         }
@@ -3037,7 +3086,7 @@ if (params.onlyAsm) {
 
         } else {
             """
-            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
+            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
 
             echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
@@ -3126,7 +3175,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            swissdb=${params.mypwd}/DBs/diamonddb_swiss/uniprot_sprot.pep
+            swissdb=${params.pipeInstall}/DBs/diamonddb_swiss/uniprot_sprot.pep
 
             assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
             transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
@@ -3165,7 +3214,7 @@ if (params.onlyAsm) {
 
         script:
             """
-            unidb=${params.mypwd}/DBs/diamonddb_custom/${params.uniname}
+            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
 
             assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
             transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
@@ -3699,7 +3748,7 @@ if (params.onlyAsm) {
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
             bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
-            cp ${params.mypwd}/bin/busco_comparison.R .
+            cp ${params.pipeInstall}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
             b=\$( cat final_perc )
@@ -3737,7 +3786,7 @@ if (params.onlyAsm) {
             tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus4.txt" )
             trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus4.txt" )
             bash get_busco_val.sh \${tri} \${trans} v4 ${sample_id}
-            cp ${params.mypwd}/bin/busco_comparison.R .
+            cp ${params.pipeInstall}/bin/busco_comparison.R .
             a=\$( cat final_spec )
             sed -i "s/MYSPEC/\${a}/" busco_comparison.R
             b=\$( cat final_perc )
@@ -3768,7 +3817,7 @@ if (params.onlyAsm) {
 
         script:
             """
-	        cp ${params.mypwd}/bin/GO_plots.R .
+	        cp ${params.pipeInstall}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
 
@@ -3826,7 +3875,7 @@ if (params.onlyAsm) {
 
             rm a.txt b.txt
 
-            cp ${params.mypwd}/conf/uni_tax.txt .
+            cp ${params.pipeInstall}/conf/uni_tax.txt .
             cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits
 
             while read line;do
@@ -3841,7 +3890,7 @@ if (params.onlyAsm) {
             rm ${sample_id}_custom_uniprot_hits.txt uni_tax.txt
             mv ${sample_id}_custom_uniprot_hits ${sample_id}_custom_uniprot_hits.txt
 
-            cp ${params.mypwd}/bin/custom_uniprot_hits.R .
+            cp ${params.pipeInstall}/bin/custom_uniprot_hits.R .
             Rscript custom_uniprot_hits.R ${sample_id}
 
             cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits.csv
@@ -3904,7 +3953,7 @@ if (params.onlyAsm) {
             script:
                 """
                 sample_id=\$( cat input.1 )
-                cp ${params.mypwd}/bin/TransPi_Report_Ind.Rmd .
+                cp ${params.pipeInstall}/bin/TransPi_Report_Ind.Rmd .
                 Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
                 """
         }
@@ -3912,7 +3961,6 @@ if (params.onlyAsm) {
 
 } else if (params.onlyEvi) {
 
-    //testing
     println("\n\tRunning Evidential Gene analysis only \n")
 
     Channel
@@ -4062,15 +4110,15 @@ process get_run_info {
         v=\$( echo ${params.uniname} )
         echo "Uniprot_DB: \$v" >>versions.txt
 
-        if [ -f ${params.mypwd}/DBs/uniprot_db/.lastrun.txt ];then
-            v=\$( cat ${params.mypwd}/DBs/uniprot_db/.lastrun.txt )
+        if [ -f ${params.pipeInstall}/DBs/uniprot_db/.lastrun.txt ];then
+            v=\$( cat ${params.pipeInstall}/DBs/uniprot_db/.lastrun.txt )
         else
             v="No info available. Check Instructions on README."
         fi
         echo -e "Uniprot_DB last update: \$v \\n" >>versions.txt
 
-        if [ -f ${params.mypwd}/DBs/hmmerdb/.lastrun.txt ];then
-            v=\$( cat ${params.mypwd}/DBs/hmmerdb/.lastrun.txt )
+        if [ -f ${params.pipeInstall}/DBs/hmmerdb/.lastrun.txt ];then
+            v=\$( cat ${params.pipeInstall}/DBs/hmmerdb/.lastrun.txt )
         else
             v="No info available. Check Instructions on README."
         fi
@@ -4114,9 +4162,6 @@ process get_run_info {
         v=\$( echo "2019.05.14" )
         echo "EvidentialGene: \$v" >>versions.txt
 
-        v=\$( echo "1.2" )
-        echo "RNAmmer: \$v" >>versions.txt
-
         v=\$( TransDecoder.LongOrfs --version | cut -f 2 -d " " )
         echo "Transdecoder: \$v" >>versions.txt
 
@@ -4126,14 +4171,8 @@ process get_run_info {
         v=\$( echo "4.0.5" )
         echo "BUSCO4: \$v" >>versions.txt
 
-        v=\$( cat ${params.mypwd}/transpi_env.yml | grep trinotate  | cut -f 2 -d "=" )
+        v=\$( cat ${params.pipeInstall}/transpi_env.yml | grep trinotate  | cut -f 2 -d "=" )
         echo "Trinotate: \$v" >>versions.txt
-
-        v=\$( echo "4.1" )
-        echo "SignalP: \$v" >>versions.txt
-
-        v=\$( echo "2.0" )
-        echo "tmhmm: \$v" >>versions.txt
 
         v=\$( cd-hit -h | head -n1 | cut -f 1 -d "(" | cut -f 2 -d "n" )
         echo "CD-HIT:\$v" >>versions.txt
