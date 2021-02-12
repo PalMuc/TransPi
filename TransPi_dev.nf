@@ -4617,115 +4617,116 @@ if (params.onlyAsm) {
     exit 0
 }
 
-process get_run_info {
+if (params.getVersions) {
+    process get_run_info {
 
-    publishDir "${workDir}/${params.outdir}/", mode: "copy", overwrite: true
+        publishDir "${workDir}/${params.outdir}/", mode: "copy", overwrite: true
 
-    conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
-    if (params.oneContainer){ container "${params.TPcontainer}" } else {
-    container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
+        output:
+           file("versions.txt") into run_info
+
+        script:
+            """
+            echo "==================================================" >>versions.txt
+            echo "  TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}" >>versions.txt
+            echo -e "==================================================\\n" >>versions.txt
+            echo -e "\\t\\tRUN INFO\\n" >>versions.txt
+            echo "-- Kmers used --" >>versions.txt
+            echo ${params.k} >>versions.txt
+
+            echo -e "\\n-- Databases name and last update --" >>versions.txt
+
+            v=\$( echo ${params.uniname} )
+            echo "Uniprot_DB: \$v" >>versions.txt
+
+            if [ -f ${params.pipeInstall}/DBs/uniprot_db/.lastrun.txt ];then
+                v=\$( cat ${params.pipeInstall}/DBs/uniprot_db/.lastrun.txt )
+            else
+                v="No info available. Check Instructions on README."
+            fi
+            echo -e "Uniprot_DB last update: \$v \\n" >>versions.txt
+
+            if [ -f ${params.pipeInstall}/DBs/hmmerdb/.lastrun.txt ];then
+                v=\$( cat ${params.pipeInstall}/DBs/hmmerdb/.lastrun.txt )
+            else
+                v="No info available. Check Instructions on README."
+            fi
+            echo -e "PfamA last update: \$v \\n" >>versions.txt
+
+            v=\$( echo ${params.busco3db} | tr "/" "\\n" | tail -n 1 )
+            echo "BUSCO_v3_DB: \$v" >>versions.txt
+
+            v=\$( echo ${params.busco4db} | tr "/" "\\n" | tail -n 1 )
+            echo "BUSCO_v4_DB: \$v" >>versions.txt
+
+            echo -e "\\n-- Program versions --" >>versions.txt
+
+            v=\$( SOAPdenovo-Trans-127mer --version | grep "version" | awk '{print \$2,\$3}' | cut -f 1 -d ":" | cut -f 2 -d " " )
+            echo "SOAP: \$v" >>versions.txt
+
+            v=\$( velveth | grep "Version" | cut -f 2 -d " " )
+            echo "Velveth: \$v" >>versions.txt
+
+            v=\$( velvetg | grep "Version" | cut -f 2 -d " " )
+            echo "Velvetg: \$v" >>versions.txt
+
+            v=\$( oases | grep "Version" | cut -f 2 -d " " )
+            echo "Oases: \$v" >>versions.txt
+
+            v=\$( rnaspades.py -v )
+            echo "rna-SPADES: \$v" >>versions.txt
+
+            v=\$( transabyss --version )
+            echo "Trans-ABySS: \$v" >>versions.txt
+
+            v=\$( Trinity --version | grep "version" | head -n 1 | cut -f 2 -d "-" )
+            echo "Trinity: \$v" >>versions.txt
+
+            v=\$( diamond --version 2>&1 | tail -n 1 | cut -f 3 -d " " )
+            echo "Diamond: \$v" >>versions.txt
+
+            v=\$( hmmsearch -h | head -n 2 | cut -f 3 -d " " | grep [0-9] )
+            echo "HMMER: \$v" >>versions.txt
+
+            v=\$( echo "2019.05.14" )
+            echo "EvidentialGene: \$v" >>versions.txt
+
+            v=\$( TransDecoder.LongOrfs --version | cut -f 2 -d " " )
+            echo "Transdecoder: \$v" >>versions.txt
+
+            v=\$( run_BUSCO.py -v | cut -f 2 -d " " )
+            echo "BUSCO3: \$v" >>versions.txt
+
+            v=\$( echo "4.0.5" )
+            echo "BUSCO4: \$v" >>versions.txt
+
+            v=\$( cat ${params.pipeInstall}/transpi_env.yml | grep trinotate  | cut -f 2 -d "=" )
+            echo "Trinotate: \$v" >>versions.txt
+
+            v=\$( cd-hit -h | head -n1 | cut -f 1 -d "(" | cut -f 2 -d "n" )
+            echo "CD-HIT:\$v" >>versions.txt
+
+            v=\$( exonerate -v | head -n1 | cut -f 5 -d " " )
+            echo "Exonerate: \$v" >>versions.txt
+
+            echo -e "\\n-- Programming Languages --" >>versions.txt
+
+            v=\$( R --version | grep "R version" | awk '{print \$3}' )
+            echo "R: \$v" >>versions.txt
+
+            v=\$( python --version | cut -f 2 -d " " )
+            echo "Python: \$v" >>versions.txt
+
+            v=\$( perl -v | head -n2 | grep version | cut -f 1 -d ")" | cut -f 2 -d "(" | tr -d "v" )
+            echo "Perl: \$v" >>versions.txt
+            """
     }
-
-    output:
-       file("versions.txt") into run_info
-
-    script:
-        """
-        echo "==================================================" >>versions.txt
-        echo "  TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}" >>versions.txt
-        echo -e "==================================================\\n" >>versions.txt
-        echo -e "\\t\\tRUN INFO\\n" >>versions.txt
-        echo "-- Kmers used --" >>versions.txt
-        echo ${params.k} >>versions.txt
-
-        echo -e "\\n-- Databases name and last update --" >>versions.txt
-
-        v=\$( echo ${params.uniname} )
-        echo "Uniprot_DB: \$v" >>versions.txt
-
-        if [ -f ${params.pipeInstall}/DBs/uniprot_db/.lastrun.txt ];then
-            v=\$( cat ${params.pipeInstall}/DBs/uniprot_db/.lastrun.txt )
-        else
-            v="No info available. Check Instructions on README."
-        fi
-        echo -e "Uniprot_DB last update: \$v \\n" >>versions.txt
-
-        if [ -f ${params.pipeInstall}/DBs/hmmerdb/.lastrun.txt ];then
-            v=\$( cat ${params.pipeInstall}/DBs/hmmerdb/.lastrun.txt )
-        else
-            v="No info available. Check Instructions on README."
-        fi
-        echo -e "PfamA last update: \$v \\n" >>versions.txt
-
-        v=\$( echo ${params.busco3db} | tr "/" "\\n" | tail -n 1 )
-        echo "BUSCO_v3_DB: \$v" >>versions.txt
-
-        v=\$( echo ${params.busco4db} | tr "/" "\\n" | tail -n 1 )
-        echo "BUSCO_v4_DB: \$v" >>versions.txt
-
-        echo -e "\\n-- Program versions --" >>versions.txt
-
-        v=\$( SOAPdenovo-Trans-127mer --version | grep "version" | awk '{print \$2,\$3}' | cut -f 1 -d ":" | cut -f 2 -d " " )
-        echo "SOAP: \$v" >>versions.txt
-
-        v=\$( velveth | grep "Version" | cut -f 2 -d " " )
-        echo "Velveth: \$v" >>versions.txt
-
-        v=\$( velvetg | grep "Version" | cut -f 2 -d " " )
-        echo "Velvetg: \$v" >>versions.txt
-
-        v=\$( oases | grep "Version" | cut -f 2 -d " " )
-        echo "Oases: \$v" >>versions.txt
-
-        v=\$( rnaspades.py -v )
-        echo "rna-SPADES: \$v" >>versions.txt
-
-        v=\$( transabyss --version )
-        echo "Trans-ABySS: \$v" >>versions.txt
-
-        v=\$( Trinity --version | grep "version" | head -n 1 | cut -f 2 -d "-" )
-        echo "Trinity: \$v" >>versions.txt
-
-        v=\$( diamond --version 2>&1 | tail -n 1 | cut -f 3 -d " " )
-        echo "Diamond: \$v" >>versions.txt
-
-        v=\$( hmmsearch -h | head -n 2 | cut -f 3 -d " " | grep [0-9] )
-        echo "HMMER: \$v" >>versions.txt
-
-        v=\$( echo "2019.05.14" )
-        echo "EvidentialGene: \$v" >>versions.txt
-
-        v=\$( TransDecoder.LongOrfs --version | cut -f 2 -d " " )
-        echo "Transdecoder: \$v" >>versions.txt
-
-        v=\$( run_BUSCO.py -v | cut -f 2 -d " " )
-        echo "BUSCO3: \$v" >>versions.txt
-
-        v=\$( echo "4.0.5" )
-        echo "BUSCO4: \$v" >>versions.txt
-
-        v=\$( cat ${params.pipeInstall}/transpi_env.yml | grep trinotate  | cut -f 2 -d "=" )
-        echo "Trinotate: \$v" >>versions.txt
-
-        v=\$( cd-hit -h | head -n1 | cut -f 1 -d "(" | cut -f 2 -d "n" )
-        echo "CD-HIT:\$v" >>versions.txt
-
-        v=\$( exonerate -v | head -n1 | cut -f 5 -d " " )
-        echo "Exonerate: \$v" >>versions.txt
-
-        echo -e "\\n-- Programming Languages --" >>versions.txt
-
-        v=\$( R --version | grep "R version" | awk '{print \$3}' )
-        echo "R: \$v" >>versions.txt
-
-        v=\$( python --version | cut -f 2 -d " " )
-        echo "Python: \$v" >>versions.txt
-
-        v=\$( perl -v | head -n2 | grep version | cut -f 1 -d ")" | cut -f 2 -d "(" | tr -d "v" )
-        echo "Perl: \$v" >>versions.txt
-        """
 }
-
 workflow.onComplete {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
