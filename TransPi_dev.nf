@@ -3115,7 +3115,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true, , pattern: "*.{tsv,txt,bus3}"
+            publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus3}"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
