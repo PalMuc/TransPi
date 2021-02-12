@@ -3489,10 +3489,6 @@ if (params.onlyAsm) {
                 Rscript heatmap_busco.R ${sample_id} $comp_table $transpi_table
                 """
         }
-
-    } else {
-        println("\n\t\033[0;31mMandatory argument not specified (--buscoDist or --allBuscos).\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
-        exit 0
     }
 
     process transdecoder {
