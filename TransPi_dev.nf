@@ -91,39 +91,74 @@ def fullHelpMessage() {
       TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
     ==================================================
 
-        Steps:
-            1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
-            2- Run TransPi
+    Steps:
+        1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+        2- Run TransPi
 
-            Usage:
+        Usage:
+            nextflow run TransPi.nf TransPi_analysis_option other_options
 
-                nextflow run TransPi.nf --all (other_options_here)
+            Example usage:
+                nextflow run TransPi.nf --all --reads "/PATH/TO/READS/*_R[1,2].fastq.gz" --k 25,41,53 --maxReadLen 75
 
-        Mandatory arguments (--all or --onlyAsm or --onlyEvi or --onlyAnn):
+        Manadatory arguments:
+            --all                   Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.)
+                                    This option also requires arguments --reads and --k
+                                    Example:
+                                        --reads "/home/ubuntu/TransPi/reads/*_R[1,2].fastq.gz" --k 25,35,55,75,85
+                                        NOTE: Use of quotes is needed for the reads PATH. Kmer list depends on read length.
 
-                --all           Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.)
+            --onlyAsm               Run only the Assemblies and EvidentialGene analysis
+                                    This option also requires arguments --reads and --k
 
-                --onlyAsm       Run only the Assemblies and EvidentialGene analysis (testing)
+            --onlyEvi               Run only the Evidential Gene analysis
+                                    Transcriptome expected to be in a directory called "onlyEvi"
 
-                --onlyEvi       Run only the Evidential Gene analysis (testing)
-
-                --onlyAnn       Run only the Annotation analysis (starting from a final assembly)
+            --onlyAnn               Run only the Annotation analysis (starting from a final assembly)
+                                    Transcriptome expected to be in a directory called "onlyAnn"
 
         Other options:
+            -with-conda             To run with a local conda installation (generated with the precheck) and not installed by nextflow
+                                    This is the preferred method of running TransPi
+                                    Example:
+                                        nextflow run transpi.nf --all -with-conda /home/ubuntu/anaconda3/envs/TransPi
 
-                -with-conda     To run with a local conda installation (generated with the precheck) and not installed by nextflow
-                                This is the preferred method of running TransPi
+            -profile                Configuration profile to use. Can use multiple (comma separated)
+                                    Available:
+                                        test (Run TransPi with test dataset)
+                                        conda (Not recommended, not all programs are installed by conda. Use the precheck)
+                                        docker (Run TransPi with a docker container with all the neccesary tools)
+                                        singularity (Run TransPi with a singularity container with all the neccesary tools)
 
-                                Example:
-                                    nextflow run transpi.nf --all -with-conda /home/ubuntu/anaconda3/envs/TransPi
+            --help                  Display this message
+            --fullHelp              Display more options and examples for running TransPi
 
-                -profile        Configuration profile to use. Can use multiple (comma separated)
+        Output options:
+            --outdir 	            Name of output directory. Example: --outdir Sponges_150. Default "results"
+            -w, -work 	            Name of working directory. Example: -work Sponges_work. Only one dash is needed for -work since it is a nextflow function.
+            --tracedir              Name for directory to save pipeline trace files. Default "pipeline_info"
 
-                                Available:
-                                    test (ready - Run TransPi with test dataset)
-                                    conda (ready - Not recommended, not all programs are installed by conda. Use the precheck)
-                                    docker (in development - Run TransPi with a docker container with all the neccesary tools)
-                                    singularity (in development - Run TransPi with a singularity container with all the neccesary tools)
+        Additional analyses:
+            --filterSpecies         Perform psytrans filtering of transcriptome. Requires options --host and --symbiont
+            --host 	                Host (or similar) protein file.
+            --symbiont     	        Symbionts (or similar) protein files
+            --psyval       	        Psytrans value to train model. Default "160"
+            --allBuscos       	    Run BUSCO analysis in all assemblies
+            --rescueBusco 	        Generate BUSCO distribution analysis
+            --minPerc        	    Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
+            --shortTransdecoder     Run Transdecoder without the homology searches
+            --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+            --withTMHMM 	        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+            --withRnammer 	        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+
+        Skip options:
+            --skipEvi 	            Skip EvidentialGene run in --onlyAsm option. Default "false"
+            --skipQC 	            Skip FastQC step. Default "false"
+            --skipFilter 	        Skip fastp filtering step. Default "false"
+            --skipReport 	        Skip generation of final TransPi report. Default "false"
+
+        Others:
+            --minQual 	             Minimum quality score for fastp filtering. Default "25"
 
         #################################################################################################
 
@@ -131,39 +166,36 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        I. Steps for running on a local cluster and local installation of TransPi
+        I. Steps for running on a local cluster and local conda installation of TransPi
 
             1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
 
             Usage:
 
-                nextflow run TransPi.nf --all -with-conda ~/anaconda3/envs/TransPi
+                nextflow run TransPi.nf --all -profile conda --myConda OTHER_PARAMETERS_HERE
 
         #################################################################################################
 
-        II. Steps for running on a local cluster and conda installation by nextflow
+        II. Steps for running on a local cluster and conda installation by Nextflow
 
             1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
 
             Usage:
 
-                nextflow run TransPi.nf --all -profile conda
-
-            NOTE:
-                Not recommended, not all programs are installed by conda. Use if other dependencies are manually installed
+                nextflow run TransPi.nf --all -profile conda OTHER_PARAMETERS_HERE
 
         #################################################################################################
 
-        III. Steps for running on docker (in development)
+        III. Steps for running on docker
 
             1- Run the `container_precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
 
             Usage:
 
-                nextflow run TransPi.nf --all -profile docker
+                nextflow run TransPi.nf --all -profile docker OTHER_PARAMETERS_HERE
 
             NOTE:
                 All necesary tools for running TransPi are pre-installed in the container
@@ -171,14 +203,14 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        IV. Steps for running on singualarity (in development)
+        IV. Steps for running on singualarity
 
             1- Run the `container_precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
 
             Usage:
 
-                nextflow run TransPi.nf --all -profile singularity
+                nextflow run TransPi.nf --all -profile singularity OTHER_PARAMETERS_HERE
 
             NOTE:
                 All necesary tools for running TransPi are pre-installed in the container
@@ -186,7 +218,7 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        V. Steps for running with multiple profiles (in development - depending on profile selected)
+        V. Steps for running with multiple profiles.
 
             1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
@@ -221,17 +253,22 @@ def hasExtension(it, extension) {
 
 def checkArgs() {
     if (!params.k) {
-        println("\n\t\033[0;31mKmer list not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        println("\n\t\033[0;31mKmer list not specified.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
         exit 0
     }
     if (!params.reads) {
-        println("\n\t\033[0;31mReads mandatory argument not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        println("\n\t\033[0;31mReads mandatory argument not specified.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
         exit 0
     }
     if (!params.maxReadLen) {
-        println("\n\t\033[0;31mMax read length argument not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        println("\n\t\033[0;31mMax read length argument not specified.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
         exit 0
     }
+}
+
+if (params.condaActivate && params.myConda && params.myCondaInstall == "") {
+    println("\n\t\033[0;31mNeed to specify the local conda installation in parameter \"myCondaInstall\" in the config file.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
+    exit 0
 }
 
 if (params.all) {
@@ -315,6 +352,11 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/fastqc", mode: "copy", overwrite: true
 
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::fastqc=0.11.9=0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastqc:0.11.9--0" : "quay.io/biocontainers/fastqc:0.11.9--0")
+            }
+
             input:
                 tuple sample_id, file(reads) from reads_qc_ch
 
@@ -337,6 +379,11 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             publishDir "${workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::fastp=0.20.1=h8b12597_0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastp:0.20.1--h8b12597_0" : "quay.io/biocontainers/fastp:0.20.1--h8b12597_0")
+            }
 
             input:
                 tuple sample_id, file(reads) from reads_ch
@@ -403,6 +450,11 @@ if (params.onlyAsm) {
             label 'med_mem'
 
             tag "${sample_id}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
+            }
 
             input:
                 tuple sample_id, file(reads) from reads_ass_ch_OAS
@@ -524,11 +576,16 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
+        }
+
         input:
             tuple sample_id, file(left), file(right) from norm_reads_trinity_OAS
 
         output:
-            tuple sample_id, file("${sample_id}.Trinity.fa") into ( assemblies_ch_trinity_OAS, busco3_ch_trinity_OAS, busco4_ch_trinity_OAS )
+            tuple sample_id, file("${sample_id}.Trinity.fa") into ( assemblies_ch_trinity_OAS, busco3_ch_trinity_OAS, busco4_ch_trinity_OAS, mapping_trinity_OAS )
 
         script:
             """
@@ -547,6 +604,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::soapdenovo-trans=1.04=ha92aebf_2" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/soapdenovo-trans:1.04--ha92aebf_2" : "quay.io/biocontainers/soapdenovo-trans:1.04--ha92aebf_2")
+        }
 
         input:
             val k from "${params.k}"
@@ -591,6 +653,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
 
         input:
             val k from "${params.k}"
@@ -639,6 +706,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::spades=3.14.0=h2d02072_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/spades:3.14.0--h2d02072_0" : "quay.io/biocontainers/spades:3.14.0--h2d02072_0")
+        }
+
         input:
             val k from "${params.k}"
             tuple sample_id, file(left), file(right) from norm_reads_spades_OAS
@@ -676,6 +748,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transabyss=2.0.1=py_6" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transabyss:2.0.1--py_6" : "quay.io/biocontainers/transabyss:2.0.1--py_6")
+        }
 
         input:
             val k from "${params.k}"
@@ -716,11 +793,16 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
         input:
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS, evigene_ch_rna_quast_OAS )
+            tuple sample_id, file("*.combined.okay.fa") into ( evigene_ch_busco3_OAS, evigene_ch_busco4_OAS, evigene_ch_rna_quast_OAS, mapping_evigene_OAS )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary_OAS
 
         script:
@@ -755,6 +837,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::rnaquast=2.0.1=0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/rnaquast:2.0.1--0" : "quay.io/biocontainers/rnaquast:2.0.1--0")
+        }
+
         input:
             tuple sample_id, file(r1), file(r2), file(assembly) from rna_quast_OAS
 
@@ -765,6 +852,76 @@ if (params.onlyAsm) {
             """
             rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
             """
+    }
+
+    mapping_evigene_in_OAS=Channel.create()
+    mapping_evigene_OAS.mix( mapping_reads_evi_OAS ).groupTuple(by:0,size:2).view().into(mapping_evigene_in_OAS)
+
+    process mapping_evigene_OAS {
+
+        label 'big_cpus'
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+        }
+
+        input:
+            tuple sample_id, file(files), file(files2) from mapping_evigene_in_OAS
+
+        output:
+            tuple sample_id, file("log*") into mapping_evi_results
+
+        script:
+            """
+            a=\$( echo $files $files2 )
+            ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-${sample_id}.norm.fq" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-${sample_id}.norm.fq" )
+            bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
+            rm *.sam
+            """
+
+    }
+
+    mapping_trinity_in_OAS=Channel.create()
+    mapping_trinity_OAS.mix( mapping_reads_trinity_OAS ).groupTuple(by:0,size:2).into(mapping_trinity_in_OAS)
+
+    process mapping_trinity_OAS {
+
+        label 'big_cpus'
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+        }
+
+        input:
+            tuple sample_id, file(files), file(files2) from mapping_trinity_in_OAS
+
+        output:
+            tuple sample_id, file("log*") into mapping_trinity_results
+
+        script:
+            """
+            a=\$( echo $files $files2 )
+            ass=\$( echo \$a | tr " " "\\n" | grep ".Trinity.fa" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-${sample_id}.norm.fq" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-${sample_id}.norm.fq" )
+            bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
+            rm *.sam
+            """
+
     }
 
     process summary_evigene_individual_OAS {
@@ -857,6 +1014,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
+        }
+
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OAS
 
@@ -884,6 +1046,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
+        }
+
         input:
             tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity_OAS
 
@@ -904,11 +1071,14 @@ if (params.onlyAsm) {
 
     process busco4_OAS {
 
-        conda "${params.cenv}"
-
         label 'med_cpus'
 
         tag "${sample_id}"
+
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        }
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
@@ -933,11 +1103,14 @@ if (params.onlyAsm) {
 
     process busco4_tri_OAS {
 
-        conda "${params.cenv}"
-
         label 'med_cpus'
 
         tag "${sample_id}"
+
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        }
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
@@ -1024,6 +1197,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
         input:
             tuple sample_id, file(files) from busco3_comp_OAS
 
@@ -1061,6 +1239,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
 
         input:
             tuple sample_id, file(files) from busco4_comp_OAS
@@ -1100,6 +1283,12 @@ if (params.onlyAsm) {
         .into{ annotation_ch_transdecoder_OA; assembly_ch_rnammer_OA }
 
     process custom_diamond_db_OA {
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         script:
             """
             cd ${params.pipeInstall}
@@ -1130,6 +1319,12 @@ if (params.onlyAsm) {
     }
 
     process hmmer_db_OA {
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
+        }
+
         script:
             """
             cd ${params.pipeInstall}
@@ -1151,6 +1346,12 @@ if (params.onlyAsm) {
     }
 
     process swiss_diamond_db_OA {
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         script:
             """
             cd ${params.pipeInstall}/DBs/sqlite_db
@@ -1219,6 +1420,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl526_2" : "quay.io/biocontainers/transdecoder:5.5.0--pl526_2")
+        }
 
         input:
             tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
@@ -1356,6 +1562,11 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         input:
             tuple sample_id, file(transdecoder), file(assembly) from transdecoder_ch_diamond_OA
 
@@ -1389,6 +1600,11 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         input:
             tuple sample_id, file(transdecoder), file(assembly) from transdecoder_ch_diamond_custom_OA
 
@@ -1421,6 +1637,11 @@ if (params.onlyAsm) {
         label 'low_cpus'
 
         tag "${sample_id}"
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
+        }
 
         input:
             tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_hmmer_OA
@@ -1581,6 +1802,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.0=pl526_1" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.0--pl526_1" : "quay.io/biocontainers/trinotate:3.2.0--pl526_1")
+        }
 
         input:
             tuple sample_id, file(files) from trinotate_ch
@@ -1775,6 +2001,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_ch_OA
 
@@ -1820,6 +2051,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
 
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from custom_uniprot_ch_OA
@@ -1869,6 +2105,12 @@ if (params.onlyAsm) {
     println("\n\tRunning the full TransPi analysis\n")
 
     process custom_diamond_db {
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         script:
             """
             cd ${params.pipeInstall}
@@ -1899,6 +2141,12 @@ if (params.onlyAsm) {
     }
 
     process hmmer_db {
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
+        }
+
         script:
             """
             cd ${params.pipeInstall}
@@ -1920,6 +2168,12 @@ if (params.onlyAsm) {
     }
 
     process swiss_diamond_db {
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         script:
             """
             cd ${params.pipeInstall}/DBs/sqlite_db
@@ -1991,6 +2245,11 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/fastqc", mode: "copy", overwrite: true
 
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::fastqc=0.11.9=0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastqc:0.11.9--0" : "quay.io/biocontainers/fastqc:0.11.9--0")
+            }
+
             input:
                 tuple sample_id, file(reads) from reads_qc_ch
 
@@ -2013,6 +2272,11 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             publishDir "${workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::fastp=0.20.1=h8b12597_0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastp:0.20.1--h8b12597_0" : "quay.io/biocontainers/fastp:0.20.1--h8b12597_0")
+            }
 
             input:
                 tuple sample_id, file(reads) from reads_ch
@@ -2078,6 +2342,11 @@ if (params.onlyAsm) {
             label 'med_mem'
 
             tag "${sample_id}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
+            }
 
             input:
                 tuple sample_id, file(reads) from reads_ass_ch
@@ -2192,6 +2461,35 @@ if (params.onlyAsm) {
         }
     }
 
+    if (params.rRNAfilter) {
+
+        process remove_rrna {
+
+            label 'med_mem'
+
+            tag "${sample_id}"
+
+            publishDir "${workDir}/${params.outdir}/rRNA_reads", mode: "copy", overwrite: true
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::sortmerna=4.2.0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/sortmerna:4.2.0--0" : "quay.io/biocontainers/sortmerna:4.2.0--0")
+            }
+
+            input:
+                tuple sample_id, file(reads) from rrna_in
+
+            output:
+                tuple sample_id, file(reads) into rrna_out
+
+            script:
+                """
+                sortmerna --ref ${params.rnaDB} --reads ${reads[0]} --reads ${reads[0]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
+                """
+
+        }
+    }
+
     process trinity_assembly {
 
         label 'med_mem'
@@ -2200,11 +2498,16 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
+        }
+
         input:
             tuple sample_id, file(left), file(right) from norm_reads_trinity
 
         output:
-            tuple sample_id, file("${sample_id}.Trinity.fa") into ( assemblies_ch_trinity, busco3_ch_trinity, busco4_ch_trinity, assemblies_ch_trinity_busco3, assemblies_ch_trinity_busco4 )
+            tuple sample_id, file("${sample_id}.Trinity.fa") into ( assemblies_ch_trinity, busco3_ch_trinity, busco4_ch_trinity, assemblies_ch_trinity_busco3, assemblies_ch_trinity_busco4, mapping_trinity )
 
         script:
             """
@@ -2223,6 +2526,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::soapdenovo-trans=1.04=ha92aebf_2" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/soapdenovo-trans:1.04--ha92aebf_2" : "quay.io/biocontainers/soapdenovo-trans:1.04--ha92aebf_2")
+        }
 
         input:
             val k from "${params.k}"
@@ -2272,6 +2580,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::velvet=1.2.10=hed695b0_3 bioconda::oases=0.2.09=h470a237_1" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
 
         input:
             val k from "${params.k}"
@@ -2325,6 +2638,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::spades=3.14.0=h2d02072_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/spades:3.14.0--h2d02072_0" : "quay.io/biocontainers/spades:3.14.0--h2d02072_0")
+        }
+
         input:
             val k from "${params.k}"
             tuple sample_id, file(left), file(right) from norm_reads_spades
@@ -2367,6 +2685,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transabyss=2.0.1=py_6" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transabyss:2.0.1--py_6" : "quay.io/biocontainers/transabyss:2.0.1--py_6")
+        }
 
         input:
             val k from "${params.k}"
@@ -2412,11 +2735,16 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
         input:
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt, evigene_ch_rna_quast )
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt, evigene_ch_rna_quast, mapping_evi )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
         script:
@@ -2452,6 +2780,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::rnaquast=2.0.1=0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/rnaquast:2.0.1--0" : "quay.io/biocontainers/rnaquast:2.0.1--0")
+        }
+
         input:
             tuple sample_id, file(r1), file(r2), file(assembly) from rna_quast
 
@@ -2462,6 +2795,76 @@ if (params.onlyAsm) {
             """
             rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
             """
+    }
+
+    mapping_evi_in=Channel.create()
+    mapping_evi.mix( mapping_reads_evi ).groupTuple(by:0,size:2).view().into(mapping_evi_in)
+
+    process mapping_evigene {
+
+        label 'big_cpus'
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+        }
+
+        input:
+            tuple sample_id, file(files), file(files2) from mapping_evi_in
+
+        output:
+            tuple sample_id, file("log*") into mapping_evi_results
+
+        script:
+            """
+            a=\$( echo $files $files2 )
+            ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-${sample_id}.norm.fq" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-${sample_id}.norm.fq" )
+            bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
+            rm *.sam
+            """
+
+    }
+
+    mapping_trinity_in=Channel.create()
+    mapping_trinity.mix( mapping_reads_trinity ).groupTuple(by:0,size:2).into(mapping_trinity_in)
+
+    process mapping_trinity {
+
+        label 'big_cpus'
+
+        tag "${sample_id}"
+
+        publishDir "${workDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+        }
+
+        input:
+            tuple sample_id, file(files), file(files2) from mapping_trinity_in
+
+        output:
+            tuple sample_id, file("log*") into mapping_trinity_results
+
+        script:
+            """
+            a=\$( echo $files $files2 )
+            ass=\$( echo \$a | tr " " "\\n" | grep ".Trinity.fa" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-${sample_id}.norm.fq" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-${sample_id}.norm.fq" )
+            bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
+            rm *.sam
+            """
+
     }
 
     if (params.filterSpecies) {
@@ -2545,6 +2948,11 @@ if (params.onlyAsm) {
 
                 label 'low_mem'
 
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+                }
+
             	input:
             	   file(seqs) from file_for_database
 
@@ -2562,6 +2970,11 @@ if (params.onlyAsm) {
                 label 'med_cpus'
 
                 tag "${sample_id}"
+
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+                }
 
             	input:
                 	tuple sample_id, file(transcriptome) from transcriptome_sequences1
@@ -2584,6 +2997,11 @@ if (params.onlyAsm) {
 
             	publishDir "${workDir}/${params.outdir}/psytrans_output/", mode: "copy", overwrite: true
 
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+                }
+
             	input:
                 	tuple sample_id, file(transcriptome) from transcriptome_sequences2
                 	file(host) from updated_host
@@ -2602,11 +3020,11 @@ if (params.onlyAsm) {
                 	"""
             }
         } else {
-            println("\n\t\033[0;31mNeed to provide a host and symbiont sequence. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+            println("\n\t\033[0;31mNeed to provide a host and symbiont sequence.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
             exit 0
         }
 
-    // mapping
+        // mapping
         if (params.mapping) {
 
             if (params.symbiont) {
@@ -2622,6 +3040,11 @@ if (params.onlyAsm) {
                     tag "${sample_id}"
 
                 	publishDir "${workDir}/${params.outdir}/mapping_output/", mode: "copy", overwrite: true
+
+                    conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+                    if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                    container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+                    }
 
                 	input:
                         file(symbiont) from symbiont_sequences
@@ -2653,6 +3076,11 @@ if (params.onlyAsm) {
                     tag "${sample_id}"
 
                     publishDir "${workDir}/${params.outdir}/mapping_output/", mode: "copy", overwrite: true
+
+                    conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+                    if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                    container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+                    }
 
                     input:
                         tuple sample_id, file("${sample_id}.symbiont.sam") from clean_reads_ch
@@ -2687,7 +3115,12 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true, , pattern: "*.{tsv,txt,bus3}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
+            }
 
             input:
                 tuple sample_id, file(files) from busco3_all
@@ -2740,13 +3173,16 @@ if (params.onlyAsm) {
 
         process busco4_all {
 
-            conda "${params.cenv}"
-
             label 'med_cpus'
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus4}"
+
+            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+            }
 
             input:
                 tuple sample_id, file(files) from busco4_all
@@ -2804,6 +3240,11 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
+            }
+
             input:
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
@@ -2826,13 +3267,16 @@ if (params.onlyAsm) {
 
         process busco4_tri {
 
-            conda "${params.cenv}"
-
             label 'med_cpus'
 
             tag "${sample_id}"
 
             publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+
+            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+            }
 
             input:
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
@@ -2864,6 +3308,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
+        }
+
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3
 
@@ -2887,13 +3336,16 @@ if (params.onlyAsm) {
 
     process busco4 {
 
-        conda "${params.cenv}"
-
         label 'med_cpus'
 
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        }
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4
@@ -2932,6 +3384,11 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
 
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            }
+
             input:
                 tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from busco3_dist_ch
 
@@ -2958,6 +3415,11 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
 
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            }
+
             input:
                 tuple sample_id, file(comp_table), file(transpi_table) from busco3_heatmap
 
@@ -2978,6 +3440,11 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            }
 
             input:
                 tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from busco4_dist_ch
@@ -3005,6 +3472,11 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
 
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            }
+
             input:
                 tuple sample_id, file(comp_table), file(transpi_table) from busco4_heatmap
 
@@ -3019,7 +3491,7 @@ if (params.onlyAsm) {
         }
 
     } else {
-        println("\n\t\033[0;31mMandatory argument not specified (--buscoDist or --allBuscos). For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        println("\n\t\033[0;31mMandatory argument not specified (--buscoDist or --allBuscos).\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
         exit 0
     }
 
@@ -3030,6 +3502,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl526_2" : "quay.io/biocontainers/transdecoder:5.5.0--pl526_2")
+        }
 
         input:
             tuple sample_id, file(assembly) from evigene_ch_transdecoder
@@ -3166,6 +3643,11 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         input:
             tuple sample_id, file(files) from diamond_trinotate
 
@@ -3205,6 +3687,11 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+        }
+
         input:
             tuple sample_id, file(files) from custom_diamond
 
@@ -3240,6 +3727,11 @@ if (params.onlyAsm) {
         label 'low_cpus'
 
         tag "${sample_id}"
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
+        }
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_hmmer
@@ -3400,6 +3892,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.0=pl526_1" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.0--pl526_1" : "quay.io/biocontainers/trinotate:3.2.0--pl526_1")
+        }
 
         input:
             tuple sample_id, file(files) from trinotate_ch
@@ -3808,6 +4305,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from trinotate_out_ch
 
@@ -3853,6 +4355,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
 
         input:
             tuple sample_id, file("${sample_id}.trinotate_annotation_report.xls") from custom_uniprot_ch
@@ -3920,6 +4427,11 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
+
         input:
             tuple sample_id, file(dist) from evi_dist
 
@@ -3942,6 +4454,11 @@ if (params.onlyAsm) {
         process get_report {
 
             publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            }
 
             input:
                 file(files) from report_ch
@@ -3974,6 +4491,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.combined.okay.fa"
+
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        }
 
         input:
             tuple sample_id, file(assembly) from evigene_ch_OE
@@ -4008,6 +4530,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
+        }
+
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3_OE
 
@@ -4036,6 +4563,11 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        }
 
         input:
             tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco4_OE
@@ -4085,7 +4617,7 @@ if (params.onlyAsm) {
     }
 
 } else {
-    println("\n\t\033[0;31mMandatory argument not specified. For more info use `nextflow run TransPi.nf --help`\n\033[0m")
+    println("\n\t\033[0;31mMandatory argument not specified.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
     exit 0
 }
 
@@ -4093,14 +4625,19 @@ process get_run_info {
 
     publishDir "${workDir}/${params.outdir}/", mode: "copy", overwrite: true
 
+    conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+    if (params.oneContainer){ container "${params.TPcontainer}" } else {
+    container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+    }
+
     output:
        file("versions.txt") into run_info
 
     script:
         """
-        echo "==========================================" >>versions.txt
-        echo "TransPi - Transcriptome Analysis Pipeline" >>versions.txt
-        echo -e "==========================================\\n" >>versions.txt
+        echo "==================================================" >>versions.txt
+        echo "  TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}" >>versions.txt
+        echo -e "==================================================\\n" >>versions.txt
         echo -e "\\t\\tRUN INFO\\n" >>versions.txt
         echo "-- Kmers used --" >>versions.txt
         echo ${params.k} >>versions.txt
