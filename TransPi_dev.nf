@@ -256,7 +256,7 @@ def checkArgs() {
         println("\n\t\033[0;31mKmer list not specified.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
         exit 0
     }
-    if (!params.reads) {
+    if (!params.reads && !params.readsTest) {
         println("\n\t\033[0;31mReads mandatory argument not specified.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
         exit 0
     }
@@ -1076,7 +1076,7 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         // change container in oneContainer option
-        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
@@ -1109,7 +1109,7 @@ if (params.onlyAsm) {
         tag "${sample_id}"
 
         // change container in oneContainer option
-        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
@@ -1581,7 +1581,7 @@ if (params.onlyAsm) {
             }
 
             transdecoder_predict_OA_ch=Channel.create()
-            transdecoder_predict_diamond_OA.mix( transdecoder_predict_hmmer_OA, annotation_ch_transdecoderB_OA ).groupTuple(by:0,size:3).view().into(transdecoder_predict_OA_ch)
+            annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).into(transdecoder_predict_OA_ch)
 
             process transdecoder_predict_OA {
 
@@ -1597,20 +1597,20 @@ if (params.onlyAsm) {
                 }
 
                 input:
-                    tuple sample_id, file(files), file(files2), file(files3) from transdecoder_predict_OA_ch
+                    tuple sample_id, file(files) from transdecoder_predict_OA_ch
 
                 output:
-                    tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
-                    tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
+                    tuple sample_id, file("${sample_id}*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
+                    tuple sample_id, file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
                     tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
                     tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
                     tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
-                    tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
+                    tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
                 script:
                     """
-                    a=\$( echo $files $files2 $files3 )
-                    ass=\$( echo \$a | tr " " "\\n" | grep ".fasta" )
+                    a=\$( echo $files )
+                    ass=\$( echo \$a | tr " " "\\n" | grep -v "pfam.domtblout" | grep ".fa" )
                     dia=\$( echo \$a | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
                     pfa=\$( echo \$a | tr " " "\\n" | grep ".pfam.domtblout" )
 
@@ -1636,36 +1636,36 @@ if (params.onlyAsm) {
 
                     #Calculate statistics of Transdecoder
                     echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
                     echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
                     echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -c "|" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -c "|" )
                     echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
                     echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:complete" )
                     echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
                     echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
                     echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
                     echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
                     echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
                     echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:internal" )
                     echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
                     echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
                     # csv for report
                     echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-                    total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
-                    complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
-                    n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
-                    n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
-                    internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
+                    total=\$( cat ${sample_id}*.transdecoder.pep  | grep -c ">" )
+                    complete=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:complete" )
+                    n5prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+                    n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+                    internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
                     echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
                     echo -e "\\n-- Done with statistics --\\n"
@@ -1941,7 +1941,7 @@ if (params.onlyAsm) {
                 echo \${x} >>.vars.txt
             done
 
-            assembly=\$( cat .vars.txt | grep "${sample_id}_asssembly.fasta" )
+            assembly=\$( cat .vars.txt | grep "${sample_id}_asssembly.fasta" | grep -v "grep -v "transdecoder" )
             transdecoder=\$( cat .vars.txt | grep -E "${sample_id}.*.transdecoder.pep" )
             diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
             diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
@@ -3299,7 +3299,7 @@ if (params.onlyAsm) {
             publishDir "${workDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus4}"
 
             // change container in oneContainer option
-            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
             if (params.oneContainer){ container "${params.v4container}" } else {
             container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
             }
@@ -3369,7 +3369,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
             output:
-                tuple sample_id, file("*${sample_id}.Trinity.bus3.txt"), file("*${sample_id}.Trinity.bus3") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+                tuple sample_id, file("*${sample_id}.Trinity.bus3.txt"), file("${sample_id}.Trinity.bus3") into ( busco3_ch_trinity_sum, busco3_comp_2 )
                 tuple sample_id, file("*tsv") into busco3_trinity_rescue
 
             script:
@@ -3394,7 +3394,7 @@ if (params.onlyAsm) {
             publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
             // change container in oneContainer option
-            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
             if (params.oneContainer){ container "${params.v4container}" } else {
             container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
             }
@@ -3403,7 +3403,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
 
             output:
-                tuple sample_id, file("*${sample_id}.Trinity.bus4.txt"), file("*${sample_id}.Trinity.bus4") into ( busco4_ch_trinity_sum, busco4_comp_2 )
+                tuple sample_id, file("*${sample_id}.Trinity.bus4.txt"), file("${sample_id}.Trinity.bus4") into ( busco4_ch_trinity_sum, busco4_comp_2 )
                 tuple sample_id, file("*tsv") into busco4_trinity_rescue
 
             script:
@@ -3464,7 +3464,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
         // change container in oneContainer option
-        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
@@ -3636,7 +3636,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                 tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
                 tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv
-                tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files
+                tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
             script:
                 """
@@ -3668,11 +3668,11 @@ if (params.onlyAsm) {
                 echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
                 # csv for report
                 echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-                total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
-                complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
-                n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
-                n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
-                internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
+                total=\$( cat ${sample_id}*.transdecoder.pep  | grep -c ">" )
+                complete=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:complete" )
+                n5prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+                n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+                internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
                 echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
                 echo -e "\\n-- Done with statistics --\\n"
@@ -3778,6 +3778,7 @@ if (params.onlyAsm) {
 
         transdecoder_predict_ch=Channel.create()
         transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, evigene_ch_transdecoderB ).groupTuple(by:0,size:3).view().into(transdecoder_predict_ch)
+        // from OA  annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).view().into(transdecoder_predict_OA_ch)
 
         process transdecoder_predict {
 
@@ -3800,11 +3801,11 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                 tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
                 tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv
-                tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files
+                tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
             script:
                 """
-                a=\$( echo $files $files2 $files3 )
+                a=\$( echo $files )
                 ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
                 dia=\$( echo \$a | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
                 pfa=\$( echo \$a | tr " " "\\n" | grep ".pfam.domtblout" )
@@ -3825,36 +3826,36 @@ if (params.onlyAsm) {
 
                 #Calculate statistics of Transdecoder
                 echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
                 echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
                 echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -c "|" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -c "|" )
                 echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
                 echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:complete" )
                 echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
                 echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
                 echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
                 echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
                 echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
                 echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:internal" )
                 echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
+                orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
                 echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
                 # csv for report
                 echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-                total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
-                complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
-                n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
-                n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
-                internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
+                total=\$( cat ${sample_id}*.transdecoder.pep  | grep -c ">" )
+                complete=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:complete" )
+                n5prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+                n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+                internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
                 echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
                 echo -e "\\n-- Done with statistics --\\n"
@@ -4822,7 +4823,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
         // change container in oneContainer option
-        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
+        conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
