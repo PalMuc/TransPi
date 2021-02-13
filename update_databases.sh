@@ -30,19 +30,24 @@ sqld(){
     if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
         echo -e -n "\n\t    Provide the full PATH of your Anaconda main installation, not an environment (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
         read ans
-        source ${ans}/etc/profile.d/conda.sh
-        conda activate TransPi
-        check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-        if [ $check_sql -eq 0 ];then
-            echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-            echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-            exit 0
-        elif [ $check_sql -eq 1 ];then
-            rm Trinotate*
-            Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-            rm uniprot_sprot.dat.gz
-            date -u >.lastrun.txt
-            pfam_c
+        if [ -f ${ans}/etc/profile.d/conda.sh ];then
+            source ${ans}/etc/profile.d/conda.sh
+            conda activate TransPi
+            check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+            if [ $check_sql -eq 0 ];then
+                echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
+                echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                exit 0
+            elif [ $check_sql -eq 1 ];then
+                rm Trinotate*
+                Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                rm uniprot_sprot.dat.gz
+                date -u >.lastrun.txt
+                pfam_c
+            fi
+        else
+            echo -e "PATH ${ans} is not correct. Trying again..."
+            sqld
         fi
     elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
         source ~/anaconda3/etc/profile.d/conda.sh
