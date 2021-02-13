@@ -451,9 +451,9 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda trinity=2.9.1 pigz=2.3.4" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-13733e73a40b40f427f5bc7edcfbd4f0dbd27ae0:fcba8b2e03b4c752f3076b94d7c315f77345e143-0" : "quay.io/biocontainers/mulled-v2-13733e73a40b40f427f5bc7edcfbd4f0dbd27ae0:fcba8b2e03b4c752f3076b94d7c315f77345e143-0")
             }
 
             input:
@@ -654,7 +654,7 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda velvet=1.2.10 oases=0.2.09" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
         }
@@ -793,9 +793,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::cd-hit=4.8.1 bioconda::exonerate=2.4 bioconda::blast=2.2.31" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0" : "quay.io/biocontainers/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0")
         }
 
         input:
@@ -1075,8 +1075,9 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
 
@@ -1107,8 +1108,9 @@ if (params.onlyAsm) {
 
         tag "${sample_id}"
 
+        // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
 
@@ -1280,7 +1282,7 @@ if (params.onlyAsm) {
 
     Channel
         .fromFilePairs("${workDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
-        .into{ annotation_ch_transdecoder_OA; assembly_ch_rnammer_OA }
+        .into{ annotation_ch_transdecoder_OA; annotation_ch_transdecoderB_OA; assembly_ch_rnammer_OA }
 
     process custom_diamond_db_OA {
 
@@ -1413,148 +1415,265 @@ if (params.onlyAsm) {
             """
     }
 
-    process transdecoder_OA {
+    if (params.shortTransdecoder) {
 
-        label 'med_cpus'
+        process transdecoder_short_OA {
 
-        tag "${sample_id}"
+            label 'med_cpus'
 
-        publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+            tag "${sample_id}"
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl526_2" : "quay.io/biocontainers/transdecoder:5.5.0--pl526_2")
-        }
+            publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl526_2" : "quay.io/biocontainers/transdecoder:5.5.0--pl526_2")
+            }
 
-        output:
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
-            tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
-            tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
-            tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
-            tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
+            input:
+                tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
 
-        script:
-        if (params.shortTransdecoder) {
-            """
-            cp ${assembly} ${sample_id}_asssembly.fasta
+            output:
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
+                tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
+                tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
+                tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
+                tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
+                tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
-            echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
+            script:
+                """
+                cp ${assembly} ${sample_id}_asssembly.fasta
 
-            TransDecoder.LongOrfs -t ${assembly}
+                echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-            echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
+                TransDecoder.LongOrfs -t ${assembly}
 
-            echo -e "\\n-- TransDecoder.Predict... --\\n"
+                echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
-            TransDecoder.Predict -t ${assembly}
+                echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-            echo -e "\\n-- Done with TransDecoder.Predict --\\n"
+                TransDecoder.Predict -t ${assembly}
 
-            echo -e "\\n-- Calculating statistics... --\\n"
+                echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
-            #Calculate statistics of Transdecoder
-            echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
-            echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
-            echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
-            echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
-            # csv for report
-            echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-            total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
-            complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
-            n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
-            n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
-            internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
-            echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+                echo -e "\\n-- Calculating statistics... --\\n"
 
-            echo -e "\\n-- Done with statistics --\\n"
+                #Calculate statistics of Transdecoder
+                echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}.transdecoder.stats
+                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
+                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
+                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
+                echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
+                # csv for report
+                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+                total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
+                complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
+                n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+                n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+                internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
+                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
 
-            echo -e "\\n-- DONE with TransDecoder --\\n"
-            """
+                echo -e "\\n-- Done with statistics --\\n"
+
+                echo -e "\\n-- DONE with TransDecoder --\\n"
+                """
+            }
         } else {
-            """
-            cp ${assembly} ${sample_id}_asssembly.fasta
 
-            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
+            process transdecoder_longorf_OA {
 
-            echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
+                label 'med_cpus'
 
-            TransDecoder.LongOrfs -t ${assembly}
+                tag "${sample_id}"
 
-            echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
+                publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
-            fname=${assembly}
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl526_2" : "quay.io/biocontainers/transdecoder:5.5.0--pl526_2")
+                }
 
-            echo -e "\\n-- Starting Diamond (blastp) --\\n"
+                input:
+                    tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
 
-            diamond blastp -d \$unidb -q \$fname.transdecoder_dir/longest_orfs.pep -p ${task.cpus} -f 6 -k 1 -e 0.00001 >diamond_blastp.outfmt6
+                output:
+                    tuple sample_id, file("${sample_id}.longest_orfs.pep") into transdecoder_diamond_OA, transdecoder_hmmer_OA
 
-            echo -e "\\n-- Done with Diamond (blastp) --\\n"
+                script:
+                    """
+                    cp ${assembly} ${sample_id}_asssembly.fasta
 
-            echo -e "\\n-- Starting HMMER --\\n"
+                    echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-            hmmscan --cpu ${task.cpus} --domtblout pfam.domtblout ${params.pfloc} \$fname.transdecoder_dir/longest_orfs.pep
+                    TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
 
-            echo -e "\\n-- Done with HMMER --\\n"
+                    cp ${sample_id}.transdecoder_dir/longest_orfs.pep ${sample_id}.longest_orfs.pep
 
-            echo -e "\\n-- TransDecoder.Predict... --\\n"
+                    echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
+                    """
+            }
 
-            TransDecoder.Predict -t ${assembly} --retain_pfam_hits pfam.domtblout --retain_blastp_hits diamond_blastp.outfmt6
+            process transdecoder_diamond_OA {
 
-            echo -e "\\n-- Done with TransDecoder.Predict --\\n"
+                label 'med_cpus'
 
-            echo -e "\\n-- Calculating statistics... --\\n"
+                tag "${sample_id}"
 
-            #Calculate statistics of Transdecoder
-            echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
-            echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -c "|" )
-            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
-            echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
-            echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
-            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-            echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
-            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-            echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
-            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
-            echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
-            echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-            # csv for report
-            echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
-            total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
-            complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
-            n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
-            n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
-            internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
-            echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+                publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
-            echo -e "\\n-- Done with statistics --\\n"
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda::forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
+                }
 
-            echo -e "\\n-- DONE with TransDecoder --\\n"
-            """
+                input:
+                    tuple sample_id, file(pep) from transdecoder_diamond_OA
+
+                output:
+                    tuple sample_id, file("${sample_id}.diamond_blastp.outfmt6") into transdecoder_predict_diamond_OA
+
+                script:
+                    """
+                    unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
+
+                    echo -e "\\n-- Starting Diamond (blastp) --\\n"
+
+                    diamond blastp -d \$unidb -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
+
+                    echo -e "\\n-- Done with Diamond (blastp) --\\n"
+                    """
+            }
+
+            process transdecoder_hmmer_OA {
+
+                label 'med_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
+                }
+
+                input:
+                    tuple sample_id, file(pep) from transdecoder_hmmer_OA
+
+                output:
+                    tuple sample_id, file("${sample_id}.pfam.domtblout") into transdecoder_predict_hmmer_OA
+
+                script:
+                    """
+                    echo -e "\\n-- Starting HMMER --\\n"
+
+                    hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfloc} ${pep}
+
+                    echo -e "\\n-- Done with HMMER --\\n"
+                    """
+            }
+
+            transdecoder_predict_ch=Channel.create()
+            transdecoder_predict_diamond_OA.mix( transdecoder_predict_hmmer_OA, annotation_ch_transdecoderB_OA ).groupTuple(by:0,size:3).view().into(transdecoder_predict_ch)
+
+            process transdecoder_predict_OA {
+
+                label 'med_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl526_2" : "quay.io/biocontainers/transdecoder:5.5.0--pl526_2")
+                }
+
+                input:
+                    tuple sample_id, file(files), file(files2), file(files3) from transdecoder_predict_ch
+
+                output:
+                    tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
+                    tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
+                    tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
+                    tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
+                    tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
+                    tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
+
+                script:
+                    """
+                    a=\$( echo $files $files2 $files3 )
+                    ass=\$( echo \$a | tr " " "\\n" | grep ".fasta" )
+                    dia=\$( echo \$a | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
+                    pfa=\$( echo \$a | tr " " "\\n" | grep ".pfam.domtblout" )
+
+                    cp \${ass} tmp.fasta
+
+                    rm \${ass}
+
+                    mv tmp.fasta ${sample_id}_asssembly.fasta
+
+                    echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
+
+                    TransDecoder.LongOrfs -t ${sample_id}_asssembly.fasta --output_dir ${sample_id}.transdecoder_dir
+
+                    echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
+
+                    echo -e "\\n-- TransDecoder.Predict... --\\n"
+
+                    TransDecoder.Predict -t ${sample_id}_asssembly.fasta --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia} --output_dir ${sample_id}.transdecoder_dir
+
+                    echo -e "\\n-- Done with TransDecoder.Predict --\\n"
+
+                    echo -e "\\n-- Calculating statistics... --\\n"
+
+                    #Calculate statistics of Transdecoder
+                    echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
+                    echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -c "|" )
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
+                    echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
+                    echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+                    echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+                    echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
+                    echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    # csv for report
+                    echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+                    total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
+                    complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
+                    n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
+                    n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
+                    internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
+                    echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+
+                    echo -e "\\n-- Done with statistics --\\n"
+
+                    echo -e "\\n-- DONE with TransDecoder --\\n"
+                    """
+            }
         }
-    }
 
     process swiss_diamond_trinotate_OA {
 
@@ -2001,9 +2120,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
         }
 
         input:
@@ -2052,9 +2171,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
         }
 
         input:
@@ -2343,9 +2462,9 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda trinity=2.9.1 pigz=2.3.4" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-13733e73a40b40f427f5bc7edcfbd4f0dbd27ae0:fcba8b2e03b4c752f3076b94d7c315f77345e143-0" : "quay.io/biocontainers/mulled-v2-13733e73a40b40f427f5bc7edcfbd4f0dbd27ae0:fcba8b2e03b4c752f3076b94d7c315f77345e143-0")
             }
 
             input:
@@ -2581,7 +2700,7 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::velvet=1.2.10=hed695b0_3 bioconda::oases=0.2.09=h470a237_1" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda velvet=1.2.10 oases=0.2.09" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
         }
@@ -2735,9 +2854,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::cd-hit=4.8.1 bioconda::exonerate=2.4 bioconda::blast=2.2.31" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0" : "quay.io/biocontainers/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0")
         }
 
         input:
@@ -3179,8 +3298,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus4}"
 
+            // change container in oneContainer option
             conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            if (params.oneContainer){ container "${params.v4container}" } else {
             container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
             }
 
@@ -3273,8 +3393,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
+            // change container in oneContainer option
             conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            if (params.oneContainer){ container "${params.v4container}" } else {
             container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
             }
 
@@ -3342,8 +3463,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
+        // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
 
@@ -3384,9 +3506,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0" : "quay.io/biocontainers/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0")
             }
 
             input:
@@ -3415,9 +3537,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
             }
 
             input:
@@ -3441,9 +3563,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0" : "quay.io/biocontainers/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0")
             }
 
             input:
@@ -3472,9 +3594,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
             }
 
             input:
@@ -4228,6 +4350,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
+        }
+
         input:
             tuple sample_id, file(files) from busco3_comp
 
@@ -4266,6 +4393,11 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
+        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
+        }
+
         input:
             tuple sample_id, file(files) from busco4_comp
 
@@ -4301,9 +4433,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
         }
 
         input:
@@ -4352,9 +4484,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
         }
 
         input:
@@ -4400,32 +4532,49 @@ if (params.onlyAsm) {
             """
     }
 
-    process get_kegg {
+    if (!params.skipKegg) {
+        process get_kegg {
 
-        tag "${sample_id}"
+            tag "${sample_id}"
 
-        publishDir "${workDir}/${params.outdir}/figures/kegg", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/figures/kegg", mode: "copy", overwrite: true
 
-        input:
-            tuple sample_id, file(kegg) from kegg_paths
+            input:
+                tuple sample_id, file(kegg) from kegg_paths
 
-        output:
-            tuple sample_id, file("${sample_id}_kegg.svg") into kegg_report
+            output:
+                tuple sample_id, file("${sample_id}_kegg.svg") into kegg_report
 
-        script:
-            """
-            curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" \
-            -d "default_radius=5" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
-            """
+            script:
+                """
+                curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" \
+                -d "default_radius=5" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
+                """
+        }
+    } else {
+        process skip_kegg {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(kegg) from kegg_paths
+
+            output:
+                tuple sample_id, file("${sample_id}_kegg.svg") into kegg_report
+
+            script:
+                """
+                touch ${sample_id}_kegg.svg
+                """
+        }
     }
 
     process get_transcript_dist {
 
         tag "${sample_id}"
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0" : "quay.io/biocontainers/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0")
         }
 
         input:
@@ -4488,9 +4637,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.combined.okay.fa"
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::cd-hit=4.8.1 bioconda::exonerate=2.4 bioconda::blast=2.2.31" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0" : "quay.io/biocontainers/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0")
         }
 
         input:
@@ -4560,8 +4709,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
+        // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.0.5=pyr36_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
+        if (params.oneContainer){ container "${params.v4container}" } else {
         container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
         }
 
