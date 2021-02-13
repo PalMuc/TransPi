@@ -10,3 +10,5 @@ COPY transpi_env.yml /
 RUN conda env create -f /transpi_env.yml  && conda clean -a
 
 ENV PATH /opt/conda/envs/TransPi/bin:$PATH
+
+RUN sed -i 's/base/TransPi/g' ~/.bashrc
