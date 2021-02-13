@@ -3370,7 +3370,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
             output:
-                tuple sample_id, file("*${sample_id}.Trinity.bus3.txt"), file("${sample_id}.Trinity.bus3") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+                tuple sample_id, file("*${sample_id}.Trinity.bus3.txt"), file("run_${sample_id}.Trinity.bus3") into ( busco3_ch_trinity_sum, busco3_comp_2 )
                 tuple sample_id, file("*tsv") into busco3_trinity_rescue
 
             script:
