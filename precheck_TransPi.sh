@@ -656,7 +656,7 @@ pfam_c() {
 #temporary for buscoV4
 bus_env4 () {
     echo -e "\n\t -- Creating BUSCO V4 environment --\n"
-    conda create -n busco4 -c conda-forge -c bioconda busco=4.0.5=pyr36_0 -y
+    conda create -n busco4 -c conda-forge -c bioconda busco=4.1.4=py_0 -y
 }
 bus4 () {
     cd $mypwd
