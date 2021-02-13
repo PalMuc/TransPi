@@ -331,7 +331,7 @@ if (params.readsTest) {
         .into{ reads_ch; reads_qc_ch }
 } else {
     println("\n\tRunning TransPi with your dataset\n")
-    if ( params.all || params.onlyAsm ) {
+    if ( ( params.all || params.onlyAsm ) && !params.readsTest) {
         Channel
             .fromFilePairs("${params.reads}", checkIfExists: true)
             .into{ reads_ch; reads_qc_ch }
@@ -460,7 +460,8 @@ if (params.onlyAsm) {
                 tuple sample_id, file(reads) from reads_ass_ch_OAS
 
             output:
-                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS )
+                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS, reads_rna_quast_OAS )
+                tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity_OAS, mapping_reads_evi_OAS )
                 tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_norm_reads )
 
             script:
@@ -826,7 +827,7 @@ if (params.onlyAsm) {
     }
 
     // check groupTuple
-    rna_quast = Channel.create()
+    rna_quast_OAS = Channel.create()
     reads_rna_quast_OAS.join( evigene_ch_rna_quast_OAS ).into( rna_quast_OAS )
 
     process rna_quast_OAS {
