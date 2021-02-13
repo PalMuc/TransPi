@@ -122,7 +122,7 @@ busv3_get () {
         else
             tname=$( cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" )
             wget $tname
-            tar -xvf ${v3name}_odb9.tar.gz
+            tar -xf ${v3name}_odb9.tar.gz
             export busnaV3=${v3name}_odb9
             rm ${v3name}_odb9.tar.gz
         fi
@@ -145,7 +145,7 @@ bus_dow () {
             wget $wname
             echo -e "\n\t -- Preparing files ... --\n";wait
             tname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
-            tar -xvf ${tname}*.tar.gz
+            tar -xf ${tname}*.tar.gz
             rm ${tname}*.tar.gz
             echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
         fi
@@ -485,7 +485,7 @@ nextflow_c () {
     if [ $check_next -eq 1 ];then
         echo -e "\n\t -- Nextflow is installed -- \n"
     elif [ $check_next -eq 0 ];then
-	check_next=$( ./nextflow info | head -n 1 | wc -l )
+	check_next=$( ls -1 | grep -v "nextflow.config" | grep -c "nextflow" )
         if [ $check_next -eq 1 ];then
             echo -e "\n\t -- Nextflow is installed -- \n"
 	    else
@@ -520,10 +520,11 @@ evi_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 cd scripts
-                echo -e "\n\t -- Downloading EvidentialGene ... -- \n"
+                echo -e "\n\t -- Downloading EvidentialGene -- \n"
                 wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_older/evigene19may14.tar
                 tar -xf evigene19may14.tar
                 rm evigene19may14.tar
+                echo -e "\n\t -- Done with EvidentialGene -- \n"
             ;;
             [nN] | [nN][oO])
                 echo -e "\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check  --\e[39m\n"
@@ -564,18 +565,23 @@ trisql_c () {
                 if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
                     echo -e -n "\n\t    Provide the full PATH of your Anaconda main installation, not an environment (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
                     read ans
-                    source ${ans}/etc/profile.d/conda.sh
-                    conda activate TransPi
-                    check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-                    if [ $check_sql -eq 0 ];then
-                        echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-                        echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-                        exit 0
-                    elif [ $check_sql -eq 1 ];then
-                        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                        rm uniprot_sprot.dat.gz
-                        date -u >.lastrun.txt
-                        sql_path
+                    if [ -f ${ans}/etc/profile.d/conda.sh ];then
+                        source ${ans}/etc/profile.d/conda.sh
+                        conda activate TransPi
+                        check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+                        if [ $check_sql -eq 0 ];then
+                            echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
+                            echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                            exit 0
+                        elif [ $check_sql -eq 1 ];then
+                            sql_path
+                            Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                            rm uniprot_sprot.dat.gz
+                            date -u >.lastrun.txt
+                        fi
+                    else
+                        echo -e "PATH ${ans} is not correct. Trying again..."
+                        trisql_c
                     fi
                 elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
                     source ~/anaconda3/etc/profile.d/conda.sh
@@ -586,10 +592,10 @@ trisql_c () {
                         echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
                         exit 0
                     elif [ $check_sql -eq 1 ];then
+                        sql_path
                         Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                         rm uniprot_sprot.dat.gz
                         date -u >.lastrun.txt
-                        sql_path
                     fi
                 fi
             ;;
@@ -650,13 +656,15 @@ pfam_c() {
 #temporary for buscoV4
 bus_env4 () {
     echo -e "\n\t -- Creating BUSCO V4 environment --\n"
-    conda create -n busco4 -c bioconda busco=4.0.5 -y
+    conda create -n busco4 -c conda-forge -c bioconda busco=4.0.5=pyr36_0 -y
 }
 bus4 () {
     cd $mypwd
     cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " | tr -d "\"" )
     if [ "$cpath" == "" ];then
         echo -e "\n\t -- Cannot find the BUSCO V4 environment -- \n"
+        echo -e "\n\t -- Cleaning conda before installing BUSCO V4 environment -- \n"
+        conda clean -a -y
         bus_env4
     else
         echo -e "\n\t -- BUSCO V4 environment found --\n"
