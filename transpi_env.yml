@@ -16,7 +16,7 @@ dependencies:
   #- busco=4.0.5 #Not working properly with the env
   - busco=3.0.2=py_13
   - transdecoder=5.5.0=pl526_2
-  - trinotate=3.2.0=pl526_1
+  - trinotate=3.2.1=pl526_0
   - diamond=0.9.30=h56fc30b_0
   - hmmer=3.3=he1b5a44_0
   - exonerate=2.4=haf93ef1_3

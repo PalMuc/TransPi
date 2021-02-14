@@ -1923,9 +1923,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.0=pl526_1" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.1=pl526_0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.0--pl526_1" : "quay.io/biocontainers/trinotate:3.2.0--pl526_1")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.1--pl526_0" : "quay.io/biocontainers/trinotate:3.2.1--pl526_0")
         }
 
         input:
@@ -4155,9 +4155,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.0=pl526_1" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.1=pl526_0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.0--pl526_1" : "quay.io/biocontainers/trinotate:3.2.0--pl526_1")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.1--pl526_0" : "quay.io/biocontainers/trinotate:3.2.1--pl526_0")
         }
 
         input:
