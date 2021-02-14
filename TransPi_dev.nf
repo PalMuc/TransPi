@@ -392,7 +392,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results_OAS
                 tuple sample_id, file("*${sample_id}.filter.fq") into reads_ass_ch_OAS
                 tuple sample_id, file("*.csv") into fastp_csv_OAS
-                tuple sample_id, file("${sample_id}_R1.filter.fq.gz"), file("${sample_id}_R2.filter.fq.gz") into save_filter_reads
+                tuple sample_id, file("${sample_id}_filter.R1.fq.gz"), file("${sample_id}_filter.R2.fq.gz") into save_filter_reads
 
             script:
                 """
@@ -405,11 +405,11 @@ if (params.onlyAsm) {
                 bash get_readstats.sh ${sample_id}.fastp.json
                 bash get_readqual.sh ${sample_id}.fastp.json
 
-                cp left-${sample_id}.filter.fq ${sample_id}_R1.filter.fq
-                cp right-${sample_id}.filter.fq ${sample_id}_R2.filter.fq
+                cp left-${sample_id}.filter.fq ${sample_id}_filter.R1.fq
+                cp right-${sample_id}.filter.fq ${sample_id}_filter.R2.fq
 
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.filter.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.filter.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R1.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R2.fq
                 """
         }
 
@@ -429,8 +429,8 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    cat $r1 >${sample_id}_R1.filter.fq.gz
-                    cat $r2 >${sample_id}_R2.filter.fq.gz
+                    cat $r1 >${sample_id}_filter.R1.fq.gz
+                    cat $r2 >${sample_id}_filter.R2.fq.gz
                     """
             }
         }
@@ -462,7 +462,7 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS, reads_rna_quast_OAS )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity_OAS, mapping_reads_evi_OAS )
-                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_norm_reads )
+                tuple sample_id, file("${sample_id}_norm.R1.fq.gz"), file("${sample_id}_norm.R2.fq.gz") into ( save_norm_reads )
 
             script:
                 //def mem=(task.memory)
@@ -482,11 +482,11 @@ if (params.onlyAsm) {
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
 
-                mv left.norm.fq ${sample_id}_R1.norm.fq
-                mv right.norm.fq ${sample_id}_R2.norm.fq
+                mv left.norm.fq ${sample_id}_norm.R1.fq
+                mv right.norm.fq ${sample_id}_norm.R2.fq
 
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
                 """
             } else {
                 """
@@ -505,11 +505,11 @@ if (params.onlyAsm) {
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
 
-                mv left.norm.fq ${sample_id}_R1.norm.fq
-                mv right.norm.fq ${sample_id}_R2.norm.fq
+                mv left.norm.fq ${sample_id}_norm.R1.fq
+                mv right.norm.fq ${sample_id}_norm.R2.fq
 
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
                 """
             }
         }
@@ -530,8 +530,8 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    cat $r1 >${sample_id}_R1.norm.fq.gz
-                    cat $r2 >${sample_id}_R2.norm.fq.gz
+                    cat $r1 >${sample_id}_norm.R1.fq.gz
+                    cat $r2 >${sample_id}_norm.R2.fq.gz
                     """
             }
         }
@@ -2404,9 +2404,9 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results
-                tuple sample_id, file("*${sample_id}.filter.fq") into reads_ass_ch
+                tuple sample_id, file("*${sample_id}.filter.fq") into reads_rna_ch
                 tuple sample_id, file("*.csv") into fastp_csv
-                tuple sample_id, file("${sample_id}_R1.filter.fq.gz"), file("${sample_id}_R2.filter.fq.gz") into save_filter_reads
+                tuple sample_id, file("${sample_id}_filter.R1.fq.gz"), file("${sample_id}_filter.R2.fq.gz") into save_filter_reads
 
             script:
                 """
@@ -2419,11 +2419,11 @@ if (params.onlyAsm) {
                 bash get_readstats.sh ${sample_id}.fastp.json
                 bash get_readqual.sh ${sample_id}.fastp.json
 
-                cp left-${sample_id}.filter.fq ${sample_id}_R1.filter.fq
-                cp right-${sample_id}.filter.fq ${sample_id}_R2.filter.fq
+                cp left-${sample_id}.filter.fq ${sample_id}_filter.R1.fq
+                cp right-${sample_id}.filter.fq ${sample_id}_filter.R2.fq
 
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.filter.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.filter.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R1.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R2.fq
                 """
         }
 
@@ -2443,17 +2443,70 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    cat $r1 >${sample_id}_R1.filter.fq.gz
-                    cat $r2 >${sample_id}_R2.filter.fq.gz
+                    cat $r1 >${sample_id}_filter.R1.fq.gz
+                    cat $r2 >${sample_id}_filter.R2.fq.gz
                     """
             }
         }
 
     } else {
         reads_ch
-            .set{ reads_ass_ch }
+            .set{ reads_rna_ch }
         fastp_results = Channel.empty()
         fastp_csv = Channel.empty()
+    }
+
+    if (params.rRNAfilter) {
+
+        if (params.rRNAdb == "" || params.rRNAdb == true) {
+            println("\n\t\033[0;31mNeed to provide the PATH to the rRNA database.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
+            exit 0
+        }
+
+        process remove_rrna {
+
+            label 'med_mem'
+
+            tag "${sample_id}"
+
+            publishDir "${workDir}/${params.outdir}/rRNA_reads", mode: "copy", overwrite: true
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::sortmerna=4.2.0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/sortmerna:4.2.0--0" : "quay.io/biocontainers/sortmerna:4.2.0--0")
+            }
+
+            input:
+                tuple sample_id, file(reads) from reads_rna_ch
+
+            output:
+                tuple sample_id, file("*rRNA.R*.fq") into reads_rna_ass
+                tuple sample_id, file("${sample_id}_remove_rRNA.log") into remove_rrna_sum
+
+            script:
+            if (!params.skipFilter) {
+                """
+                sortmerna --ref ${params.rRNAdb} --reads ${reads[0]} --reads ${reads[0]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
+                mv rRNA_reads.log ${sample_id}_remove_rRNA.log
+                mv rRNA_reads_fwd* ${sample_id}_rRNA_reads.R1.fq
+                mv rRNA_reads_rev* ${sample_id}_rRNA_reads.R2.fq
+                mv non_rRNA_reads_fwd* ${sample_id}_filter_no_rRNA.R1.fq
+                mv non_rRNA_reads_rev* ${sample_id}_filter_no_rRNA.R2.fq
+                """
+            } else {
+                """
+                sortmerna --ref ${params.rRNAdb} --reads ${reads[0]} --reads ${reads[0]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
+                mv rRNA_reads.log ${sample_id}_remove_rRNA.log
+                mv rRNA_reads_fwd* ${sample_id}_rRNA_reads.R1.fq
+                mv rRNA_reads_rev* ${sample_id}_rRNA_reads.R2.fq
+                mv non_rRNA_reads_fwd* ${sample_id}_no_rRNA.R1.fq
+                mv non_rRNA_reads_rev* ${sample_id}_no_rRNA.R2.fq
+                """
+            }
+        }
+    } else {
+        reads_rna_ch
+            .set{ reads_rna_ass }
     }
 
     if (!params.skipNormalization) {
@@ -2470,12 +2523,12 @@ if (params.onlyAsm) {
             }
 
             input:
-                tuple sample_id, file(reads) from reads_ass_ch
+                tuple sample_id, file(reads) from reads_rna_ass
 
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
-                tuple sample_id, file("${sample_id}_R1.norm.fq.gz"), file("${sample_id}_R2.norm.fq.gz") into ( save_norm_reads )
+                tuple sample_id, file("${sample_id}_norm.R1.fq.gz"), file("${sample_id}_norm.R2.fq.gz") into ( save_norm_reads )
 
             script:
                 //def mem=(task.memory)
@@ -2495,13 +2548,13 @@ if (params.onlyAsm) {
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
 
-                mv left.norm.fq ${sample_id}_R1.norm.fq
-                mv right.norm.fq ${sample_id}_R2.norm.fq
+                mv left.norm.fq ${sample_id}_norm.R1.fq
+                mv right.norm.fq ${sample_id}_norm.R2.fq
 
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
                 """
-            } else {
+            } else if (params.skipFilter && !params.rRNAfilter) {
                 """
                 echo ${sample_id}
                 zcat ${reads[0]} >left-${sample_id}.fq &
@@ -2518,11 +2571,11 @@ if (params.onlyAsm) {
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
 
-                mv left.norm.fq ${sample_id}_R1.norm.fq
-                mv right.norm.fq ${sample_id}_R2.norm.fq
+                mv left.norm.fq ${sample_id}_norm.R1.fq
+                mv right.norm.fq ${sample_id}_norm.R2.fq
 
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R1.norm.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_R2.norm.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
+                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
                 """
             }
         }
@@ -2543,8 +2596,8 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    cat $r1 >${sample_id}_R1.norm.fq.gz
-                    cat $r2 >${sample_id}_R2.norm.fq.gz
+                    cat $r1 >${sample_id}_norm.R1.fq.gz
+                    cat $r2 >${sample_id}_norm.R2.fq.gz
                     """
             }
         }
@@ -2559,7 +2612,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file(reads) from reads_ass_ch
+                tuple sample_id, file(reads) from reads_rna_ass
 
             output:
                 tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
@@ -2580,35 +2633,9 @@ if (params.onlyAsm) {
                 """
             }
         }
-    }
-
-    if (params.rRNAfilter) {
-
-        process remove_rrna {
-
-            label 'med_mem'
-
-            tag "${sample_id}"
-
-            publishDir "${workDir}/${params.outdir}/rRNA_reads", mode: "copy", overwrite: true
-
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::sortmerna=4.2.0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/sortmerna:4.2.0--0" : "quay.io/biocontainers/sortmerna:4.2.0--0")
-            }
-
-            input:
-                tuple sample_id, file(reads) from rrna_in
-
-            output:
-                tuple sample_id, file(reads) into rrna_out
-
-            script:
-                """
-                sortmerna --ref ${params.rnaDB} --reads ${reads[0]} --reads ${reads[0]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
-                """
-
-        }
+    } else if (!params.skipFilter && params.skipNormalization) {
+        reads_rna_ass
+            .into{ norm_reads_soap; norm_reads_velvet; norm_reads_trinity; norm_reads_spades; norm_reads_transabyss; reads_rna_quast; mapping_reads_trinity; mapping_reads_evi; mapping_symbiont }
     }
 
     process trinity_assembly {
