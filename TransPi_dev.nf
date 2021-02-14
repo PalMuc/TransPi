@@ -856,7 +856,7 @@ if (params.onlyAsm) {
     }
 
     mapping_evigene_in_OAS=Channel.create()
-    mapping_evigene_OAS.mix( mapping_reads_evi_OAS ).groupTuple(by:0,size:2).view().into(mapping_evigene_in_OAS)
+    mapping_evigene_OAS.mix( mapping_reads_evi_OAS ).groupTuple(by:0,size:2).into(mapping_evigene_in_OAS)
 
     process mapping_evigene_OAS {
 
@@ -1229,7 +1229,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
@@ -1272,7 +1272,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
@@ -1942,7 +1942,7 @@ if (params.onlyAsm) {
                 echo \${x} >>.vars.txt
             done
 
-            assembly=\$( cat .vars.txt | grep "${sample_id}_asssembly.fasta" | grep -v "grep -v "transdecoder" )
+            assembly=\$( cat .vars.txt | grep "${sample_id}_asssembly.fasta" | grep -v "transdecoder" )
             transdecoder=\$( cat .vars.txt | grep -E "${sample_id}.*.transdecoder.pep" )
             diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
             diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
@@ -2135,6 +2135,7 @@ if (params.onlyAsm) {
 
         script:
             """
+            set +e
             cp ${params.pipeInstall}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
@@ -2160,9 +2161,9 @@ if (params.onlyAsm) {
             mv GO_biological.txt ${sample_id}_GO_biological.txt
             mv GO_molecular.txt ${sample_id}_GO_molecular.txt
 
-            cat ${sample_id}_GO_cellular.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_cellular.csv
-            cat ${sample_id}_GO_biological.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_biological.csv
-            cat ${sample_id}_GO_molecular.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_molecular.csv
+            cat ${sample_id}_GO_cellular.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_cellular.csv
+            cat ${sample_id}_GO_biological.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_biological.csv
+            cat ${sample_id}_GO_molecular.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_molecular.csv
             """
     }
 
@@ -2918,7 +2919,7 @@ if (params.onlyAsm) {
     }
 
     mapping_evi_in=Channel.create()
-    mapping_evi.mix( mapping_reads_evi ).groupTuple(by:0,size:2).view().into(mapping_evi_in)
+    mapping_evi.mix( mapping_reads_evi ).groupTuple(by:0,size:2).into(mapping_evi_in)
 
     process mapping_evigene {
 
@@ -3370,7 +3371,8 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
 
             output:
-                tuple sample_id, file("*${sample_id}.Trinity.bus3.txt"), file("run_${sample_id}.Trinity.bus3") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+                tuple sample_id, file("*${sample_id}.Trinity.bus3.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
+                file("run_${sample_id}.Trinity.bus3")
                 tuple sample_id, file("*tsv") into busco3_trinity_rescue
 
             script:
@@ -3404,7 +3406,8 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.Trinity.fa") from busco4_ch_trinity
 
             output:
-                tuple sample_id, file("*${sample_id}.Trinity.bus4.txt"), file("${sample_id}.Trinity.bus4") into ( busco4_ch_trinity_sum, busco4_comp_2 )
+                tuple sample_id, file("*${sample_id}.Trinity.bus4.txt") into ( busco4_ch_trinity_sum, busco4_comp_2 )
+                file("${sample_id}.Trinity.bus4")
                 tuple sample_id, file("*tsv") into busco4_trinity_rescue
 
             script:
@@ -3778,7 +3781,7 @@ if (params.onlyAsm) {
         }
 
         transdecoder_predict_ch=Channel.create()
-        transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, evigene_ch_transdecoderB ).groupTuple(by:0,size:3).view().into(transdecoder_predict_ch)
+        transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, evigene_ch_transdecoderB ).groupTuple(by:0,size:3).into(transdecoder_predict_ch)
         // from OA  annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).view().into(transdecoder_predict_OA_ch)
 
         process transdecoder_predict {
@@ -3795,7 +3798,7 @@ if (params.onlyAsm) {
             }
 
             input:
-                tuple sample_id, file(files), file(files2), file(files3) from transdecoder_predict_ch
+                tuple sample_id, file(files) from transdecoder_predict_ch
 
             output:
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
@@ -4493,7 +4496,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
             """
     }
@@ -4536,7 +4539,7 @@ if (params.onlyAsm) {
             mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO4_comparison.pdf
             mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO4_comparison.svg
             # csv
-            sed -i 's/\$/\n/g' final_*
+            sed -i 's/\$/\\n/g' final_*
             cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco4.csv
             """
     }
@@ -4561,9 +4564,12 @@ if (params.onlyAsm) {
 
         script:
             """
+            set +e
 	        cp ${params.pipeInstall}/bin/GO_plots.R .
 
             cat ${sample_id}.trinotate_annotation_report.xls | awk 'FS="\\t",OFS="#" {print \$1,\$15,\$16,\$17}' | grep -v "gene_id" >all_GOs.txt
+
+            touch final_GOs.txt
 
             while read line;do
                 echo \${line} | cut -f 2,3,4 -d "#" | grep "GO:" | tr "#" "\\n" | tr "\\`" "\\n" | sed 's/\\. /,/g' | tr "," "\\n" | grep "GO:" | sort -u >>final_GOs.txt
@@ -4586,9 +4592,9 @@ if (params.onlyAsm) {
             mv GO_biological.txt ${sample_id}_GO_biological.txt
             mv GO_molecular.txt ${sample_id}_GO_molecular.txt
 
-            cat ${sample_id}_GO_cellular.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_cellular.csv
-            cat ${sample_id}_GO_biological.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_biological.csv
-            cat ${sample_id}_GO_molecular.txt | sed -r 's/^[^0-9]*([0-9]+)/\1,/g' >${sample_id}_GO_molecular.csv
+            cat ${sample_id}_GO_cellular.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_cellular.csv
+            cat ${sample_id}_GO_biological.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_biological.csv
+            cat ${sample_id}_GO_molecular.txt | sed -r 's/^[^0-9]*([0-9]+)/\\1,/g' >${sample_id}_GO_molecular.csv
             """
     }
 
@@ -4773,7 +4779,7 @@ if (params.onlyAsm) {
 
             echo -e "\\n-- DONE with EviGene --\\n"
 
-            cp okayset/*combined.okay* ${sample_id}.combined.okay.fa
+            cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
 
             if [ -d tmpfiles/ ];then
                 rm -rf tmpfiles/
