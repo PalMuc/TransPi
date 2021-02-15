@@ -12,59 +12,33 @@ pfam_c() {
         echo -e "\n\t -- Creating directory for the HMMER database --\n"
         mkdir -p DBs/hmmerdb/
         cd DBs/hmmerdb/
-        mv $mypwd/DBs/sqlite_db/Pfam-A.hmm.gz .
-        cp $mypwd/DBs/sqlite_db/.lastrun.txt .
+        echo -e "-- Downloading Pfam-A files ... --\n"
+        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
         echo -e "-- Preparing Pfam-A files ... --\n"
         gunzip Pfam-A.hmm.gz
+        date -u >.lastrun.txt
     elif [ -d DBs/hmmerdb/ ];then
         echo -e "\n\t -- Directory for the HMMER database is present --\n"
         cd DBs/hmmerdb/
         rm -rf *
-        mv $mypwd/DBs/sqlite_db/Pfam-A.hmm.gz .
-        cp $mypwd/DBs/sqlite_db/.lastrun.txt .
+        echo -e "-- Downloading Pfam-A files ... --\n"
+        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
         echo -e "-- Preparing Pfam-A files ... --\n"
         gunzip Pfam-A.hmm.gz
+        date -u >.lastrun.txt
     fi
 }
 sqld(){
-    if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
-        echo -e -n "\n\t    Provide the full PATH of your Anaconda main installation, not an environment (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
-        read ans
-        if [ -f ${ans}/etc/profile.d/conda.sh ];then
-            source ${ans}/etc/profile.d/conda.sh
-            conda activate TransPi
-            check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-            if [ $check_sql -eq 0 ];then
-                echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-                echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-                exit 0
-            elif [ $check_sql -eq 1 ];then
-                rm Trinotate*
-                Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                rm uniprot_sprot.dat.gz
-                date -u >.lastrun.txt
-                pfam_c
-            fi
-        else
-            echo -e "PATH ${ans} is not correct. Trying again..."
-            sqld
-        fi
-    elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
-        source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate TransPi
-        check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-        if [ $check_sql -eq 0 ];then
-            echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-            echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-            exit 0
-        elif [ $check_sql -eq 1 ];then
-            rm Trinotate*
-            Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-            rm uniprot_sprot.dat.gz
-            date -u >.lastrun.txt
-            pfam_c
-        fi
-    fi
+    rm -rf *
+    echo -e "\n\t -- Custom sqlite database for Trinotate will be installed -- \n"
+    echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
+    wget https://github.com/Trinotate/Trinotate/archive/Trinotate-v3.2.1.tar.gz
+    tar -xf Trinotate-v3.2.1.tar.gz
+    mv Trinotate-Trinotate-v3.2.1/ Trinotate_build_scripts/
+    ./Trinotate_build_scripts/admin/Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+    rm uniprot_sprot.dat.gz
+    date -u >.lastrun.txt
+    pfam_c
 }
 ddate() {
     if [ ! -e .lastrun.txt ];then
@@ -157,7 +131,6 @@ message(){
     echo -e "\n###################################################################\n"
     echo -e "\n  Script for updating the databases used by TransPi \n"
     echo -e "\n  - SwissProt, PFAM, eggNOG, GO, and Trinotate SQL database - \n"
-    echo -e "\n  Make sure the conda env TransPi is installed and working \n"
     echo -e "\n###################################################################\n"
 }
 message
