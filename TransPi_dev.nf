@@ -2488,21 +2488,21 @@ if (params.onlyAsm) {
             script:
             if (!params.skipFilter) {
                 """
-                sortmerna --ref ${params.rRNAdb} --reads ${reads[0]} --reads ${reads[0]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
-                mv rRNA_reads.log ${sample_id}_remove_rRNA.log
-                mv rRNA_reads_fwd* ${sample_id}_rRNA_reads.R1.fq
-                mv rRNA_reads_rev* ${sample_id}_rRNA_reads.R2.fq
-                mv non_rRNA_reads_fwd* ${sample_id}_filter_no_rRNA.R1.fq
-                mv non_rRNA_reads_rev* ${sample_id}_filter_no_rRNA.R2.fq
+                sortmerna --ref ${params.rRNAdb} --reads ${reads[0]} --reads ${reads[1]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
+                mv rRNAreads.log ${sample_id}_remove_rRNA.log
+                mv rRNAreads_fwd* ${sample_id}_rRNA_reads.R1.fq
+                mv rRNAreads_rev* ${sample_id}_rRNA_reads.R2.fq
+                mv nonrRNAreads_fwd* ${sample_id}_no_rRNA.R1.fq
+                mv nonrRNAreads_rev* ${sample_id}_no_rRNA.R2.fq
                 """
             } else {
                 """
-                sortmerna --ref ${params.rRNAdb} --reads ${reads[0]} --reads ${reads[0]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
-                mv rRNA_reads.log ${sample_id}_remove_rRNA.log
-                mv rRNA_reads_fwd* ${sample_id}_rRNA_reads.R1.fq
-                mv rRNA_reads_rev* ${sample_id}_rRNA_reads.R2.fq
-                mv non_rRNA_reads_fwd* ${sample_id}_no_rRNA.R1.fq
-                mv non_rRNA_reads_rev* ${sample_id}_no_rRNA.R2.fq
+                sortmerna --ref ${params.rRNAdb} --reads ${reads[0]} --reads ${reads[1]} --threads ${task.cpus} --aligned rRNAreads --other nonrRNAreads --paired_in --out2 --fastx --workdir .
+                mv rRNAreads.log ${sample_id}_remove_rRNA.log
+                mv rRNAreads_fwd* ${sample_id}_rRNA_reads.R1.fq
+                mv rRNAreads_rev* ${sample_id}_rRNA_reads.R2.fq
+                mv nonrRNAreads_fwd* ${sample_id}_no_rRNA.R1.fq
+                mv nonrRNAreads_rev* ${sample_id}_no_rRNA.R2.fq
                 """
             }
         }
