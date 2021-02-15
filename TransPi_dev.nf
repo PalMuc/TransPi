@@ -271,6 +271,13 @@ if (params.condaActivate && params.myConda && params.myCondaInstall == "") {
     exit 0
 }
 
+if (params.rRNAfilter) {
+    if (params.rRNAdb == "" || params.rRNAdb == true) {
+        println("\n\t\033[0;31mNeed to provide the PATH to the rRNA database.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
+        exit 0
+    }
+}
+
 if (params.all) {
     log.info """\
             ==================================================
@@ -2457,11 +2464,6 @@ if (params.onlyAsm) {
     }
 
     if (params.rRNAfilter) {
-
-        if (params.rRNAdb == "" || params.rRNAdb == true) {
-            println("\n\t\033[0;31mNeed to provide the PATH to the rRNA database.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
-            exit 0
-        }
 
         process remove_rrna {
 
