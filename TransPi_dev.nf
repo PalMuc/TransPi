@@ -16,7 +16,7 @@ def helpMessage() {
     ==================================================
 
     Steps:
-        1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+        1- Run the `precheck_TransPi.sh` to set up the databases and tools (if neccesary) used by TransPi
         2- Run TransPi
 
         Usage:
@@ -27,13 +27,13 @@ def helpMessage() {
 
         Manadatory arguments:
             --all                   Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.)
-                                    This option also requires arguments --reads and --k
+                                    This option also requires arguments --reads, --k, and --maxReadLen
                                     Example:
-                                        --reads "/home/ubuntu/TransPi/reads/*_R[1,2].fastq.gz" --k 25,35,55,75,85
+                                        --reads "/PATH/TO/READS/*_R[1,2].fastq.gz" --k 25,35,55,75,85 --maxReadLen 150
                                         NOTE: Use of quotes is needed for the reads PATH. Kmer list depends on read length.
 
             --onlyAsm               Run only the Assemblies and EvidentialGene analysis
-                                    This option also requires arguments --reads and --k
+                                    This option also requires arguments --reads, --k, --maxReadLen
 
             --onlyEvi               Run only the Evidential Gene analysis
                                     Transcriptome expected to be in a directory called "onlyEvi"
@@ -42,47 +42,59 @@ def helpMessage() {
                                     Transcriptome expected to be in a directory called "onlyAnn"
 
         Other options:
-            -with-conda             To run with a local conda installation (generated with the precheck) and not installed by nextflow
-                                    This is the preferred method of running TransPi
-                                    Example:
-                                        nextflow run transpi.nf --all -with-conda /home/ubuntu/anaconda3/envs/TransPi
-
             -profile                Configuration profile to use. Can use multiple (comma separated)
-                                    Available:
-                                        test (Run TransPi with test dataset)
-                                        conda (Not recommended, not all programs are installed by conda. Use the precheck)
-                                        docker (Run TransPi with a docker container with all the neccesary tools)
-                                        singularity (Run TransPi with a singularity container with all the neccesary tools)
+                    test                Run TransPi with a test dataset
+                    conda               Run TransPi with conda.
+                    docker              Run TransPi with docker container
+                    singularity         Run TransPi with singularity container with all the neccesary tools
+                    TransPiContainer    Run TransPi with a single container with all tools
 
             --help                  Display this message
-            --fullHelp              Display more options and examples for running TransPi
+            --fullHelp              Display this message and examples for running TransPi
 
         Output options:
-            --outdir 	            Name of output directory. Example: --outdir Sponges_150. Default "results"
-            -w, -work 	            Name of working directory. Example: -work Sponges_work. Only one dash is needed for -work since it is a nextflow function.
+            --outdir 	            Name of output directory. Default "results"
+            -w, -work 	            Name of working directory. Default "work". Only one dash is needed for -work since it is a nextflow function.
             --tracedir              Name for directory to save pipeline trace files. Default "pipeline_info"
 
         Additional analyses:
-            --filterSpecies         Perform psytrans filtering of transcriptome. Requires options --host and --symbiont
-            --host 	                Host (or similar) protein file.
-            --symbiont     	        Symbionts (or similar) protein files
+            --rRNAfilter            Remove rRNA from sequences. Requires option --rRNAdb
+                --rRNAdb                PATH to database of rRNA sequences to use for filtering of rRNA. Default ""
+
+            --filterSpecies         Perform psytrans filtering of transcriptome. Default "false" Requires options --host and --symbiont
+                --host 	                PATH to host (or similar) protein file. Default ""
+                --symbiont     	        PATH to symbionts (or similar) protein files. Default ""
+
             --psyval       	        Psytrans value to train model. Default "160"
-            --allBuscos       	    Run BUSCO analysis in all assemblies
-            --rescueBusco 	        Generate BUSCO distribution analysis
+            --allBuscos       	    Run BUSCO analysis in all assemblies. Default "false"
+            --rescueBusco 	        Generate BUSCO distribution analysis. Default "false"
             --minPerc        	    Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
-            --shortTransdecoder     Run Transdecoder without the homology searches
-            --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
-            --withTMHMM 	        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
-            --withRnammer 	        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+            --shortTransdecoder     Run Transdecoder without the homology searches. Default "false"
+            --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --signalp
+                --signalp               PATH to SignalP software. Default ""
+
+            --withTMHMM 	        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --tmhmm
+                --tmhmm                 PATH to TMHMM software. Default ""
+
+            --withRnammer 	        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --rnam
+                --rnam                  PATH to Rnammer software. Default ""
 
         Skip options:
             --skipEvi 	            Skip EvidentialGene run in --onlyAsm option. Default "false"
             --skipQC 	            Skip FastQC step. Default "false"
             --skipFilter 	        Skip fastp filtering step. Default "false"
+            --skipKegg              Skip kegg analysis. Default "false"
             --skipReport 	        Skip generation of final TransPi report. Default "false"
 
         Others:
-            --minQual 	             Minimum quality score for fastp filtering. Default "25"
+            --minQual 	            Minimum quality score for fastp filtering. Default "25"
+            --pipeInstall           PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
+            --myCondaInstall        PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
+                --myConda           Make TransPi use a local conda environemt with all the tools (generated with precheck)
+
+            --envCacheDir           PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
+            --getVersions           Get software versions. Default "false"
+
     """.stripIndent()
 }
 def fullHelpMessage() {
@@ -92,7 +104,7 @@ def fullHelpMessage() {
     ==================================================
 
     Steps:
-        1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+        1- Run the `precheck_TransPi.sh` to set up the databases and tools (if neccesary) used by TransPi
         2- Run TransPi
 
         Usage:
@@ -103,13 +115,13 @@ def fullHelpMessage() {
 
         Manadatory arguments:
             --all                   Run the entire pipeline (Assemblies, EvidentialGene, Annotation, etc.)
-                                    This option also requires arguments --reads and --k
+                                    This option also requires arguments --reads, --k, and --maxReadLen
                                     Example:
-                                        --reads "/home/ubuntu/TransPi/reads/*_R[1,2].fastq.gz" --k 25,35,55,75,85
+                                        --reads "/PATH/TO/READS/*_R[1,2].fastq.gz" --k 25,35,55,75,85 --maxReadLen 150
                                         NOTE: Use of quotes is needed for the reads PATH. Kmer list depends on read length.
 
             --onlyAsm               Run only the Assemblies and EvidentialGene analysis
-                                    This option also requires arguments --reads and --k
+                                    This option also requires arguments --reads, --k, --maxReadLen
 
             --onlyEvi               Run only the Evidential Gene analysis
                                     Transcriptome expected to be in a directory called "onlyEvi"
@@ -118,47 +130,58 @@ def fullHelpMessage() {
                                     Transcriptome expected to be in a directory called "onlyAnn"
 
         Other options:
-            -with-conda             To run with a local conda installation (generated with the precheck) and not installed by nextflow
-                                    This is the preferred method of running TransPi
-                                    Example:
-                                        nextflow run transpi.nf --all -with-conda /home/ubuntu/anaconda3/envs/TransPi
-
             -profile                Configuration profile to use. Can use multiple (comma separated)
-                                    Available:
-                                        test (Run TransPi with test dataset)
-                                        conda (Not recommended, not all programs are installed by conda. Use the precheck)
-                                        docker (Run TransPi with a docker container with all the neccesary tools)
-                                        singularity (Run TransPi with a singularity container with all the neccesary tools)
+                    test                Run TransPi with a test dataset
+                    conda               Run TransPi with conda.
+                    docker              Run TransPi with docker container
+                    singularity         Run TransPi with singularity container with all the neccesary tools
+                    TransPiContainer    Run TransPi with a single container with all tools
 
             --help                  Display this message
-            --fullHelp              Display more options and examples for running TransPi
+            --fullHelp              Display this message and examples for running TransPi
 
         Output options:
-            --outdir 	            Name of output directory. Example: --outdir Sponges_150. Default "results"
-            -w, -work 	            Name of working directory. Example: -work Sponges_work. Only one dash is needed for -work since it is a nextflow function.
+            --outdir 	            Name of output directory. Default "results"
+            -w, -work 	            Name of working directory. Default "work". Only one dash is needed for -work since it is a nextflow function.
             --tracedir              Name for directory to save pipeline trace files. Default "pipeline_info"
 
         Additional analyses:
-            --filterSpecies         Perform psytrans filtering of transcriptome. Requires options --host and --symbiont
-            --host 	                Host (or similar) protein file.
-            --symbiont     	        Symbionts (or similar) protein files
+            --rRNAfilter            Remove rRNA from sequences. Requires option --rRNAdb
+                --rRNAdb                PATH to database of rRNA sequences to use for filtering of rRNA. Default ""
+
+            --filterSpecies         Perform psytrans filtering of transcriptome. Default "false" Requires options --host and --symbiont
+                --host 	                PATH to host (or similar) protein file. Default ""
+                --symbiont     	        PATH to symbionts (or similar) protein files. Default ""
+
             --psyval       	        Psytrans value to train model. Default "160"
-            --allBuscos       	    Run BUSCO analysis in all assemblies
-            --rescueBusco 	        Generate BUSCO distribution analysis
+            --allBuscos       	    Run BUSCO analysis in all assemblies. Default "false"
+            --rescueBusco 	        Generate BUSCO distribution analysis. Default "false"
             --minPerc        	    Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
-            --shortTransdecoder     Run Transdecoder without the homology searches
-            --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
-            --withTMHMM 	        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
-            --withRnammer 	        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools. Default "false"
+            --shortTransdecoder     Run Transdecoder without the homology searches. Default "false"
+            --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --signalp
+                --signalp               PATH to SignalP software. Default ""
+
+            --withTMHMM 	        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --tmhmm
+                --tmhmm                 PATH to TMHMM software. Default ""
+
+            --withRnammer 	        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --rnam
+                --rnam                  PATH to Rnammer software. Default ""
 
         Skip options:
             --skipEvi 	            Skip EvidentialGene run in --onlyAsm option. Default "false"
             --skipQC 	            Skip FastQC step. Default "false"
             --skipFilter 	        Skip fastp filtering step. Default "false"
+            --skipKegg              Skip kegg analysis. Default "false"
             --skipReport 	        Skip generation of final TransPi report. Default "false"
 
         Others:
-            --minQual 	             Minimum quality score for fastp filtering. Default "25"
+            --pipeInstall           PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
+            --minQual 	            Minimum quality score for fastp filtering. Default "25"
+            --myCondaInstall        PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
+                --myConda           Make TransPi use a local conda environemt with all the tools (generated with precheck)
+
+            --envCacheDir           PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
+            --getVersions           Get software versions. Default "false"
 
         #################################################################################################
 
@@ -168,7 +191,7 @@ def fullHelpMessage() {
 
         I. Steps for running on a local cluster and local conda installation of TransPi
 
-            1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+            1- Run the `precheck_TransPi.sh` to install tools with conda, set up the databases and directories for TransPi
             2- Run TransPi
 
             Usage:
@@ -179,18 +202,21 @@ def fullHelpMessage() {
 
         II. Steps for running on a local cluster and conda installation by Nextflow
 
-            1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+            1- Run the `precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
 
             Usage:
 
                 nextflow run TransPi.nf --all -profile conda OTHER_PARAMETERS_HERE
 
+            NOTE:
+                A conda environment will be created for each process.
+
         #################################################################################################
 
-        III. Steps for running on docker
+        III. Steps for running with docker
 
-            1- Run the `container_precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+            1- Run the `container_precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
 
             Usage:
@@ -199,13 +225,12 @@ def fullHelpMessage() {
 
             NOTE:
                 All necesary tools for running TransPi are pre-installed in the container
-                `container_precheck_TransPi.sh` will install only the database used by TransPi
 
         #################################################################################################
 
-        IV. Steps for running on singualarity
+        IV. Steps for running with singualarity
 
-            1- Run the `container_precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
+            1- Run the `container_precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
 
             Usage:
@@ -214,25 +239,36 @@ def fullHelpMessage() {
 
             NOTE:
                 All necesary tools for running TransPi are pre-installed in the container
-                `container_precheck_TransPi.sh` will install only the database used by TransPi
 
         #################################################################################################
 
-        V. Steps for running with multiple profiles.
+        V. Steps for running with a container engine and TransPi container.
 
             1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
 
             Usage:
 
-                nextflow run TransPi.nf --all -profile conda,test
+                nextflow run TransPi.nf --all -profile singularity,TransPiContainer
 
             NOTE:
-                This will run TransPi using a test dataset and a conda environment created by Nextflow
-                To run with containers first run the `container_precheck_TransPi.sh` and use -profile docker,test
+                This will run TransPi using a single container only.
 
         #################################################################################################
 
+        VI. Steps for running with multiple profiles.
+
+            1- Run the `precheck_TransPi.sh` to set up the databases for TransPi
+            2- Run TransPi
+
+            Usage:
+
+                nextflow run TransPi.nf --all -profile singularity,TransPiContainer,test
+
+            NOTE:
+                This will run TransPi using a test dataset, with singularity and the TransPi container.
+
+        #################################################################################################
     """.stripIndent()
 }
 
