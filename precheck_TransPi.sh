@@ -63,7 +63,7 @@ conda_c() {
                     echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
                     conda env create -f transpi_env.yml
                 else
-                    echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found \(transpi_env.yml\). Please check requirements and rerun the pre-check --\e[39m\n"
+                    echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please check requirements and rerun the pre-check --\e[39m\n"
                     exit 0
                 fi
             elif [ "$check_env" -eq 1 ];then
@@ -376,7 +376,7 @@ bus_c () {
 uni_c () {
     PS3="
     Please select UNIPROT database to use: "
-    select var in `ls *fasta`;do
+    select var in `ls *`;do
         if [ "$var" != "" ];then
             echo -e "\n\t -- UNIPROT database selected: \"$var\" --\n"
             export unina=${var}
@@ -393,7 +393,7 @@ unicomp_c () {
     case $ans in
         [yY] | [yY][eE][sS])
             echo -e "\n\n\t -- Uncompressing file(s) ... -- \n"
-            gunzip *fasta.gz
+            gunzip *.gz
         ;;
         [nN] | [nN][oO])
             echo -e "\n\t\e[31m -- ERROR: Please uncompress the file(s) and rerun the pre-check  --\e[39m\n"
@@ -412,7 +412,7 @@ unicomp_c () {
 uniprot_meta () {
     myuni=$( pwd )
     echo -e "\n\t -- TransPi uses a custom protein database (one of many) from UNIPROT for the annotation -- \n"
-    echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,exit): "
+    echo -e -n "\n\t    Do you want to download the current metazoan proteins from UNIPROT? (y,n,skip,exit): "
     read ans
     case $ans in
         [yY] | [yY][eE][sS])
@@ -425,6 +425,10 @@ uniprot_meta () {
         ;;
         [nN] | [nN][oO])
             echo -e "\n\t\e[31m -- ERROR: Please download your desire UNIPROT database and save it at \"$myuni\". Rerun the pre-check  --\e[39m\n"
+            exit 0
+        ;;
+        skip)
+            echo -e "\n\t -- Skipping download of UniProt metazoan proteins. Remember to add the proteins before running TransPi  -- \n"
             exit 0
         ;;
         exit)
@@ -449,9 +453,9 @@ uniprot_c () {
         cd DBs/uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- UNIPROT database directory found at: $myuni -- \n"
-        ls -1 *.fasta 2>&1 | head -n 1 >.unilist.txt
+        ls -1 *.{fasta,fa} 2>&1 | head -n 1 >.unilist.txt
         if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
-            ls -1 *.fasta.gz 2>&1 | head -n 1 >.unilist.txt
+            ls -1 *.{fasta.gz,fa.gz} 2>&1 | head -n 1 >.unilist.txt
             if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
                 echo -e "\n\t -- Directory \"$myuni\" is empty --\n"
                 rm .unilist.txt
@@ -542,19 +546,7 @@ evi_c () {
         echo -e "\n\t -- EvidentialGene is already installed -- \n"
     fi
 }
-#change BuildSQL PATH (temporary)
-sql_path () {
-    a=$( which Build_Trinotate_Boilerplate_SQLite_db.pl )
-    sed -i 's/$SPROT_DAT_URL = \"http:/$SPROT_DAT_URL = \"ftp:/' $a
-    sed -i 's/\$EGGNOG_DAT_URL = \".*/\$EGGNOG_DAT_URL = \"http:\/\/eggnogdb.embl.de\/download\/eggnog_4.5\/data\/NOG\/NOG.annotations.tsv.gz\";/' $a
-}
 trisql_c () {
-    source ~/.bashrc
-    check_conda=$( command -v conda )
-    if [ "$check_conda" == "" ];then
-        echo -e "\n\t\e[31m -- Looks like conda is not installed--\e[39m\n"
-        exit 0
-    fi
     if [ ! -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
         echo -e -n "\n\t    Do you want to install the custom sqlite database? (y or n): "
@@ -562,42 +554,13 @@ trisql_c () {
         case $ans in
             [yY] | [yY][eE][sS])
                 echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-                if [ ! -f ~/anaconda3/etc/profile.d/conda.sh ];then
-                    echo -e -n "\n\t    Provide the full PATH of your Anaconda main installation, not an environment (Examples: /home/bioinf/anaconda3 ,  ~/tools/anaconda3 ,  ~/tools/py3/anaconda3): "
-                    read ans
-                    if [ -f ${ans}/etc/profile.d/conda.sh ];then
-                        source ${ans}/etc/profile.d/conda.sh
-                        conda activate TransPi
-                        check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-                        if [ $check_sql -eq 0 ];then
-                            echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-                            echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-                            exit 0
-                        elif [ $check_sql -eq 1 ];then
-                            sql_path
-                            Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                            rm uniprot_sprot.dat.gz
-                            date -u >.lastrun.txt
-                        fi
-                    else
-                        echo -e "PATH ${ans} is not correct. Trying again..."
-                        trisql_c
-                    fi
-                elif [ -f ~/anaconda3/etc/profile.d/conda.sh ];then
-                    source ~/anaconda3/etc/profile.d/conda.sh
-                    conda activate TransPi
-                    check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
-                    if [ $check_sql -eq 0 ];then
-                        echo -e "\n\t -- Script "Build_Trinotate_Boilerplate_SQLite_db.pl" from Trinotate cannot be found -- \n"
-                        echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
-                        exit 0
-                    elif [ $check_sql -eq 1 ];then
-                        sql_path
-                        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-                        rm uniprot_sprot.dat.gz
-                        date -u >.lastrun.txt
-                    fi
-                fi
+                rm -rf *
+                wget https://github.com/Trinotate/Trinotate/archive/Trinotate-v3.2.1.tar.gz
+                tar -xf Trinotate-v3.2.1.tar.gz
+                mv Trinotate-Trinotate-v3.2.1/ Trinotate_build_scripts/
+                ./Trinotate_build_scripts/admin/Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
+                date -u >.lastrun.txt
             ;;
             [nN] | [nN][oO])
                 echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/DBs/sqlite_db". Then rerun the pre-check  --\e[39m\n"
@@ -608,7 +571,7 @@ trisql_c () {
                 trisql_c
             ;;
         esac
-    else
+    elif [ -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
         DB=$( cat .lastrun.txt )
         echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
@@ -670,6 +633,36 @@ bus4 () {
         echo -e "\n\t -- BUSCO V4 environment found --\n"
     fi
 }
+get_var_container () {
+    cd $mypwd
+    echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
+    echo "busco4db=$mypwd/DBs/busco_db/$busna" >>${mypwd}/.varfile.sh
+    echo "uniname=$unina" >>${mypwd}/.varfile.sh
+    echo "uniprot=$mypwd/DBs/uniprot_db/$unina" >>${mypwd}/.varfile.sh
+    echo "pfloc=$mypwd/DBs/hmmerdb/Pfam-A.hmm" >>${mypwd}/.varfile.sh
+    echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
+    echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
+    echo "Tsql=$mypwd/DBs/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
+    echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
+    echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
+    vpwd=$mypwd
+    echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
+    source .varfile.sh
+    echo -e "\n\t -- INFO to use in TransPi --\n"
+    echo -e "\t Pipeline PATH:\t\t $mypwd"
+    echo -e "\t BUSCO V4 database:\t $busco4db"
+    echo -e "\t UNIPROT database:\t $uniprot"
+    echo -e "\t UNIPROT last update:\t $unpdate"
+    echo -e "\t PFAM files:\t\t $pfloc"
+    echo -e "\t PFAM last update:\t $pfdate"
+    echo -e "\t SQL DB last update: \t $dbdate"
+    echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
+    cat template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
+        -e "s|busco3db|busco3db=\"${busco3db}\"|" >nextflow.config
+    rm .varfile.sh
+}
 get_var () {
     cd $mypwd
     echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
@@ -683,6 +676,7 @@ get_var () {
     echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
+    echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
@@ -698,8 +692,45 @@ get_var () {
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|cenv|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|myCondaInstall|myCondaInstall=\"${tenv}\"|" -e "s|cenv|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
+}
+pipeline_steup() {
+    echo -e "\n\t -- Conda or containers (e.g. docker, singularity) -- \n"
+    echo -e -n "\n\t    Do you plan to run TransPi with containers (i.e. Singularity or Docker)? (y or n): "
+    read ans
+    case $ans in
+        [yY] | [yY][eE][sS])
+            echo -e "\n\n\t -- Installing databases only -- \n"
+            dir_c
+            bus_c
+            uniprot_c
+            nextflow_c
+            buildsql_c
+            pfam_c
+            echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+            get_var_container
+        ;;
+        [nN] | [nN][oO])
+            echo -e "\n\n\t -- Installing conda and the databases -- \n"
+            conda_c
+            dir_c
+            bus_c
+            uniprot_c
+            nextflow_c
+            evi_c
+            buildsql_c
+            pfam_c
+            bus4
+            echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+            get_var
+
+        ;;
+        *)
+            echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+            pipeline_steup
+        ;;
+    esac
 }
 #Main
 if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
@@ -712,16 +743,5 @@ elif [ ! -d "$mypwd" ];then
     exit 0
 elif [ -d "$mypwd" ];then
     cd $mypwd
-    #read_c
-    conda_c
-    dir_c
-    bus_c
-    uniprot_c
-    nextflow_c
-    evi_c
-    buildsql_c
-    pfam_c
-    bus4
-    echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-    get_var
+    pipeline_steup
 fi
