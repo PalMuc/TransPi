@@ -1,4 +1,4 @@
-# TransPi - TRanscriptome ANalysiS PIpeline (in development)
+# TransPi - TRanscriptome ANalysiS PIpeline
 
 ```
  _______                                 _____   _
@@ -31,7 +31,7 @@ TransPi is based on the scientific workflow manager [Nextflow](https://www.nextf
 
 
 ## Manual
-TransPi documentation and examples can be found [here]()
+TransPi documentation and examples can be found [here](https://palmuc.github.io/TransPi/)
 
 
 # Publication
