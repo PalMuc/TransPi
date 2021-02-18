@@ -39,7 +39,7 @@ TransPi depends on several programs and databases (e.g. SwissProt, PFAM, etc.) t
 ### Main pipeline (`TransPi.nf`)
 A detailed diagram of the complete TransPi pipeline is presented in **Figure 1**. First, reads are checked for adapter presence and/or errors with Fastqc (Andrews, 2010). Reads are then filtered (Q>25) and adapters are removed (if existent) with fastp (Chen et al., 2018). Filtered reads are then normalized before being assembled using a combination of five different assemblers and kmers. The assemblers used by TransPi are rnaSPADES (Bushmanova et al., 2019), Trans-ABySS (Robertson et al., 2010), SOAP (Luo et al., 2012), Trinity (Grabherr et al., 2011) and Velvet/Oases (Zerbino & Birney, 2008, Schulz et al., 2012). Together they generate an over-assembled transcriptome, which is then reduced with EvidentialGene (Gilbert, 2013, 2019). EvidentialGene aims to keep the most valid biological transcript, discard the less valid and, reduce the redundancy of the multiple assemblers to arrive at the best non-redundant consensus transcriptome assembly. This is done by merging perfect duplicates, clustering of proteins, and local similarities searches with BLAST (Altschul et al., 1997) (for more details see Gilbert, 2019).   
 
-![TransPi flowchart](https://sync.palmuc.org/index.php/s/FNYmpbgtziFkZte/preview)
+![TransPi flowchart](https://sync.palmuc.org/index.php/s/nrd3KPnfnz7AipF/preview)
 
 **Figure 1. TransPi flowchart**   
 
