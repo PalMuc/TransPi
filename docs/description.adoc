@@ -3,7 +3,7 @@
 TransPi provides a useful resource for the generation of de novo transcriptome assemblies,
 with minimum user input but without losing the ability of a thorough analysis.
 
-* For more info see the https://www.biorxiv.org/[Preprint]
+* For more info see the https://doi.org/10.1101/2021.02.18.431773[Preprint]
 
 * Code available at https://www.github.com/palmuc/TransPi[GitHub]
 
