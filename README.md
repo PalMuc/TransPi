@@ -35,7 +35,6 @@ TransPi is based on the scientific workflow manager [Nextflow](https://www.nextf
 ## Manual
 TransPi documentation and examples can be found [here](https://palmuc.github.io/TransPi/)
 
-
 # Publication
 Preprint of TransPi including kmer, reads length, and reads quantities tests can be found [here](https://doi.org/10.1101/2021.02.18.431773). Also we tested the pipeline with over 45 samples from different phyla.
 
