@@ -1,0 +1,49 @@
+*TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly*
+
+TransPi provides a useful resource for the generation of de novo transcriptome assemblies,
+with minimum user input but without losing the ability of a thorough analysis.
+
+* For more info see the https://www.biorxiv.org/[Preprint]
+
+* Code available at https://www.github.com/palmuc/TransPi[GitHub]
+
+* Author: Ramón Rivera-Vicéns
+** https://twitter.com/rerv787[Twitter]
+
+
+= Programs used
+
+* List of programs use by TransPi:
+** FastQC
+** fastp
+** sortmerna
+** rnaSPADES
+** SOAP
+** Trinity
+** Velvet
+** Oases
+** TransABySS
+** rnaQUAST
+** EvidentialGene
+** CD-Hit
+** Exonerate
+** Blast
+** BUSCO
+** Psytrans
+** Trandecoder
+** Trinotate
+** Diamond
+** Hmmer
+** Bowtie2
+** rnammer
+** tmhmm
+** signalP
+** iPath
+** SQLite
+** R
+** Python
+
+* Databases used by TransPi:
+** Swissprot
+** Uniprot custom database (e.g. all metazoan proteins)
+** Pfam

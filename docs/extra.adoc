@@ -1,0 +1,84 @@
+Here are some notes that can help in the execution of TransPi. Also some important considerations based Nextflow settings.
+For more in detail information visit the https://www.nextflow.io/docs/latest/index.html[Nextflow documentation]
+
+= `-resume`
+If an error occurs and you need to resume the pipeline just include the `-resume` option when calling the pipeline.
+
+[source,bash]
+----
+./nextflow run TransPi.nf --onlyAnn -profile conda -resume
+----
+
+= `template.nextflow.config`
+
+== Resources
+The `template.nextflow.config` file has different configurations for the each program of the pipeline
+(e.g. some with a lot of CPUs, others with a small amount of CPUs). You can modify this depending on the resources you have in your system.
+
+Example:
+[source,bash]
+****
+process {
+    withLabel: big_cpus {
+        cpus='30'
+        memory='15 GB'
+    }
+****
+
+In this case, all the processes using the label `big_cpus` will use 30 CPUs. If your system only has 20 please modify these values accordingly to avoid errors.
+
+[NOTE]
+Setting the correct CPUs and RAM of your system is important because `nextflow` will start as many jobs as possible if the resources are available.
+If you are in a VM with 120 CPUs, `nextfow` will be able to start four processes with the label `big_cpus`.
+
+== Data
+
+The precheck is designed to create a new `nextflow.config` every time is run with with the `PATH` to the databases.
+You can modify the values that do not need editing for your analysis on the `template.nextflow.config`. This way you avoid doing the same changes to the `nextflow.config` after the precheck run.
+
+Example: Modify the `template.nextflow.config` with your cluster info to avoid repeating these in the future.
+
+= Custom profiles
+
+We are using https://slurm.schedmd.com/documentation.html[SLURM] as our workload manager in our server.
+Thus we have custom profiles for the submission of jobs. For example our `nextflow.config` has the following lines in the `profiles` section.
+
+
+[source,text]
+****
+profiles {
+    palmuc {
+        process {
+            executor='slurm'
+            clusterOptions='--clusters=inter --partition=bigNode --qos=low'
+        }
+    }
+}
+****
+
+You can add your custom profiles depending on the settings of your system and the workload manager you use (e.g. SGE, PBS, etc).
+
+The line `clusterOptions` can be used to add any other option that you will usually use for your job submission.
+
+= Local nextflow
+
+To avoid calling the pipeline using `./nextflow ...` you can modify the nextflow command like this `chmod 777 nextflow`. For running the pipeline you just need to use:
+
+[source,bash]
+****
+
+nextflow run TransPi.nf ...
+
+****
+
+= Real Time Monitoring
+To monitor your pipeline remotely without connecting to the server via ssh use https://tower.nf/login[Nextflow Tower].
+Make an account with your email and follow their instructions. After this, you can now run the pipeline adding the `-with-tower` option and follow live the execution
+of the processes.
+
+[source,bash]
+****
+
+nextflow run TransPi.nf --all -with-tower -profile conda
+
+****

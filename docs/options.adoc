@@ -1,0 +1,87 @@
+There are other parameters that can be changed when executing TransPi.
+
+= Output options
+
+[horizontal]
+`--outdir`::
+        name of output directory. Example: `--outdir Sponges_150`.
+        Default "results"
+
+`-w, -work`::
+        name of working directory. Example: `-work Sponges_work`. Only one dash is needed for `-work` since it is a nextflow function.
+
+`--tracedir`::
+        Name for directory to save pipeline trace files.
+        Default "pipeline_info"
+
+= Additional analyses
+
+[horizontal]
+`--rRNAfilter`:: Remove rRNA from sequences. Requires option --rRNAdb
+
+`--rRNAdb`:: PATH to database of rRNA sequences to use for filtering of rRNA. Default ""
+
+`--filterSpecies`::
+        Perform psytrans filtering of transcriptome. Requires options `--host` and `--symbiont`
+
+`--host`:: Host (or similar) protein file.
+
+`--symbiont`:: Symbionts (or similar) protein files
+
+`--psyval`:: Psytrans value to train model. Default "160"
+
+`--allBuscos`:: Run BUSCO analysis in all assemblies
+
+`--rescueBusco`:: Generate BUSCO distribution analysis
+
+`--minPerc`::
+            Mininmum percentage of assemblers require for the BUSCO distribution.
+            Default ".70"
+
+`--shortTransdecoder`:: Run Transdecoder without the homology searches
+
+`--withSignalP`::
+        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools.
+        Default "false"
+
+`--rnam`:: PATH to Rnammer software. Default ""
+
+`--withTMHMM`::
+        Include TMHMM for the annotation. Needs manual installation of CBS-DTU tools.
+        Default "false"
+
+`--tmhmm`:: PATH to TMHMM software. Default ""
+
+`--withRnammer`::
+        Include Rnammer for the annotation. Needs manual installation of CBS-DTU tools.
+        Default "false"
+
+`--rnam`:: PATH to Rnammer software. Default ""
+
+= Skip options
+
+[horizontal]
+`--skipEvi`:: Skip EvidentialGene run in --onlyAsm option. Default "false"
+
+`--skipQC`:: Skip FastQC step. Default "false"
+
+`--skipFilter`:: Skip fastp filtering step. Default "false"
+
+`--skipKegg`:: Skip kegg analysis. Default "false"
+
+`--skipReport`:: Skip generation of final TransPi report. Default "false"
+
+= Other parameters
+
+[horizontal]
+`--minQual`:: Minimum quality score for fastp filtering. Default "25"
+
+`--pipeInstall`:: PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
+
+`--myCondaInstall`:: PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
+
+`--myConda`:: Make TransPi use a local conda environemt with all the tools (generated with precheck)
+
+`--envCacheDir`:: PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
+
+`--getVersions`:: Get software versions. Default "false"

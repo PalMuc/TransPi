@@ -1,0 +1,115 @@
+= Full analysis (`--all`)
+
+After the successful run of the precheck script you are set to run TransPi.
+
+We recommend to run TransPi with the option `--all` where it will do the complete analysis, from raw reads filtering to annotation.
+Other options described below.
+
+To run the complete pipeline.
+[source,bash]
+----
+nextflow run TransPi.nf --all --reads '/YOUR/READS/PATH/HERE/*_R[1,2].fastq.gz' \
+     --k 25,41,53 --maxReadLen 75 -profile conda --myConda
+
+----
+
+Arguments explanations:
+[source,text]
+----
+--all                Run full TransPi analysis
+--reads              PATH to the paired-end reads
+--k                  kmers list to use for the assemblies
+--maxReadLen         Max read length in the library
+-profile             Use conda to run the analyses
+--myConda            Use local conda installed by precheck run
+----
+
+[CAUTION]
+--
+If you combined multiple libraries of the same individual to create a reference transcriptome, which will be later use in downstream analyses (e.g. Differential Expression),
+make sure the kmer list is based on the length for the shortest read library and the `maxReadLen` based on the longest read length.
+
+Example: Combining reads of 100bp with 125bp
+[source,text]
+****
+--k 25,41,53,61 --maxReadLen 125
+****
+--
+
+[NOTE]
+--
+You can run multiple samples at the same time
+--
+
+= Other options
+
+== `--onlyAsm`
+
+Run only the Assemblies and EvidentialGene analysis.
+
+Example for `--onlyAsm`:
+[source,bash]
+----
+nextflow run TransPi.nf --onlyAsm --reads '/home/rrivera/TransPi/reads/*_R[1,2].fastq.gz' \
+     --k 25,41,53 --maxReadLen 75 -profile conda --myConda
+
+----
+
+[NOTE]
+You can run multiple samples at the same time
+
+== `--onlyEvi`
+
+Run only the Evidential Gene analysis
+
+Example for `--onlyEvi`:
+[source,bash]
+----
+nextflow run TransPi.nf --onlyEvi -profile conda --myConda
+----
+
+
+[IMPORTANT]
+TransPi looks for a directory named `onlyEvi`. It expects one file per sample to perform the reduction. The file should have all the assemblies concatenated into one.
+[NOTE]
+You can run multiple samples at the same time
+
+== `--onlyAnn`
+
+Run only the Annotation analysis (starting from a final assembly)
+
+Example for `--onlyAnn`:
+[source,bash]
+----
+nextflow run TransPi.nf --onlyAnn -profile conda --myConda
+----
+
+[IMPORTANT]
+TransPi looks for a directory named `onlyAnn`. It expects one file per sample to perform the annotation.
+[NOTE]
+You can run multiple samples at the same time
+
+= Using `-profiles`
+
+TransPi can also use docker, singularity, and individual conda installations (i.e. per process) to deploy the pipeline.
+
+[source,text]
+----
+test                Run TransPi with a test dataset
+conda               Run TransPi with conda.
+docker              Run TransPi with docker container
+singularity         Run TransPi with singularity container with all the necessary tools
+TransPiContainer    Run TransPi with a single container with all tools
+----
+
+[NOTE]
+--
+Multiple profiles can be specified (comma separated)
+
+[source,text]
+****
+Example: `-profile test,singularity`
+****
+--
+
+Refer to *Section 6* of this manual for further details on deployment of TransPi using other profiles.

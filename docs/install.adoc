@@ -1,0 +1,54 @@
+= Requirements
+
+- System: Linux OS
+
+- Data type: Paired-end reads
+
+    Example:
+        IndA_R1.fastq.gz, IndA_R2.fastq.gz
+
+[NOTE]
+Make sure reads end with `_R1.fastq.gz` and `_R2.fastq.gz`.
+Multiple individuals can be run at the same time.
+
+
+= Downloading TransPi
+
+1- Clone the repository
+
+[source,bash]
+----
+
+git clone https://github.com/palmuc/TransPi.git
+
+----
+
+2- Move to the TransPi directory
+
+[source,bash]
+----
+
+cd TransPi
+
+----
+
+= Configuration
+
+TransPi requires various databases to run. The precheck script will installed the databases and software, if necessary, to run the tool.
+The precheck run needs a `PATH` as an argument for installing (locally) all the databases the pipeline needs.
+
+```
+
+bash precheck_TransPi.sh /YOUR/PATH/HERE/
+
+```
+
+[NOTE]
+This process may take a while depending on the options you select. Step that takes longer is downloading, if desired, the entire metazoan proteins from UniProt (6Gb).
+Other processes and databases are relatively fast depending on internet connection.
+
+Once the precheck run is done it will create a file named `nextflow.config` that contains the various `PATH` for the databases.
+If  selected, it will also have the local conda environment `PATH`.
+
+The `nextflow.config` file has also other important parameters for pipeline execution that will be discussed further
+in the following sections.

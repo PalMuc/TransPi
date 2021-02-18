@@ -1,0 +1,302 @@
+Here are some examples on how to deploy TransPi depending on the method to use (e.g. conda) and the analyses to be performed.
+
+= Profiles
+You can use TransPi either with:
+- a local conda environment (from precheck);
+- individual conda environment per process;
+- docker or singularity
+
+== Local conda
+This way of executing TransPi assumes that you installed conda locally and created the TransPi conda environment.
+All these is done automatically, if desired, with the precheck script.
+
+*Example:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -profile conda --myConda
+----
+
+[NOTE]
+`myConda` tells TransPi that the conda environment to use is the local one. The PATH for this environment is taken
+from the `nextflow.config`, specifically the parameter `myCondaInstall`.
+
+== Individual conda
+You also have the option to run TransPi with individual conda environments for each process. To use this you only specify the profile for conda.
+
+*Example:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -profile conda
+----
+
+== Containers
+Docker or singularity can also be use for deploying TransPi. You can either use individual containers for each process or a TransPi container with all the tools.
+
+=== Individual
+To use individual containers:
+
+*Example for docker:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -profile docker
+----
+
+*Example for singularity:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -profile singularity
+----
+
+=== TransPi container
+To use the TransPi container with all the tools you need to use the profile `TransPiContainer`.
+
+*Example for docker:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -profile docker,TransPiContainer
+----
+
+*Example for singularity:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -profile singularity,TransPiContainer
+----
+
+
+= Other examples
+
+[NOTE]
+Order of commands is not important.
+
+== Filtering
+
+*Scenario:*
+[horizontal]
+Sample:: Coral sample
+Read length:: 150bp
+TransPi mode:: --all
+Kmers:: 25,35,55,75,85
+Reads PATH:: /YOUR/PATH/HERE/*_R[1,2].fastq.gz
+Output directory:: Results_Acropora
+Work directory:: work_acropora
+Engine:: local conda
+Filter species:: on
+host:: scleractinian proteins
+symbiont:: symbiodinium proteins
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -w work_acropora -profile condas --myConda --filterSpecies \
+    --host /YOUR/PATH/HERE/uniprot-Scleractinia.fasta \
+    --symbiont /YOUR/PATH/HERE/uniprot-symbiodinium.fasta
+----
+
+
+== BUSCO distribution
+
+*Scenario:*
+[horizontal]
+Sample:: SampleA
+Read length:: 100bp
+TransPi mode:: --all
+Kmers:: 25,41,57,67
+Reads PATH:: /YOUR/PATH/HERE/SampleA/*_R[1,2].fastq.gz
+Output directory:: Results_SampleA
+Engine:: conda
+All BUSCOs:: on
+BUSCO distribution:: on
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 100 --k 25,35,55,75,85 \
+    --outdir Results_SampleA --reads '/YOUR/PATH/HERE/SampleA/*_R[1,2].fastq.gz' \
+    -profile conda --allBuscos --buscoDist
+----
+
+== `--onlyEvi`
+
+*Scenario:*
+[horizontal]
+Sample:: Assemblies from multiple assemblers and kmers
+Read length:: 50bp
+TransPi mode:: --onlyEvi
+Kmers:: 25,33,37
+Reads PATH:: /YOUR/PATH/HERE/*_R[1,2].fastq.gz
+Output directory:: Reduction_results
+Engine:: conda
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --onlyEvi --outdir Reduction_results \
+    -profile conda
+----
+
+.NOTES
+****
+- A directory named `onlyEvi` is needed for this option with the transcriptome to perform the reduction.
+
+TIP: You can do multiple transcriptomes at the same time. Each file should have a unique name.
+
+- No need to specify reads PATH, length, cutoff, and kmers when using the `--onlyEvi`.
+
+****
+
+== `--onlyAnn`
+
+*Scenario:*
+[horizontal]
+Sample:: Transcriptome missing annotation
+Read length:: 100bp
+TransPi mode:: --onlyEvi
+Kmers:: 25,41,57,67
+Reads PATH:: /YOUR/PATH/HERE/*_R[1,2].fastq.gz
+Output directory:: Annotation_results
+Engine:: singularity
+Container:: TransPi container
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --onlyAnn --outdir Annotation_results \
+    -profile singularity,TransPiContainer
+----
+
+.NOTES
+****
+- A directory named `onlyAnn` is needed for this option with the transcriptome to annotate.
+
+TIP: You can do multiple transcriptomes (i.e. samples) at the same time. Each file should have a unique name.
+
+- No need to specify reads PATH, length, cutoff, and kmers when using the `--onlyAnn`.
+
+****
+
+== Skip options
+
+*Scenario:*
+[horizontal]
+Sample:: Coral sample
+Read length:: 150bp
+TransPi mode:: --all
+Kmers:: 25,35,55,75,85
+Reads PATH:: /YOUR/PATH/HERE/*_R[1,2].fastq.gz
+Output directory:: Results_Acropora
+Work directory:: work_acropora
+Engine:: docker
+Container:: Individual containers
+Skip QC:: on
+Skip Filter:: on
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results_Acropora \
+    -w work_acropora -profile docker \
+    --skipQC --skipFilter
+----
+
+== Extra annotation steps
+
+*Scenario:*
+[horizontal]
+Sample:: Mollusc sample
+Read length:: 150bp
+TransPi mode:: --all
+Kmers:: 25,35,55,75,85
+Reads PATH:: /YOUR/PATH/HERE/*_R[1,2].fastq.gz
+Output directory:: Results
+Engine:: conda
+Skip QC:: on
+SignalP:: on
+TMHMM:: on
+RNAmmer:: on
+
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results \
+    -profile conda -myConda --skipQC --withSignalP --withTMHMM --withRnammer
+----
+
+.NOTE
+****
+- This option requires manual installation of the CBS-DTU tools: signalP, tmhmm, and rnammer.
+
+- For more info visit https://services.healthtech.dtu.dk/software.php[CBS-DTU tools]
+
+- It also assumes that the `PATH` for all the tools are in the `nextflow.config` file.
+
+****
+
+
+If the `PATH` are not specify in the `nextflow.config` then you can either add them in the file or use the parameters from the command line.
+
+*Example:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results \
+    -profile conda --myConda --myCondaInstall "/YOUR/PATH/HERE/TransPi" --skipQC
+    --withSignalP --signalp "/YOUR/PATH/HERE/rnammer"
+    --withTMHMM --tmhmm "/YOUR/PATH/HERE/tmhmm"
+    --withRnammer --rnam "/YOUR/PATH/HERE/signalp"
+----
+
+[NOTE]
+In this example the local conda environment was not specified in the `nextflow.config` but as a command line argument.
+
+
+== Full run and extra annotation
+
+*Scenario:*
+[horizontal]
+Sample:: Coral sample
+Read length:: 150bp
+TransPi mode:: --all
+Kmers:: 25,35,55,75,85
+Reads PATH:: /YOUR/PATH/HERE/*_R[1,2].fastq.gz
+Output directory:: Results
+Engine:: conda
+Skip QC:: on
+SignalP:: on
+TMHMM:: on
+RNAmmer:: on
+Filter species:: on
+host:: scleractinian proteins
+symbiont:: symbiodinium proteins
+All BUSCOs:: on
+BUSCO distribution:: on
+Remove rRNA:: on
+rRNA database:: /YOUR/PATH/HERE/silva_rRNA_file.fasta
+
+*Command:*
+[source,bash]
+----
+nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
+    --reads '/YOUR/PATH/HERE/*_R[1,2].fastq.gz' --outdir Results \
+    -profile conda --skipQC --withSignalP --withTMHMM --withRnammer \
+    --host /YOUR/PATH/HERE/uniprot-Scleractinia.fasta \
+    --symbiont /YOUR/PATH/HERE/uniprot-symbiodinium.fasta
+    --allBuscos --buscoDist --rRNAfilter \
+    --rRNAdb "/YOUR/PATH/HERE/silva_rRNA_file.fasta"
+----

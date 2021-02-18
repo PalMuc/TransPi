@@ -1,0 +1,67 @@
+= TransPi Manual
+Ramón Rivera-Vicéns
+v1.0.0, 2021-02-16
+:docinfo:
+:keywords: TransPi, transcriptome, assembly, annotation, Nextflow, pipeline
+:description: TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly
+:icons: font
+:toclevels: 3
+:imagesdir: img
+:toc: left
+:toc-title: TransPi Manual
+:source-highlighter: coderay
+:coderay-linenums-mode: table
+:sectnums:
+:sectlinks:
+
+How to use TransPi
+
+== Description
+:leveloffset: +2
+
+include::description.adoc[]
+
+:leveloffset: -2
+
+== Installing TransPi
+:leveloffset: +2
+
+include::install.adoc[]
+
+:leveloffset: -2
+
+== Running TransPi
+:leveloffset: +2
+
+include::run.adoc[]
+
+:leveloffset: -2
+
+== Results
+:leveloffset: +2
+
+include::results.adoc[]
+
+:leveloffset: -2
+
+== Additional options
+:leveloffset: +2
+
+include::options.adoc[]
+
+:leveloffset: -2
+
+== Examples
+
+:leveloffset: +2
+
+include::examples.adoc[]
+
+:leveloffset: -2
+
+== Extra information
+:leveloffset: +2
+
+include::extra.adoc[]
+
+:leveloffset: -2

@@ -1,0 +1,65 @@
+= Directories
+
+== `results`
+After a successful run of TransPi the results are saved in a directory called `results`. This directory is divided into multiple directories for each major step of the pipeline.
+
+[NOTE]
+Directories will be created based on the options selected in the pipeline execution
+
+[horizontal]
+fastqc:: Fastqc html files
+filter:: Filter step html files
+rRNA_reads:: Info and reads of rRNA removal process
+normalization:: Normalized reads files
+saveReads:: Folder with reads saved from the filter and normalization processes
+assemblies:: All individual assemblies
+evigene:: Non-redundant final transcriptome (ends with name `.combined.okay.fa`)
+rnaQuast:: rnaQUAST output
+mapping:: Mapping results
+busco3:: BUSCO V3 results
+busco4:: BUSCO V4 results
+transdecoder:: Transdecoder results
+trinotate:: Annotation results
+report:: Interactive report of TransPi
+figures:: Figures created by TransPi (BUSCO comparison, Annotation, GO, etc)
+stats:: Basic stats from all steps of TransPi
+pipeline_info:: Nextflow report, trace file and others
+versions.txt:: File with all versionts of the tools used by TransPi
+
+.NOTES
+
+****
+
+- Name of output directory can be changed by using the `--outdir` parameter when executing the pipeline. Example `--outdir Results_SampleA`.
+- If multiple samples are run, each directory will have all files together but each one with a unique sample name.
+
+
+****
+
+== `work`
+
+A directory called `work` is also created when running TransPi. It contains all the Nextflow working files, TransPi results and intermediate files.
+
+[NOTE]
+Directory `work` can be removed after the pipeline is done since all important files are stored in the `results` directory.
+
+
+= Figures
+
+TransPi produces multiple figures that are stored in the results directory.
+
+Example:
+
+image:https://sync.palmuc.org/index.php/s/kxetdGiNiSyHzrg/preview[UniProt,800,400,float="center", role="Uniprot"]
+
+
+= Report
+
+TransPi creates an interactive custom HTML report for ease data exploration.
+
+Report https://sync.palmuc.org/index.php/s/XCxeCNwAfParBHX[Sponge transcriptome]
+
+.NOTE
+****
+- Example report here is a PDF file and not a HTML file. However the original HTML file with interactive visualization (i.e. as generated in TransPi) can be downloaded https://sync.palmuc.org/index.php/s/nP3TKPawmoX4xqL[here]
+****
