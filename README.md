@@ -42,7 +42,7 @@ Preprint of TransPi including kmer, reads length, and reads quantities tests can
 ## Cite
 If you use TransPi please cite the preprint:
 
-Rivera-Vicéns, R.E., Garcia Escudero, C., Conci, N., Eitel, M., and Wörheide, G. (2021). TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly. bioRxiv 2021.02.18.431773; doi: https://doi.org/10.1101/2021.02.18.431773
+Rivera-Vicéns, R.E., García-Escudero, CA., Conci, N., Eitel, M., and Wörheide, G. (2021). TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly. bioRxiv 2021.02.18.431773; doi: https://doi.org/10.1101/2021.02.18.431773
 
 
 # Future work
