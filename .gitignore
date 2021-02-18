@@ -17,5 +17,4 @@ sqlite_db/
 .nextflow*
 .DS_Store
 cbs-dtu-tools.tar.gz
-docs/
 Singularity
