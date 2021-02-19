@@ -6,7 +6,13 @@ output:
 date: "Generated on: `r Sys.time()`"
 params:
   interactive: yes
-  data: !r commandArgs(trailingOnly=T)[2]
+  sample_id: !r commandArgs(trailingOnly=T)[1]
+  skipFilter: !r commandArgs(trailingOnly=T)[2]
+  skipNormalization: !r commandArgs(trailingOnly=T)[3]
+  rRNAfilter: !r commandArgs(trailingOnly=T)[4]
+  buscoDist: !r commandArgs(trailingOnly=T)[5]
+  allBuscos: !r commandArgs(trailingOnly=T)[6]
+  skipKegg: !r commandArgs(trailingOnly=T)[7]
 ---
 
 <style>
@@ -41,29 +47,29 @@ mycol=c('#088da5','#73cdc8','#ff6f61','#7cb8df','#88b04b','#00a199','#6B5B95','#
 <div class="rectangle"><h2 style="color:white">&nbsp;&nbsp;Reads Stats</h2></div>
 <br>
 **Input reads and filtering**
-```{bash reads_stats, include=FALSE}
-cat *_reads_stats.csv >final_reads_stats.csv
-```
 ```{r readstats_table, echo=FALSE}
-reads_stats=read.csv("final_reads_stats.csv")
+reads_stats=read.csv(paste(params$sample_id,sep="","_reads_stats.csv"))
 paged_table(reads_stats,options = list(rows.print = 10))
 ```
 <br>
 <br>
 <br>
 **Reads mean quality before filtering**
-```{bash reads_qual, include=FALSE}
-cat *_reads_qual.csv >final_reads_qual.csv
-```
 ```{r qual_plot, echo=FALSE}
-rqual=read.csv("final_reads_qual.csv",header=FALSE)
-qp <- plot_ly(x=c(1:rqual[1,1]),y=as.numeric(rqual[2,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
-qp <- qp %>% add_trace(x=c(1:rqual[3,1]), y=as.numeric(rqual[4,]), name="Read2", opacity = .8, line=list(color='#e19336'))
-qp <- qp %>% layout(xaxis=list(title="Base position"))
-qp <- qp %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
-qp <- qp %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
-qp <- qp %>% config(toImageButtonOptions=list(format='svg',filename='readsQC_before', height= 500, width= 800, scale= 1), displaylogo = FALSE)
-qp
+if (params$skipFilter == "true") {
+    writeLines("\n--------------------------------------------------------------\n")
+    writeLines("\t\t\t\tFiltering process was skipped")
+    writeLines("\n--------------------------------------------------------------\n")
+} else {
+    rqual=read.csv(paste(params$sample_id,sep="","_reads_qual.csv"),header=FALSE)
+    qp <- plot_ly(x=c(1:rqual[1,1]),y=as.numeric(rqual[2,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
+    qp <- qp %>% add_trace(x=c(1:rqual[3,1]), y=as.numeric(rqual[4,]), name="Read2", opacity = .8, line=list(color='#e19336'))
+    qp <- qp %>% layout(xaxis=list(title="Base position"))
+    qp <- qp %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
+    qp <- qp %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
+    qp <- qp %>% config(toImageButtonOptions=list(format='svg',filename='readsQC_before', height= 500, width= 800, scale= 1), displaylogo = FALSE)
+    qp
+}
 ```
 <br>
 <br>
@@ -71,15 +77,48 @@ qp
 <br>
 **Reads mean quality after filtering**
 ```{r qual_plot2, echo=FALSE}
-qp2 <- plot_ly(x=c(1:rqual[5,1]),y=as.numeric(rqual[6,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
-qp2 <- qp2 %>% add_trace(x=c(1:rqual[7,1]),y=as.numeric(rqual[8,]), name="Read2", opacity = .8, line=list(color='#e19336'))
-qp2 <- qp2 %>% layout(xaxis=list(title="Base position"))
-qp2 <- qp2 %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
-qp2 <- qp2 %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
-qp2 <- qp2 %>% config(toImageButtonOptions=list(format='svg',filename='readsQC_after', height= 500, width= 800, scale= 1), displaylogo = FALSE)
-qp2
+if (params$skipFilter == "true") {
+    writeLines("\n--------------------------------------------------------------\n")
+    writeLines("\t\t\t\tFiltering process was skipped")
+    writeLines("\n--------------------------------------------------------------\n")
+} else {
+    qp2 <- plot_ly(x=c(1:rqual[5,1]),y=as.numeric(rqual[6,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
+    qp2 <- qp2 %>% add_trace(x=c(1:rqual[7,1]),y=as.numeric(rqual[8,]), name="Read2", opacity = .8, line=list(color='#e19336'))
+    qp2 <- qp2 %>% layout(xaxis=list(title="Base position"))
+    qp2 <- qp2 %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
+    qp2 <- qp2 %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
+    qp2 <- qp2 %>% config(toImageButtonOptions=list(format='svg',filename='readsQC_after', height= 500, width= 800, scale= 1), displaylogo = FALSE)
+    qp2
+}
 ```
-
+<br>
+<br>
+<br>
+<br>
+**rRNA removal**
+```{r rrna_remove, echo=FALSE}
+if (params$rRNAfilter == "true") {
+    writeLines("\t\t\t\tPLOT HERE")
+} else {
+    writeLines("\n--------------------------------------------------------------\n")
+    writeLines("\t\t\t\tNo rRNA filtration was performed")
+    writeLines("\n--------------------------------------------------------------\n")
+}
+```
+<br>
+<br>
+<br>
+<br>
+**Normalization**
+```{r norm_plot, echo=FALSE}
+if (params$skipNormalization == "true") {
+    writeLines("\n--------------------------------------------------------------\n")
+    writeLines("\t\t\t\tNormalization process was skipped")
+    writeLines("\n--------------------------------------------------------------\n")
+} else {
+    writeLines("\t\t\t\tPLOT HERE")
+}
+```
 
 <br>
 <br>
@@ -90,11 +129,8 @@ qp2
 <br>
 
 **Number of transcripts before Evidential Genes**
-```{bash pre_EG, include=FALSE}
-cat *_preEG.csv >preEG.csv
-```
 ```{r pre_EG_table, echo=FALSE}
-trans_preEG=read.csv("preEG.csv")
+trans_preEG=read.csv(paste(params$sample_id,sep="",".sum_preEG.csv"))
 paged_table(trans_preEG,options = list(rows.print = 10))
 ```
 
@@ -103,11 +139,8 @@ paged_table(trans_preEG,options = list(rows.print = 10))
 <br>
 
 **Number of transcripts after Evidential Genes**
-```{bash EG, include=FALSE}
-cat *_EG.csv >EG.csv
-```
 ```{r EG_table, echo=FALSE, results='asis'}
-trans_EG=read.csv("EG.csv")
+trans_EG=read.csv(paste(params$sample_id,sep="",".sum_EG.csv"))
 paged_table(trans_EG,options = list(rows.print = 10))
 ```
 
@@ -141,11 +174,8 @@ peg
 <br>
 
 **Transcript length distribution**
-```{bash trans_len, include=FALSE}
-cat *_sizes.txt >final_sizes.txt
-```
 ```{r trans_len_plot, echo=FALSE, results='asis'}
-tlen=read.delim("final_sizes.txt", sep = "\t", header = FALSE)
+tlen=read.delim(paste(params$sample_id,sep="","_sizes.txt"), sep = "\t", header = FALSE)
 
 gg=ggplot(tlen,aes(x=tlen$V2))+
     coord_flip()+theme_bw()+
@@ -160,6 +190,24 @@ tlp <- tlp %>% layout(yaxis = list(title = "Number of transcripts"))
 tlp <- tlp %>% layout(xaxis = list(title = "Transcripts sizes (100bp incrememnt)"))
 tlp <- tlp %>% config(toImageButtonOptions=list(format='svg',filename='transcript_distribution', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 tlp
+```
+<br>
+<br>
+<br>
+
+**rnaQUAST**
+```{r rna_quast, echo=FALSE, results='asis'}
+#paged_table(read.csv(paste(params$sample_id,sep="","_rnaQUAST.csv")),options = list(rows.print = 10))
+```
+
+<br>
+<br>
+<br>
+
+**Mapping stats**
+```{r mapping_stats, echo=FALSE, results='asis'}
+#mapping_trinity
+#mapping_evigene
 ```
 
 <br>
@@ -181,7 +229,7 @@ tlp
 cat *_busco3.csv >final_busco3.csv
 ```
 ```{r busco3_plot, echo=FALSE}
-bus=read.csv("final_busco3.csv", header=FALSE)
+bus=read.csv(paste(params$sample_id,sep="","_busco3.csv"), header=FALSE)
 MYSPEC=as.character(t(bus[1,]))
 MYPERC=as.numeric(t(bus[2,]))
 MYVAL=as.numeric(t(bus[3,]))
@@ -274,7 +322,7 @@ bp
 cat *_busco4.csv >final_busco4.csv
 ```
 ```{r busco4_plot, echo=FALSE}
-bus=read.csv("final_busco4.csv",header=FALSE)
+bus=read.csv(paste(params$sample_id,sep="","_busco4.csv"),header=FALSE)
 MYSPEC=as.character(t(bus[1,]))
 MYPERC=as.numeric(t(bus[2,]))
 MYVAL=as.numeric(t(bus[3,]))
@@ -351,6 +399,44 @@ bp <- bp %>% layout(title = "BUSCO Results - TransPi vs Trinity")
 bp <- bp %>% layout(legend = list(x=10,y=.5))
 bp <- bp %>% config(toImageButtonOptions=list(format='svg',filename='busco4_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 bp
+```
+
+<br>
+<br>
+<br>
+<br>
+
+### - BUSCO Distribution
+
+<br>
+<br>
+
+```{r busco_dist, echo=FALSE}
+if (params$buscoDist == "true" && params$allBuscos == "true") {
+    writeLines("\t\t\t\tHEATMAP")
+    csv=read.csv(paste(params$sample_id,sep="","_TransPi_comparison_table.tsv"), header=TRUE, sep="\t")
+    #csv=read.csv("SRR10527303_Octolasmis_warwickii_complete_comparison_table.tsv", header=TRUE, sep="\t")
+    csv <- data.frame(lapply(csv, function(x) {gsub("Complete", "3", x)}))
+    csv <- data.frame(lapply(csv, function(x) {gsub("Duplicated", "2", x)}))
+    csv <- data.frame(lapply(csv, function(x) {gsub("Fragmented", "1", x)}))
+    csv <- data.frame(lapply(csv, function(x) {gsub("Missing", "0", x)}))
+    csv
+    c=melt(csv,id.vars = 'Busco.ID')
+    dec=c(0,.25,.25,.50,.50,.75,.75,1)
+    my_colors <- c("#081D58","#081D58", "#2280B8","#2280B8", "#99D6B9", "#99D6B9","#f8f9fc","#f8f9fc")
+    colz <- setNames(data.frame(dec, my_colors), NULL)
+    fig <- plot_ly(c,x=~variable, y=~Busco.ID, z=~value, colorscale=colz, reversescale=T, type = "heatmap",
+                  colorbar=list(tickmode='array', tickvals=c(.35,1.1,1.87,2.60), thickness=30,
+                  ticktext= c("Missing","Fragmented","Duplicated","Complete"), len=0.4))
+    fig <- fig %>% layout(xaxis=list(title="", showline = TRUE, mirror = TRUE, tickfont=list(size=8)),
+                  yaxis=list(title="BUSCO ID", tickmode="auto", nticks=length(csv$Busco.ID),
+                  tickfont=list(size=6), showline = TRUE, mirror = TRUE))
+    fig
+} else {
+    writeLines("\n--------------------------------------------------------------\n")
+    writeLines("\t\t\t\tBUSCO distribution analysis was skipped")
+    writeLines("\n--------------------------------------------------------------\n")
+}
 ```
 
 <br>
@@ -477,11 +563,15 @@ p3
 <br>
 <br>
 
-```{bash pathways, echo=FALSE}
-cat *.svg >final.svg
-```
 ```{r pathways_plot, echo=FALSE}
-knitr::include_graphics("final.svg")
+if (params$skipKegg == "true") {
+    writeLines("\n--------------------------------------------------------------\n")
+    writeLines("\t\t\t\tKEGG analysis was skipped")
+    writeLines("\n--------------------------------------------------------------\n")
+} else {
+    writeLines("\t\t\t\tPathways from annotation and iPATH")
+    knitr::include_graphics(paste(params$sample_id,sep="","_kegg.svg"))
+}
 ```
 
 <br>
