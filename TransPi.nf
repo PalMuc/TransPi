@@ -506,6 +506,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap_OAS, norm_reads_velvet_OAS, norm_reads_trinity_OAS, norm_reads_spades_OAS, norm_reads_transabyss_OAS, reads_rna_quast_OAS )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity_OAS, mapping_reads_evi_OAS )
                 tuple sample_id, file("${sample_id}_norm.R1.fq.gz"), file("${sample_id}_norm.R2.fq.gz") into ( save_norm_reads )
+                tuple sample_id, file("${sample_id}_normStats.txt") into norm_report_OAS
 
             script:
                 //def mem=(task.memory)
@@ -521,6 +522,8 @@ if (params.onlyAsm) {
                 insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left ${reads[0]} --right ${reads[1]} --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
                 echo -e "\\n-- DONE with Normalization --\\n"
+
+                cat .command.out | grep "\-\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -544,6 +547,8 @@ if (params.onlyAsm) {
                 insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
                 echo -e "\\n-- DONE with Normalization --\\n"
+
+                cat .command.out | grep "\-\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -2567,6 +2572,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
                 tuple sample_id, file("${sample_id}_norm.R1.fq.gz"), file("${sample_id}_norm.R2.fq.gz") into ( save_norm_reads )
+                tuple sample_id, file("${sample_id}_normStats.txt") into norm_report
 
             script:
                 //def mem=(task.memory)
@@ -2579,9 +2585,11 @@ if (params.onlyAsm) {
 
                 mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-                insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left ${reads[0]} --right ${reads[1]} --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
+                insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov ${params.normMaxCov} --min_cov ${params.normMinCov} --left ${reads[0]} --right ${reads[1]} --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
                 echo -e "\\n-- DONE with Normalization --\\n"
+
+                cat .command.out | grep "\-\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -2602,9 +2610,11 @@ if (params.onlyAsm) {
 
                 mem=\$( echo ${task.memory} | cut -f 1 -d " " )
 
-                insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov 100 --min_cov 1 --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
+                insilico_read_normalization.pl --seqType fq -JM \${mem}G --max_cov ${params.normMaxCov} --min_cov ${params.normMinCov} --left left-${sample_id}.fq --right right-${sample_id}.fq --pairs_together --PARALLEL_STATS --CPU ${task.cpus}
 
                 echo -e "\\n-- DONE with Normalization --\\n"
+
+                cat .command.out | grep "\-\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -2994,10 +3004,13 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.rna_quast") into rna_quast_sum
+            tuple sample_id, file("$${sample_id}_rnaQUAST.csv" into rna_quast_report
 
         script:
             """
             rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
+            cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep -v "METRICS" |  sed 's/\(\ \)* \([0-9]\)/,\2/g' | sed 's/>,/>/g' | grep [0-9] >${sample_id}_rnaQUAST.csv
+            cat Sponge_sample.rna_quast/*_output/sensitivity.txt | grep "Genes" | sed 's/\(\ \)* \([0-9]\)/,\2/g' >>${sample_id}_rnaQUAST.csv
             """
     }
 
@@ -3865,7 +3878,7 @@ if (params.onlyAsm) {
 
         transdecoder_predict_ch=Channel.create()
         transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, evigene_ch_transdecoderB ).groupTuple(by:0,size:3).into(transdecoder_predict_ch)
-        // from OA  annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).view().into(transdecoder_predict_OA_ch)
+        // from OA  annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).into(transdecoder_predict_OA_ch)
 
         process transdecoder_predict {
 
@@ -4201,7 +4214,7 @@ if (params.onlyAsm) {
     }
 
     trinotate_ch = Channel.create()
-    evigene_ch_trinotate.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).view().into(trinotate_ch)
+    evigene_ch_trinotate.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).into(trinotate_ch)
 
     process trinotate {
 
