@@ -523,7 +523,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- DONE with Normalization --\\n"
 
-                cat .command.out | grep "\\-\\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
+                cat .command.out | grep "stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -548,7 +548,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- DONE with Normalization --\\n"
 
-                cat .command.out | grep "\\-\\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
+                cat .command.out | grep "stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -2589,7 +2589,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- DONE with Normalization --\\n"
 
-                cat .command.out | grep "\\-\\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
+                cat .command.out | grep "stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
@@ -2614,7 +2614,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- DONE with Normalization --\\n"
 
-                cat .command.out | grep "\\-\\-stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
+                cat .command.out | grep "stats_file" -A 3 | tail -n 3 >${sample_id}_normStats.txt
 
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
