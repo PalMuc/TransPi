@@ -62,6 +62,7 @@ qp <- qp %>% add_trace(x=c(1:rqual[3,1]), y=as.numeric(rqual[4,]), name="Read2",
 qp <- qp %>% layout(xaxis=list(title="Base position"))
 qp <- qp %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
 qp <- qp %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
+qp <- qp %>% config(toImageButtonOptions=list(format='svg',filename='readsQC_before', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 qp
 ```
 <br>
@@ -75,6 +76,7 @@ qp2 <- qp2 %>% add_trace(x=c(1:rqual[7,1]),y=as.numeric(rqual[8,]), name="Read2"
 qp2 <- qp2 %>% layout(xaxis=list(title="Base position"))
 qp2 <- qp2 %>% layout(yaxis=list(title="Mean quality", range = c(0,41)))
 qp2 <- qp2 %>% layout(legend = list(x=10,y=.5), hovermode = "x unified")
+qp2 <- qp2 %>% config(toImageButtonOptions=list(format='svg',filename='readsQC_after', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 qp2
 ```
 
@@ -129,6 +131,7 @@ peg <- peg %>% add_trace(y = ~V3, name = 'After', marker=list(color='#e19336'), 
 peg <- peg %>% layout(yaxis = list(title = 'Number of transcripts'), barmode = 'group')
 peg <- peg %>% layout(xaxis = list(title = '',categoryorder = "array",categoryarray = ~V1))
 peg <- peg %>% layout(legend = list(x=10,y=.5))
+peg <- peg %>% config(toImageButtonOptions=list(format='svg',filename='evigene_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 peg
 ```
 
@@ -155,6 +158,7 @@ tlp <- plot_ly(tlen, x=~V2, type="histogram", xbins=list(start='200',end='2500',
                width = 1)), hovertemplate = paste('Size range: %{x}','<br>Number of transcripts: %{y}','<extra></extra>'), opacity = 0.7)
 tlp <- tlp %>% layout(yaxis = list(title = "Number of transcripts"))
 tlp <- tlp %>% layout(xaxis = list(title = "Transcripts sizes (100bp incrememnt)"))
+tlp <- tlp %>% config(toImageButtonOptions=list(format='svg',filename='transcript_distribution', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 tlp
 ```
 
@@ -252,6 +256,7 @@ for(i in rev(c(1:length(levels(species))))){
 bp <-ggplotly(figure)
 bp <- bp %>% layout(title = "BUSCO Results - TransPi vs Trinity")
 bp <- bp %>% layout(legend = list(x=10,y=.5))
+bp <- bp %>% config(toImageButtonOptions=list(format='svg',filename='busco3_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 bp
 ```
 
@@ -344,6 +349,7 @@ for(i in rev(c(1:length(levels(species))))){
 bp <-ggplotly(figure)
 bp <- bp %>% layout(title = "BUSCO Results - TransPi vs Trinity")
 bp <- bp %>% layout(legend = list(x=10,y=.5))
+bp <- bp %>% config(toImageButtonOptions=list(format='svg',filename='busco4_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 bp
 ```
 
@@ -391,6 +397,7 @@ pcel <- pcel %>% layout(yaxis = list(title = '',categoryorder = "array",category
 pcel <- pcel %>% layout(xaxis = list(title = 'Number of sequences'))
 pcel <- pcel %>% layout(font = list(size=10))
 pcel <- pcel %>% layout(title = list(text='Cellular Component GOs',x=.7))
+pcel <- pcel %>% config(toImageButtonOptions=list(format='svg',filename='GO_cellular_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 pcel
 ```
 <br>
@@ -410,6 +417,7 @@ pmol <- pmol %>% layout(yaxis = list(title = '',categoryorder = "array",category
 pmol <- pmol %>% layout(xaxis = list(title = 'Number of sequences'))
 pmol <- pmol %>% layout(font = list(size=10))
 pmol <- pmol %>% layout(title = list(text='Molecular Function GOs',x=.7))
+pmol <- pmol %>% config(toImageButtonOptions=list(format='svg',filename='GO_molecular_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 pmol
 ```
 <br>
@@ -429,6 +437,7 @@ pbio <- pbio %>% layout(yaxis = list(title = '',categoryorder = "array",category
 pbio <- pbio %>% layout(xaxis = list(title = 'Number of sequences'))
 pbio <- pbio %>% layout(font = list(size=10))
 pbio <- pbio %>% layout(title = list(text='Biological Processes GOs',x=.7))
+pbio <- pbio %>% config(toImageButtonOptions=list(format='svg',filename='GO_biological_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 pbio
 ```
 <br>
@@ -454,6 +463,7 @@ p3 <- p3 %>% layout(yaxis = list(title = '',categoryorder = "array",categoryarra
 p3 <- p3 %>% layout(xaxis = list(title = 'Number of sequences'))
 p3 <- p3 %>% layout(font = list(size=10))
 p3 <- p3 %>% layout(title = list(text='UniProt Species Hits',x=.7))
+p3 <- p3 %>% config(toImageButtonOptions=list(format='svg',filename='custom_uniprot_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
 p3
 ```
 
