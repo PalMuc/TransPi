@@ -4732,7 +4732,8 @@ if (params.onlyAsm) {
 
             script:
                 """
-                curl -X POST --data-urlencode "selection@${kegg}" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" -d "default_radius=5" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
+                awk '{print \$2}' ${kegg} >kegg_terms
+                curl -X POST --data-urlencode "selection@kegg_terms" -d "export_type=svg" -d "default_opacity=.5" -d "default_width=2" -d "default_radius=5" https://pathways.embl.de/mapping.cgi >${sample_id}_kegg.svg
                 """
         }
     } else {
