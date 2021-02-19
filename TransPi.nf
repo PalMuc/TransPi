@@ -5083,7 +5083,10 @@ if (params.getVersions) {
 workflow.onComplete {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
-        + "\n\033[0;32mDone! Open the following report in your browser --> ${workDir}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" : \
+        + "\n\033[0;32mDone! Open the following reports in your browser\033[0m" \
+        + "\n\033[0;32mPipeline performance report: ${workDir}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" \
+        + "\n\033[0;32mTransPi (--all) interactive report: ${workDir}/${params.outdir}/report/TransPi_Report_*.hmtl\033[0m" \
+        : \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
 }
