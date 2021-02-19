@@ -4800,7 +4800,7 @@ if (params.onlyAsm) {
                 """
                 sample_id=\$( cat input.1 )
                 cp ${params.pipeInstall}/bin/TransPi_Report_Ind.Rmd .
-                Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id}
+                Rscript -e "rmarkdown::render('TransPi_Report_Ind.Rmd',output_file='TransPi_Report_\${sample_id}.html')" \${sample_id} ${params.skipFilter} ${params.skipNormalization} ${params.rRNAfilter} ${params.buscoDist} ${params.allBuscos} ${params.skipKegg}
                 """
         }
     }
