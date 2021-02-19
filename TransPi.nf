@@ -3004,7 +3004,7 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("${sample_id}.rna_quast") into rna_quast_sum
-            tuple sample_id, file("$${sample_id}_rnaQUAST.csv" into rna_quast_report
+            tuple sample_id, file("${sample_id}_rnaQUAST.csv" into rna_quast_report
 
         script:
             """
