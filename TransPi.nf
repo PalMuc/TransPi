@@ -2935,23 +2935,41 @@ if (params.onlyAsm) {
 
         script:
             def mem_MB=(task.memory.toMega())
+            if (workflow.containerEngine == 'singularity' || workflow.containerEngine == 'docker' && params.oneContainer) {
+                """
+                echo -e "\\n-- Starting EviGene --\\n"
 
-            """
-            echo -e "\\n-- Starting EviGene --\\n"
+                cat ${assemblies} >${sample_id}.combined.fa
 
-            cat ${assemblies} >${sample_id}.combined.fa
+                tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
 
-            $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
+                echo -e "\\n-- DONE with EviGene --\\n"
 
-            echo -e "\\n-- DONE with EviGene --\\n"
+                cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
+                cp okayset/*combined.okay*.cds ${sample_id}.combined.okay.cds
 
-            cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
-            cp okayset/*combined.okay*.cds ${sample_id}.combined.okay.cds
+                if [ -d tmpfiles/ ];then
+                    rm -rf tmpfiles/
+                fi
+                """
+            } else {
+                """
+                echo -e "\\n-- Starting EviGene --\\n"
 
-            if [ -d tmpfiles/ ];then
-                rm -rf tmpfiles/
-            fi
-        	"""
+                cat ${assemblies} >${sample_id}.combined.fa
+
+                $evi/scripts/prot/tr2aacds.pl -tidy -NCPU ${task.cpus} -MAXMEM ${mem_MB} -log -cdna ${sample_id}.combined.fa
+
+                echo -e "\\n-- DONE with EviGene --\\n"
+
+                cp okayset/*combined.okay*.fa ${sample_id}.combined.okay.fa
+                cp okayset/*combined.okay*.cds ${sample_id}.combined.okay.cds
+
+                if [ -d tmpfiles/ ];then
+                    rm -rf tmpfiles/
+                fi
+            	"""
+            }
     }
 
     // check groupTuple
