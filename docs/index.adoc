@@ -65,3 +65,10 @@ include::examples.adoc[]
 include::extra.adoc[]
 
 :leveloffset: -2
+
+== Issues
+:leveloffset: +2
+
+include::issues.adoc[]
+
+:leveloffset: -2

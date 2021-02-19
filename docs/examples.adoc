@@ -55,6 +55,9 @@ nextflow run TransPi.nf --all --maxReadLen 150 --k 25,35,55,75,85 \
     -profile singularity
 ----
 
+[NOTE]
+Some individual containers can create problems. We are working on solving these issues. In the meantime you can use the TransPi container (see below).
+
 === TransPi container
 To use the TransPi container with all the tools you need to use the profile `TransPiContainer`.
 

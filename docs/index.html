@@ -623,6 +623,12 @@ table.CodeRay td.code{padding:0 0 0 .75em}
 <li><a href="#_real_time_monitoring">7.5. Real Time Monitoring</a></li>
 </ul>
 </li>
+<li><a href="#_issues">8. Issues</a>
+<ul class="sectlevel2">
+<li><a href="#_reporting_an_issue">8.1. Reporting an issue</a></li>
+<li><a href="#_test_dataset">8.2. Test dataset</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -1702,6 +1708,18 @@ from the <code>nextflow.config</code>, specifically the parameter <code>myCondaI
     -profile singularity</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Some individual containers can create problems. We are working on solving these issues. In the meantime you can use the TransPi container (see below).
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_transpi_container"><a class="link" href="#_transpi_container">TransPi container</a></h5>
@@ -2675,18 +2693,16 @@ You can modify the values that do not need editing for your analysis on the <cod
 <p>We are using <a href="https://slurm.schedmd.com/documentation.html">SLURM</a> as our workload manager in our server.
 Thus we have custom profiles for the submission of jobs. For example our <code>nextflow.config</code> has the following lines in the <code>profiles</code> section.</p>
 </div>
-<div class="sidebarblock">
+<div class="listingblock">
 <div class="content">
-<div class="paragraph">
-<p>profiles {
+<pre class="CodeRay highlight"><code data-lang="text">profiles {
     palmuc {
         process {
             executor='slurm'
             clusterOptions='--clusters=inter --partition=bigNode --qos=low'
         }
     }
-}</p>
-</div>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2726,11 +2742,56 @@ of the processes.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_issues"><a class="link" href="#_issues">8. Issues</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We tested TransPi using the followings deployment methods:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>conda = local installation done by precheck</p>
+</li>
+<li>
+<p>docker = using TransPi container (i.e. -profile docker,TransPiContainer)</p>
+</li>
+<li>
+<p>singularity = using TransPi container (i.e. -profile singularity,TransPiContainer)</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Using individual container per process is working for the majority of processes. However, we found a couple os issues with some containers (e.g. transabyss). We are working to find a solution for these issues.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_reporting_an_issue"><a class="link" href="#_reporting_an_issue">8.1. Reporting an issue</a></h3>
+<div class="paragraph">
+<p>If you find a problem or get an error please let us know by opening an issue in the repository.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_test_dataset"><a class="link" href="#_test_dataset">8.2. Test dataset</a></h3>
+<div class="paragraph">
+<p>We include a <code>test</code> profile to try TransPi using a small dataset. However, this can create issues in some of the process (e.g. contamination removal by psytrans).</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0<br>
-Last updated 2021-02-18 11:11:15 -0800
+Last updated 2021-02-19 09:30:46 -0800
 </div>
 </div>
 </body>

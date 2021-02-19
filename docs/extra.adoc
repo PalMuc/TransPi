@@ -45,7 +45,6 @@ Thus we have custom profiles for the submission of jobs. For example our `nextfl
 
 
 [source,text]
-****
 profiles {
     palmuc {
         process {
@@ -54,7 +53,7 @@ profiles {
         }
     }
 }
-****
+
 
 You can add your custom profiles depending on the settings of your system and the workload manager you use (e.g. SGE, PBS, etc).
 
