@@ -3009,8 +3009,8 @@ if (params.onlyAsm) {
         script:
             """
             rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
-            cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep -v "METRICS" |  sed 's/\(\ \)* \([0-9]\)/,\2/g' | sed 's/>,/>/g' | grep [0-9] >${sample_id}_rnaQUAST.csv
-            cat Sponge_sample.rna_quast/*_output/sensitivity.txt | grep "Genes" | sed 's/\(\ \)* \([0-9]\)/,\2/g' >>${sample_id}_rnaQUAST.csv
+            cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep -v "METRICS" |  sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' | sed 's/>,/>/g' | grep [0-9] >${sample_id}_rnaQUAST.csv
+            cat Sponge_sample.rna_quast/*_output/sensitivity.txt | grep "Genes" | sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' >>${sample_id}_rnaQUAST.csv
             """
     }
 
