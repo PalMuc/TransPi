@@ -1,0 +1,22 @@
+We tested TransPi using the followings deployment methods:
+
+- conda = local installation done by precheck
+
+- docker = using TransPi container (i.e. -profile docker,TransPiContainer)
+
+- singularity = using TransPi container (i.e. -profile singularity,TransPiContainer)
+
+
+[NOTE]
+Using individual container per process is working for the majority of processes. However, we found a couple os issues with some containers (e.g. transabyss). We are working to find a solution for these issues.
+
+
+
+= Reporting an issue
+
+If you find a problem or get an error please let us know by opening an issue in the repository.
+
+
+= Test dataset
+
+We include a `test` profile to try TransPi using a small dataset. However, this can create issues in some of the process (e.g. contamination removal by psytrans).
