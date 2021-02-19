@@ -17,8 +17,9 @@
     * [Manual](#Manual)
 * [Publication](#Publication)
     * [Cite](#Cite)
-* [Future work](#Future-work)
 * [Funding](#Funding)
+* [Future work](#Future-work)
+* [Issues](#Issues)
 
 # General info
 TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly
@@ -44,10 +45,6 @@ If you use TransPi please cite the preprint:
 Rivera-Vicéns, R.E., García-Escudero, CA., Conci, N., Eitel, M., and Wörheide, G. (2021). TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly. bioRxiv 2021.02.18.431773; doi: https://doi.org/10.1101/2021.02.18.431773
 
 
-# Future work
-- Cloud deployment of the tool
-
-
 # Funding
 - European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 764840 (ITN IGNITE).
 
@@ -56,3 +53,10 @@ Rivera-Vicéns, R.E., García-Escudero, CA., Conci, N., Eitel, M., and Wörheide
 - Lehre@LMU (project number: W19 F1; Studi forscht@GEO)
 
 - LMU Munich’s Institutional Strategy LMUexcellent within the framework of the German Excellence Initiative
+
+# Future work
+- Cloud deployment of the tool
+
+# Issues
+
+We tested TransPi using conda, singularity and docker. However, if you find a problem or get an error please let us know by opening an issue.
