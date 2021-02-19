@@ -12,3 +12,5 @@ RUN conda env create -f /transpi_env.yml  && conda clean -a
 ENV PATH /opt/conda/envs/TransPi/bin:$PATH
 
 RUN sed -i 's/base/TransPi/g' ~/.bashrc
+
+RUN mkdir -p /opt/conda/envs/TransPi/lib/python3.6/site-packages/bin && cp /opt/conda/envs/TransPi/bin/skip*.awk /opt/conda/envs/TransPi/lib/python3.6/site-packages/bin/
