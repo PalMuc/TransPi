@@ -150,6 +150,8 @@ paged_table(trans_EG,options = list(rows.print = 10))
 
 **Plot before and after Evidential Gene**
 ```{bash EG_final, include=FALSE}
+cat *_preEG.csv >preEG.csv
+cat *_EG.csv >EG.csv
 head -n1 EG.csv | tr "," "\n" >headers.tmp
 tail -n1 preEG.csv | tr "," "\n" >preEG.tmp
 tail -n1 EG.csv | tr "," "\n" >EG.tmp
