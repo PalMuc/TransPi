@@ -453,23 +453,20 @@ uniprot_c () {
         cd DBs/uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- UNIPROT database directory found at: $myuni -- \n"
-        ls -1 *.{fasta,fa} 2>&1 | head -n 1 >.unilist.txt
-        if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
-            ls -1 *.{fasta.gz,fa.gz} 2>&1 | head -n 1 >.unilist.txt
-            if [ `cat .unilist.txt | grep -c "ls:\ cannot"` -eq 1 ];then
+        myfasta=$( ls -1 * | egrep '.fasta|.fa' | wc -l )
+        if [ $myfasta -eq 0 ];then
+            myfastagz=$( ls -1 * | egrep '.fasta.gz|.fa.gz' | wc -l )
+            if [ $myfastagz -eq 0 ];then
                 echo -e "\n\t -- Directory \"$myuni\" is empty --\n"
-                rm .unilist.txt
                 uniprot_meta
             else
                 echo -e "\n\t\e[31m -- Directory \"$myuni\" is available but UNIPROT database is compressed --\e[39m\n"
                 unicomp_c
                 uni_c
-                rm .unilist.txt
             fi
         else
             echo -e "\n\t -- Here is the list of UNIPROT files found at: $myuni -- \n"
             uni_c
-            rm .unilist.txt
         fi
     fi
 }
