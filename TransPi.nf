@@ -700,7 +700,7 @@ if (params.onlyAsm) {
 
         conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda velvet=1.2.10 oases=0.2.09" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-8ce10492777ba3fb1db6e6e13fa9b78ac116db2f:f54a9246f1216443f2e0f6de9ec5908ca882f710-0" : "quay.io/biocontainers/mulled-v2-8ce10492777ba3fb1db6e6e13fa9b78ac116db2f:f54a9246f1216443f2e0f6de9ec5908ca882f710-0")
         }
 
         input:
@@ -1243,9 +1243,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
         }
 
         input:
@@ -1286,9 +1286,9 @@ if (params.onlyAsm) {
 
         publishDir "${workDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
         }
 
         input:
@@ -2769,7 +2769,7 @@ if (params.onlyAsm) {
 
         conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda velvet=1.2.10 oases=0.2.09" : null)
         if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-8ce10492777ba3fb1db6e6e13fa9b78ac116db2f:f54a9246f1216443f2e0f6de9ec5908ca882f710-0" : "quay.io/biocontainers/mulled-v2-8ce10492777ba3fb1db6e6e13fa9b78ac116db2f:f54a9246f1216443f2e0f6de9ec5908ca882f710-0")
         }
 
         input:
@@ -3201,9 +3201,9 @@ if (params.onlyAsm) {
 
             	publishDir "${workDir}/${params.outdir}/psytrans_output/", mode: "copy", overwrite: true
 
-                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0" : "quay.io/biocontainers/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0")
                 }
 
             	input:
@@ -3281,9 +3281,9 @@ if (params.onlyAsm) {
 
                     publishDir "${workDir}/${params.outdir}/mapping_output/", mode: "copy", overwrite: true
 
-                    conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+                    conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
                     if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                    container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+                    container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0" : "quay.io/biocontainers/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0")
                     }
 
                     input:
@@ -4803,9 +4803,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::NAME-HERE" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME-HERE" : "quay.io/biocontainers/NAME-HERE")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
             }
 
             input:
