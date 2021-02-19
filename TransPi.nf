@@ -3624,7 +3624,11 @@ if (params.onlyAsm) {
                 SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
                 mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
                 mv TransPi_comparison_table ${sample_id}_TransPi_comparison_table.tsv
-                mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO3.fasta
+                if [ -e sequences_to_add.fasta ];then
+                    mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
+                else
+                    touch ${sample_id}_rescued_BUSCO4.fasta
+                fi
                 """
 
         }
@@ -3681,7 +3685,11 @@ if (params.onlyAsm) {
                 SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
                 mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
                 mv TransPi_comparison_table ${sample_id}_TransPi_comparison_table.tsv
-                mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
+                if [ -e sequences_to_add.fasta ];then
+                    mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
+                else
+                    touch ${sample_id}_rescued_BUSCO4.fasta
+                fi
                 """
 
         }
