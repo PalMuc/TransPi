@@ -516,6 +516,8 @@ evi_c () {
     if [ $check_evi -eq 0 ];then
         if [ ! -d scripts/evigene/ ];then
         echo -e "\n\t -- EvidentialGene is not installed -- \n"
+        echo -e "\n\t -- If you will use TransPi container (-profile TransPiContainer) you do not need it."
+        echo -e "\t -- Otherwise, please answer yes to the following question -- \n"
         echo -e -n "\n\t    Do you want to install EvidentialGene? (y or n): "
         read ans
         case $ans in
@@ -703,6 +705,7 @@ pipeline_steup() {
             bus_c
             uniprot_c
             nextflow_c
+            evi_c
             buildsql_c
             pfam_c
             echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
