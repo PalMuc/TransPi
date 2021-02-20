@@ -9,7 +9,7 @@
    |_|    |_|     \__,_| |_| |_| |___/  |_|     |_|
  ```
 
-[![Prepint](http://d2538ggaoe6cji.cloudfront.net/sites/default/files/images/favicon.ico)](https://doi.org/10.1101/2021.02.18.431773)[**Preprint**](https://doi.org/10.1101/2021.02.18.431773) &ensp;[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)&ensp;[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)&ensp;[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
+[![Prepint](http://d2538ggaoe6cji.cloudfront.net/sites/default/files/images/favicon.ico)](https://doi.org/10.1101/2021.02.18.431773)[**Preprint**](https://doi.org/10.1101/2021.02.18.431773) &ensp;[![Chat on Gitter](https://img.shields.io/gitter/room/PalMuc/TransPi.svg?colorB=26af64&style=popout)](https://gitter.im/PalMuc/TransPi) &ensp;[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)&ensp;[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)&ensp;[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
 # Table of contents
 * [General info](#General-info)
@@ -20,6 +20,7 @@
 * [Funding](#Funding)
 * [Future work](#Future-work)
 * [Issues](#Issues)
+    * [Chat](#Chat)
 
 # General info
 TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly
@@ -60,3 +61,7 @@ Rivera-Vicéns, R.E., García-Escudero, CA., Conci, N., Eitel, M., and Wörheide
 # Issues
 
 We tested TransPi using conda, singularity and docker. However, if you find a problem or get an error please let us know by opening an issue.
+
+## Chat
+
+If you have further questions and need help with TransPi you can chat with us in the [TransPi Gitter chat](https://gitter.im/PalMuc/TransPi)
