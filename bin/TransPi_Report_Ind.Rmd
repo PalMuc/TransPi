@@ -34,6 +34,7 @@ knitr::opts_chunk$set(echo = TRUE,
 ```{r load_libraries, include=FALSE}
 library(ggthemes)
 library(ggplot2)
+library(reshape2)
 library(grid)
 library(plotly)
 library(knitr)
@@ -58,7 +59,7 @@ paged_table(reads_stats,options = list(rows.print = 10))
 ```{r qual_plot, echo=FALSE}
 if (params$skipFilter == "true") {
     writeLines("\n--------------------------------------------------------------\n")
-    writeLines("\t\t\t\tFiltering process was skipped")
+    cat(readLines(list.files(pattern="filter_reads.txt")) , sep = '\n')
     writeLines("\n--------------------------------------------------------------\n")
 } else {
     rqual=read.csv(paste(params$sample_id,sep="","_reads_qual.csv"),header=FALSE)
@@ -79,7 +80,7 @@ if (params$skipFilter == "true") {
 ```{r qual_plot2, echo=FALSE}
 if (params$skipFilter == "true") {
     writeLines("\n--------------------------------------------------------------\n")
-    writeLines("\t\t\t\tFiltering process was skipped")
+    cat(readLines(list.files(pattern="filter_reads.txt")) , sep = '\n')
     writeLines("\n--------------------------------------------------------------\n")
 } else {
     qp2 <- plot_ly(x=c(1:rqual[5,1]),y=as.numeric(rqual[6,]),type="scatter", mode = "lines", name="Read1", opacity = .8, line=list(color='#088da5'))
@@ -98,10 +99,10 @@ if (params$skipFilter == "true") {
 **rRNA removal**
 ```{r rrna_remove, echo=FALSE}
 if (params$rRNAfilter == "true") {
-    writeLines("\t\t\t\tPLOT HERE")
+    cat(readLines(list.files(pattern="*_remove_rRNA.log")) , sep = '\n')
 } else {
     writeLines("\n--------------------------------------------------------------\n")
-    writeLines("\t\t\t\tNo rRNA filtration was performed")
+    cat(readLines(list.files(pattern="rrna_removal.txt")) , sep = '\n')
     writeLines("\n--------------------------------------------------------------\n")
 }
 ```
@@ -113,10 +114,10 @@ if (params$rRNAfilter == "true") {
 ```{r norm_plot, echo=FALSE}
 if (params$skipNormalization == "true") {
     writeLines("\n--------------------------------------------------------------\n")
-    writeLines("\t\t\t\tNormalization process was skipped")
+    cat(readLines(list.files(pattern="norm_reads.txt")) , sep = '\n')
     writeLines("\n--------------------------------------------------------------\n")
 } else {
-    writeLines("\t\t\t\tPLOT HERE")
+    cat(readLines(list.files(pattern="*_normStats.txt")) , sep = '\n')
 }
 ```
 
@@ -130,7 +131,7 @@ if (params$skipNormalization == "true") {
 
 **Number of transcripts before Evidential Genes**
 ```{r pre_EG_table, echo=FALSE}
-trans_preEG=read.csv(paste(params$sample_id,sep="",".sum_preEG.csv"))
+trans_preEG=read.csv(paste(params$sample_id,sep="","_sum_preEG.csv"))
 paged_table(trans_preEG,options = list(rows.print = 10))
 ```
 
@@ -140,7 +141,7 @@ paged_table(trans_preEG,options = list(rows.print = 10))
 
 **Number of transcripts after Evidential Genes**
 ```{r EG_table, echo=FALSE, results='asis'}
-trans_EG=read.csv(paste(params$sample_id,sep="",".sum_EG.csv"))
+trans_EG=read.csv(paste(params$sample_id,sep="","_sum_EG.csv"))
 paged_table(trans_EG,options = list(rows.print = 10))
 ```
 
@@ -199,17 +200,27 @@ tlp
 
 **rnaQUAST**
 ```{r rna_quast, echo=FALSE, results='asis'}
-#paged_table(read.csv(paste(params$sample_id,sep="","_rnaQUAST.csv")),options = list(rows.print = 10))
+paged_table(read.csv(paste(params$sample_id,sep="","_rnaQUAST.csv")),options = list(rows.print = 10))
 ```
 
 <br>
 <br>
 <br>
 
-**Mapping stats**
-```{r mapping_stats, echo=FALSE, results='asis'}
-#mapping_trinity
-#mapping_evigene
+**Mapping reads to EviGene results**
+
+```{bash mapping_stats_evi, echo=FALSE, results='asis'}
+cat *.combined.okay.fa.txt | grep "overall alignment rate"
+```
+
+<br>
+<br>
+<br>
+
+**Mapping reads to Trinity results**
+
+```{bash mapping_stats_tri, echo=FALSE, results='asis'}
+cat *.Trinity.fa.txt | grep "overall alignment rate"
 ```
 
 <br>
@@ -227,9 +238,6 @@ tlp
 <br>
 <br>
 
-```{bash busco3, echo=FALSE}
-cat *_busco3.csv >final_busco3.csv
-```
 ```{r busco3_plot, echo=FALSE}
 bus=read.csv(paste(params$sample_id,sep="","_busco3.csv"), header=FALSE)
 MYSPEC=as.character(t(bus[1,]))
@@ -320,9 +328,6 @@ bp
 <br>
 <br>
 
-```{bash busco4, echo=FALSE}
-cat *_busco4.csv >final_busco4.csv
-```
 ```{r busco4_plot, echo=FALSE}
 bus=read.csv(paste(params$sample_id,sep="","_busco4.csv"),header=FALSE)
 MYSPEC=as.character(t(bus[1,]))
@@ -410,19 +415,21 @@ bp
 
 ### - BUSCO Distribution
 
+#### BUSCO V3
+
 <br>
 <br>
 
-```{r busco_dist, echo=FALSE}
+
+**Missing BUSCO distribution**
+```{bash cat_busco3_dist_mis, echo=FALSE}
+cat *_missing_BUSCO3_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO3_missing_table.tsv
+
+```
+```{r busco3_dist_mis, echo=FALSE}
 if (params$buscoDist == "true" && params$allBuscos == "true") {
     writeLines("\t\t\t\tHEATMAP")
-    csv=read.csv(paste(params$sample_id,sep="","_TransPi_comparison_table.tsv"), header=TRUE, sep="\t")
-    #csv=read.csv("SRR10527303_Octolasmis_warwickii_complete_comparison_table.tsv", header=TRUE, sep="\t")
-    csv <- data.frame(lapply(csv, function(x) {gsub("Complete", "3", x)}))
-    csv <- data.frame(lapply(csv, function(x) {gsub("Duplicated", "2", x)}))
-    csv <- data.frame(lapply(csv, function(x) {gsub("Fragmented", "1", x)}))
-    csv <- data.frame(lapply(csv, function(x) {gsub("Missing", "0", x)}))
-    csv
+    csv=read.csv("BUSCO3_missing_table.tsv", header=TRUE, sep="\t")
     c=melt(csv,id.vars = 'Busco.ID')
     dec=c(0,.25,.25,.50,.50,.75,.75,1)
     my_colors <- c("#081D58","#081D58", "#2280B8","#2280B8", "#99D6B9", "#99D6B9","#f8f9fc","#f8f9fc")
@@ -433,10 +440,47 @@ if (params$buscoDist == "true" && params$allBuscos == "true") {
     fig <- fig %>% layout(xaxis=list(title="", showline = TRUE, mirror = TRUE, tickfont=list(size=8)),
                   yaxis=list(title="BUSCO ID", tickmode="auto", nticks=length(csv$Busco.ID),
                   tickfont=list(size=6), showline = TRUE, mirror = TRUE))
+    fig <- fig %>% config(toImageButtonOptions=list(format='svg',filename='busco3_TransPi_missing_distribution_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
     fig
 } else {
     writeLines("\n--------------------------------------------------------------\n")
-    writeLines("\t\t\t\tBUSCO distribution analysis was skipped")
+    cat(readLines(list.files(pattern="busco3_dist.txt")) , sep = '\n')
+    writeLines("\n--------------------------------------------------------------\n")
+}
+```
+
+<br>
+<br>
+
+#### BUSCO V4
+
+<br>
+<br>
+
+**Missing BUSCO distribution**
+```{bash cat_busco4_dist_mis, echo=FALSE}
+cat *_missing_BUSCO4_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO4_missing_table.tsv
+
+```
+```{r busco4_dist_mis, echo=FALSE}
+if (params$buscoDist == "true" && params$allBuscos == "true") {
+    writeLines("\t\t\t\tHEATMAP")
+    csv=read.csv("BUSCO4_missing_table.tsv", header=TRUE, sep="\t")
+    c=melt(csv,id.vars = 'Busco.ID')
+    dec=c(0,.25,.25,.50,.50,.75,.75,1)
+    my_colors <- c("#081D58","#081D58", "#2280B8","#2280B8", "#99D6B9", "#99D6B9","#f8f9fc","#f8f9fc")
+    colz <- setNames(data.frame(dec, my_colors), NULL)
+    fig <- plot_ly(c,x=~variable, y=~Busco.ID, z=~value, colorscale=colz, reversescale=T, type = "heatmap",
+                  colorbar=list(tickmode='array', tickvals=c(.35,1.1,1.87,2.60), thickness=30,
+                  ticktext= c("Missing","Fragmented","Duplicated","Complete"), len=0.4))
+    fig <- fig %>% layout(xaxis=list(title="", showline = TRUE, mirror = TRUE, tickfont=list(size=8)),
+                  yaxis=list(title="BUSCO ID", tickmode="auto", nticks=length(csv$Busco.ID),
+                  tickfont=list(size=6), showline = TRUE, mirror = TRUE))
+    fig <- fig %>% config(toImageButtonOptions=list(format='svg',filename='busco4_TransPi_missing_distribution_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
+    fig
+} else {
+    writeLines("\n--------------------------------------------------------------\n")
+    cat(readLines(list.files(pattern="busco4_dist.txt")) , sep = '\n')
     writeLines("\n--------------------------------------------------------------\n")
 }
 ```
@@ -453,11 +497,8 @@ if (params$buscoDist == "true" && params$allBuscos == "true") {
 
 **Summary of the Transdecoder run**
 
-```{bash transdecoder, include=FALSE}
-cat *.transdecoder.csv >final_transdecoder.csv
-```
 ```{r trandecoder_table, echo=FALSE, results='asis'}
-paged_table(read.csv("final_transdecoder.csv"),options = list(rows.print = 10))
+paged_table(read.csv(paste(params$sample_id,sep="","_transdecoder.csv")),options = list(rows.print = 10))
 ```
 
 <br>
@@ -471,12 +512,10 @@ paged_table(read.csv("final_transdecoder.csv"),options = list(rows.print = 10))
 
 <br>
 <br>
-```{bash go1, echo=FALSE}
-cat *_cellular.csv >final_GO_cellular.csv
-```
+
 ```{r go_plots1, echo=FALSE}
 #go_sample_name=params$data
-dataCC=read.csv("final_GO_cellular.csv", header = F)
+dataCC=read.csv(paste(params$sample_id,sep="","_GO_cellular.csv"), header = F)
 pcel <- plot_ly(dataCC,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#ff8f66',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
                 hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
 pcel <- pcel %>% layout(yaxis=list(showticklabels=TRUE))
@@ -492,11 +531,9 @@ pcel
 <br>
 <br>
 <br>
-```{bash go2, echo=FALSE}
-cat *_molecular.csv >final_GO_molecular.csv
-```
+
 ```{r go_plots2, echo=FALSE}
-dataMF=read.csv("final_GO_molecular.csv", header = F)
+dataMF=read.csv(paste(params$sample_id,sep="","_GO_molecular.csv"), header = F)
 pmol <- plot_ly(dataMF,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#b0e0e6',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
                 hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
 pmol <- pmol %>% layout(yaxis=list(showticklabels=TRUE))
@@ -512,11 +549,9 @@ pmol
 <br>
 <br>
 <br>
-```{bash go3, echo=FALSE}
-cat *_biological.csv >final_GO_biological.csv
-```
+
 ```{r go_plots3, echo=FALSE}
-dataBP=read.csv("final_GO_biological.csv", header = F)
+dataBP=read.csv(paste(params$sample_id,sep="","_GO_biological.csv"), header = F)
 pbio <- plot_ly(dataBP,x=~V1,y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#88B04B',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
                 hovertemplate = paste('Category: %{y}','<br>Number of GOs: %{x}','<extra></extra>'))
 pbio <- pbio %>% layout(yaxis=list(showticklabels=TRUE))
@@ -538,11 +573,8 @@ pbio
 <br>
 <br>
 
-```{bash custom_uniprot, echo=FALSE}
-cat *_custom_uniprot_hits.csv >final_custom_uniprot_hits.csv
-```
 ```{r custom_uniprot_plot, echo=FALSE}
-dataUni=read.csv("final_custom_uniprot_hits.csv", header=F)
+dataUni=read.csv(paste(params$sample_id,sep="","_custom_uniprot_hits.csv"), header=F)
 p3 <- plot_ly(dataUni,x=~V1, y=~V2, text = ~V1, textposition = 'outside', marker = list(color = '#0e9aa7',line = list(color = '#08306B', width = 1.5)), opacity = 0.8,
               hovertemplate = paste('Species: %{y}','<br>Number of hits: %{x}','<extra></extra>'))
 p3 <- p3 %>% layout(yaxis=list(showticklabels=TRUE))
