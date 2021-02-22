@@ -49,8 +49,14 @@ mycol=c('#088da5','#73cdc8','#ff6f61','#7cb8df','#88b04b','#00a199','#6B5B95','#
 <br>
 **Input reads and filtering**
 ```{r readstats_table, echo=FALSE}
-reads_stats=read.csv(paste(params$sample_id,sep="","_reads_stats.csv"))
-paged_table(reads_stats,options = list(rows.print = 10))
+if (params$skipFilter == "true") {
+    writeLines("\n--------------------------------------------------------------\n")
+    cat(readLines(list.files(pattern="filter_reads.txt")) , sep = '\n')
+    writeLines("\n--------------------------------------------------------------\n")
+} else {
+    reads_stats=read.csv(paste(params$sample_id,sep="","_reads_stats.csv"))
+    paged_table(reads_stats,options = list(rows.print = 10))
+}
 ```
 <br>
 <br>
@@ -422,12 +428,9 @@ bp
 
 
 **Missing BUSCO distribution**
-```{bash cat_busco3_dist_mis, echo=FALSE}
-cat *_missing_BUSCO3_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO3_missing_table.tsv
-
-```
 ```{r busco3_dist_mis, echo=FALSE}
 if (params$buscoDist == "true" && params$allBuscos == "true") {
+    system("cat *_missing_BUSCO3_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO3_missing_table.tsv")
     writeLines("\t\t\t\tHEATMAP")
     csv=read.csv("BUSCO3_missing_table.tsv", header=TRUE, sep="\t")
     c=melt(csv,id.vars = 'Busco.ID')
@@ -458,12 +461,9 @@ if (params$buscoDist == "true" && params$allBuscos == "true") {
 <br>
 
 **Missing BUSCO distribution**
-```{bash cat_busco4_dist_mis, echo=FALSE}
-cat *_missing_BUSCO4_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO4_missing_table.tsv
-
-```
 ```{r busco4_dist_mis, echo=FALSE}
 if (params$buscoDist == "true" && params$allBuscos == "true") {
+    system("cat *_missing_BUSCO4_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO4_missing_table.tsv")
     writeLines("\t\t\t\tHEATMAP")
     csv=read.csv("BUSCO4_missing_table.tsv", header=TRUE, sep="\t")
     c=melt(csv,id.vars = 'Busco.ID')
