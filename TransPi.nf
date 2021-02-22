@@ -371,13 +371,13 @@ if (params.readsTest) {
         .from(params.readsTest)
         .map{ row -> [ row[0], [ file(row[1][0],checkIfExists: true),file(row[2][0],checkIfExists: true) ] ] }
         .ifEmpty{ exit 1, "params.readsTest was empty - no input files supplied" }
-        .into{ reads_ch; reads_qc_ch }
+        .into{ reads_ch; reads_qc_ch; report_reads }
 } else {
     println("\n\tRunning TransPi with your dataset\n")
     if ( ( params.all || params.onlyAsm ) && !params.readsTest) {
         Channel
             .fromFilePairs("${params.reads}", checkIfExists: true)
-            .into{ reads_ch; reads_qc_ch }
+            .into{ reads_ch; reads_qc_ch; report_reads }
     }
 }
 
@@ -983,74 +983,74 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary_OAS
 
         output:
-            tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1_OAS
-            tuple sample_id, file("${sample_id}.sum_preEG.csv"), file("${sample_id}.sum_EG.csv") into summary_evi_csv_OAS
+            tuple sample_id, file("${sample_id}_sum_preEG.txt"), file("${sample_id}_sum_EG.txt") into final_sum_1_OAS
+            tuple sample_id, file("*.csv") into summary_evi_csv_OAS
 
         script:
             """
             #Summary of total number of transcripts
-            echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
-            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
+            echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}_sum_preEG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Total transcripts:" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Trinity" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t SOAP" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Velvet/Oases" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t rna-SPADES" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
 
             # csv report
-            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}_sum_preEG.csv
             total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}_sum_preEG.csv
 
             #Summary of transcripts after EvidentialGenes
-            echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
-            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
+            echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}_sum_EG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Total transcripts:" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Trinity" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t SOAP" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Velvet/Oases" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t rna-SPADES" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
 
             # csv report after evigene
-            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}_sum_EG.csv
             total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
-            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}_sum_EG.csv
             """
 
     }
@@ -1486,8 +1486,8 @@ if (params.onlyAsm) {
                 tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
                 tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
                 tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
-                tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
-                tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
+                tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary_OA
+                tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv_OA
                 tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
             script:
@@ -1509,25 +1509,25 @@ if (params.onlyAsm) {
                 echo -e "\\n-- Calculating statistics... --\\n"
 
                 #Calculate statistics of Transdecoder
-                echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}.transdecoder.stats
+                echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
-                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:complete" )
-                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c "ORF type:internal" )
-                echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}_transdecoder.stats
                 # csv for report
-                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}_transdecoder.csv
                 total=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c ">" )
                 complete=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:complete" )
                 n5prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
                 n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                 internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
-                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
 
                 echo -e "\\n-- Done with statistics --\\n"
 
@@ -1652,8 +1652,8 @@ if (params.onlyAsm) {
                     tuple sample_id, file("${sample_id}*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
                     tuple sample_id, file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
                     tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
-                    tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary_OA
-                    tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv_OA
+                    tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary_OA
+                    tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv_OA
                     tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
                 script:
@@ -1684,38 +1684,38 @@ if (params.onlyAsm) {
                     echo -e "\\n-- Calculating statistics... --\\n"
 
                     #Calculate statistics of Transdecoder
-                    echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
+                    echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
-                    echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                    echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
+                    echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}_transdecoder.stats
+                    echo -e "\\t Of these ORFs" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -c "|" )
-                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
-                    echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:complete" )
-                    echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
-                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-                    echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
-                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-                    echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
-                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:internal" )
-                    echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
-                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                    echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                     # csv for report
-                    echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+                    echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}_transdecoder.csv
                     total=\$( cat ${sample_id}*.transdecoder.pep  | grep -c ">" )
                     complete=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:complete" )
                     n5prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
                     n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                     internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
-                    echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+                    echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
 
                     echo -e "\\n-- Done with statistics --\\n"
 
@@ -2102,7 +2102,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary_OA
+            tuple sample_id, file("${sample_id}_transdecoder.stats") from transdecoder_summary_OA
 
         output:
             tuple sample_id, file("${sample_id}.sum_transdecoder.txt") into final_sum_3_OA
@@ -2111,7 +2111,7 @@ if (params.onlyAsm) {
             """
             #Summary of Transdecoder stats
             echo -e "Summary of Transdecoder \\n" >>${sample_id}.sum_transdecoder.txt
-            cat ${sample_id}.transdecoder.stats >>${sample_id}.sum_transdecoder.txt
+            cat ${sample_id}_transdecoder.stats >>${sample_id}.sum_transdecoder.txt
             echo -e "##### \\n" >>${sample_id}.sum_transdecoder.txt
             """
     }
@@ -2432,6 +2432,14 @@ if (params.onlyAsm) {
         }
     }
 
+    // create channels for skip processes for the report
+    skip_filter_ch = Channel.create()
+    skip_filter_only_ch = Channel.create()
+    skip_norm_ch = Channel.create()
+    skip_norm_only_ch = Channel.create()
+    skip_busco_dist = Channel.create()
+    report_reads.into( skip_filter_ch, skip_filter_only_ch, skip_norm_ch, skip_norm_only_ch, skip_busco_dist )
+
     if (!params.skipFilter) {
 
         process fastp {
@@ -2501,7 +2509,6 @@ if (params.onlyAsm) {
         reads_ch
             .set{ reads_rna_ch }
         fastp_results = Channel.empty()
-        fastp_csv = Channel.empty()
     }
 
     if (params.rRNAfilter) {
@@ -2549,7 +2556,22 @@ if (params.onlyAsm) {
         }
     } else {
         reads_rna_ch
-            .set{ reads_rna_ass }
+            .into{ reads_rna_ass; skip_rna_ch }
+
+        process skip_rrna_removal {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(files) from skip_rna_ch
+
+            output:
+                tuple sample_id, file("rrna_removal.txt") into remove_rrna_sum
+
+            script:
+                """
+                echo "rRNA removal step was skipped" >rrna_removal.txt
+                """
+        }
     }
 
     if (!params.skipNormalization) {
@@ -2681,9 +2703,75 @@ if (params.onlyAsm) {
                 """
             }
         }
+
+        process skip_filter {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(files) from skip_filter_ch
+
+            output:
+                tuple sample_id, file("filter_reads.txt") into fastp_csv
+
+            script:
+                """
+                echo "Filter step was skipped" >filter_reads.txt
+                """
+        }
+
+        process skip_normalization {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(files) from skip_norm_ch
+
+            output:
+                tuple sample_id, file("norm_reads.txt") into norm_report
+
+            script:
+                """
+                echo "Normalization step was skipped" >norm_reads.txt
+                """
+        }
+
     } else if (!params.skipFilter && params.skipNormalization) {
-        reads_rna_ass
-            .into{ norm_reads_soap; norm_reads_velvet; norm_reads_trinity; norm_reads_spades; norm_reads_transabyss; reads_rna_quast; mapping_reads_trinity; mapping_reads_evi; mapping_symbiont }
+        //reads_rna_ass
+        //    .into{ norm_reads_soap; norm_reads_velvet; norm_reads_trinity; norm_reads_spades; norm_reads_transabyss; reads_rna_quast; mapping_reads_trinity; mapping_reads_evi; mapping_symbiont }
+
+        process skip_normalization_only {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(reads) from reads_rna_ass
+
+            output:
+                tuple sample_id, file("norm_reads.txt") into norm_report
+                tuple sample_id, file("left-${sample_id}.fq"), file("right-${sample_id}.fq") into norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast, mapping_reads_trinity, mapping_reads_evi, mapping_symbiont
+
+            script:
+                """
+                echo "Normalization step was skipped" >norm_reads.txt
+                echo ${sample_id}
+                cat ${reads[0]} >left-${sample_id}.fq &
+                cat ${reads[1]} >right-${sample_id}.fq
+                """
+        }
+
+    } else if (params.skipFilter && !params.skipNormalization) {
+        process skip_filter_only {
+            tag "${sample_id}"
+
+            input:
+                tuple sample_id, file(files) from skip_filter_only_ch
+
+            output:
+                tuple sample_id, file("filter_reads.txt") into fastp_csv
+
+            script:
+                """
+                echo "Filter step was skipped" >filter_reads.txt
+                """
+        }
     }
 
     process trinity_assembly {
@@ -3009,7 +3097,8 @@ if (params.onlyAsm) {
         script:
             """
             rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
-            cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep -v "METRICS" |  sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' | sed 's/>,/>/g' | grep [0-9] >${sample_id}_rnaQUAST.csv
+            echo "Category,Value" >${sample_id}_rnaQUAST.csv
+            cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep -v "METRICS" |  sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' | sed 's/>,/>/g' | grep [0-9] >>${sample_id}_rnaQUAST.csv
             cat Sponge_sample.rna_quast/*_output/sensitivity.txt | grep "Genes" | sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' >>${sample_id}_rnaQUAST.csv
             """
     }
@@ -3040,8 +3129,8 @@ if (params.onlyAsm) {
             """
             a=\$( echo $files $files2 )
             ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
-            r1=\$( echo \$a | tr " " "\\n" | grep "left-${sample_id}.norm.fq" )
-            r2=\$( echo \$a | tr " " "\\n" | grep "right-${sample_id}.norm.fq" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
             bowtie2-build \${ass} \${ass} --threads ${task.cpus}
             bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
             rm *.sam
@@ -3075,8 +3164,8 @@ if (params.onlyAsm) {
             """
             a=\$( echo $files $files2 )
             ass=\$( echo \$a | tr " " "\\n" | grep ".Trinity.fa" )
-            r1=\$( echo \$a | tr " " "\\n" | grep "left-${sample_id}.norm.fq" )
-            r2=\$( echo \$a | tr " " "\\n" | grep "right-${sample_id}.norm.fq" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
             bowtie2-build \${ass} \${ass} --threads ${task.cpus}
             bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
             rm *.sam
@@ -3594,13 +3683,11 @@ if (params.onlyAsm) {
     if (params.buscoDist && params.allBuscos) {
 
         busco3_dist_ch=Channel.create()
-        busco4_dist_ch=Channel.create()
-        busco3_transpi_tsv.join( busco3_all_tsv ).view().into( busco3_dist_ch )
-        busco4_transpi_tsv.join( busco4_all_tsv ).view().into( busco4_dist_ch )
+        busco3_transpi_tsv.join( busco3_all_tsv ).into( busco3_dist_ch )
 
         process busco3_dist {
 
-            label 'exlow_cpus'
+            label 'low_cpus'
 
             tag "${sample_id}"
 
@@ -3616,14 +3703,14 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fasta"), file("*_table.tsv") into busco3_dist_sum
-                tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TransPi_comparison_table.tsv") into busco3_heatmap
+                tuple sample_id, file("*_table.tsv") into busco3_heatmap
 
             script:
                 """
                 cat $transpi_tsv | grep -v "#" | tr "\\t" "," >>$all_busco
                 SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
-                mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
-                mv TransPi_comparison_table ${sample_id}_TransPi_comparison_table.tsv
+                mv Complete_comparison_table ${sample_id}_complete_BUSCO3_table.tsv
+                mv TransPi_comparison_table ${sample_id}_TransPi_missing_BUSCO3_table.tsv
                 if [ -e sequences_to_add.fasta ];then
                     mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
                 else
@@ -3633,35 +3720,12 @@ if (params.onlyAsm) {
 
         }
 
-        process heatmap_busco3 {
-
-            label 'exlow_cpus'
-
-            tag "${sample_id}"
-
-            publishDir "${workDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
-
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
-            }
-
-            input:
-                tuple sample_id, file(comp_table), file(transpi_table) from busco3_heatmap
-
-            output:
-                tuple sample_id, file("*.png"), file("*.pdf") into heatmap_busco3_sum
-
-            script:
-                """
-                cp ${params.pipeInstall}/bin/heatmap_busco.R .
-                Rscript heatmap_busco.R ${sample_id} $comp_table $transpi_table
-                """
-        }
+        busco4_dist_ch=Channel.create()
+        busco4_transpi_tsv.join( busco4_all_tsv ).into( busco4_dist_ch )
 
         process busco4_dist {
 
-            label 'exlow_cpus'
+            label 'low_cpus'
 
             tag "${sample_id}"
 
@@ -3677,14 +3741,14 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fasta"), file("*_table.tsv") into busco4_dist_sum
-                tuple sample_id, file("*_complete_comparison_table.tsv"), file("*_TransPi_comparison_table.tsv") into busco4_heatmap
+                tuple sample_id, file("*_table.tsv") into busco4_heatmap
 
             script:
                 """
                 cat $transpi_tsv | grep -v "#" | tr "\\t" "," >>$all_busco
                 SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
-                mv Complete_comparison_table ${sample_id}_complete_comparison_table.tsv
-                mv TransPi_comparison_table ${sample_id}_TransPi_comparison_table.tsv
+                mv Complete_comparison_table ${sample_id}_complete_BUSCO4_table.tsv
+                mv TransPi_comparison_table ${sample_id}_TransPi_missing_BUSCO4_table.tsv
                 if [ -e sequences_to_add.fasta ];then
                     mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
                 else
@@ -3694,29 +3758,21 @@ if (params.onlyAsm) {
 
         }
 
-        process heatmap_busco4 {
-
-            label 'exlow_cpus'
-
+    } else {
+        process skip_busco_dist {
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{png,pdf}"
-
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
-            }
-
             input:
-                tuple sample_id, file(comp_table), file(transpi_table) from busco4_heatmap
+                tuple sample_id, file(files) from skip_busco_dist
 
             output:
-                tuple sample_id, file("*.png"), file("*.pdf") into heatmap_busco4_sum
+                tuple sample_id, file("busco3_dist.txt") into busco3_heatmap
+                tuple sample_id, file("busco4_dist.txt") into busco4_heatmap
 
             script:
                 """
-                cp ${params.pipeInstall}/bin/heatmap_busco.R .
-                Rscript heatmap_busco.R ${sample_id} $comp_table $transpi_table
+                echo "BUSCO3 distribution analysis was skipped" >busco3_dist.txt
+                echo "BUSCO4 distribution analysis was skipped" >busco4_dist.txt
                 """
         }
     }
@@ -3742,8 +3798,8 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
-                tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
-                tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv
+                tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
+                tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
                 tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
             script:
@@ -3763,25 +3819,25 @@ if (params.onlyAsm) {
                 echo -e "\\n-- Calculating statistics... --\\n"
 
                 #Calculate statistics of Transdecoder
-                echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}.transdecoder.stats
+                echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
-                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
-                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
-                echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}_transdecoder.stats
                 # csv for report
-                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}_transdecoder.csv
                 total=\$( cat ${sample_id}*.transdecoder.pep  | grep -c ">" )
                 complete=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:complete" )
                 n5prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
                 n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                 internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
-                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
 
                 echo -e "\\n-- Done with statistics --\\n"
 
@@ -3907,8 +3963,8 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
-                tuple sample_id, file("${sample_id}.transdecoder.stats") into transdecoder_summary
-                tuple sample_id, file("${sample_id}.transdecoder.csv") into transdecoder_csv
+                tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
+                tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
                 tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
             script:
@@ -3933,38 +3989,38 @@ if (params.onlyAsm) {
                 echo -e "\\n-- Calculating statistics... --\\n"
 
                 #Calculate statistics of Transdecoder
-                echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}.transdecoder.stats
+                echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
-                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}.transdecoder.stats
-                echo -e "\\t Of these ORFs" >>${sample_id}.transdecoder.stats
+                echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}_transdecoder.stats
+                echo -e "\\t Of these ORFs" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -c "|" )
-                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep ">" | grep -v "|" | grep -c ">" )
-                echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t\\t no annotation: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:complete" )
-                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:complete" | grep -c "|" )
-                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:5prime_partial" )
-                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:5prime_partial" | grep -c "|" )
-                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
-                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:3prime_partial" | grep -c "|" )
-                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:internal" )
-                echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t ORFs type=internal: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep "ORF type:internal" | grep -c "|" )
-                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}.transdecoder.stats
+                echo -e "\\t\\t with annotations: \$orfnum \\n" >>${sample_id}_transdecoder.stats
                 # csv for report
-                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}.transdecoder.csv
+                echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}_transdecoder.csv
                 total=\$( cat ${sample_id}*.transdecoder.pep  | grep -c ">" )
                 complete=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:complete" )
                 n5prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:5prime_partial" )
                 n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                 internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
-                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}.transdecoder.csv
+                echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
 
                 echo -e "\\n-- Done with statistics --\\n"
 
@@ -4367,74 +4423,74 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary
 
         output:
-            tuple sample_id, file("${sample_id}.sum_preEG.txt"), file("${sample_id}.sum_EG.txt") into final_sum_1
+            tuple sample_id, file("${sample_id}_sum_preEG.txt"), file("${sample_id}_sum_EG.txt") into final_sum_1
             tuple sample_id, file("*.csv") into summary_evi_csv
 
         script:
             """
             #Summary of total number of transcripts
-            echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}.sum_preEG.txt
-            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Total transcripts:" >>${sample_id}.sum_preEG.txt
+            echo -e "- Number of transcripts before Evidential Genes\\n" >>${sample_id}_sum_preEG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Total transcripts:" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Trinity" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Trinity" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t SOAP" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t SOAP" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Velvet/Oases" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t rna-SPADES" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t rna-SPADES" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
-            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}_sum_preEG.txt
             num=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_preEG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_preEG.txt
 
             # csv report
-            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_preEG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}_sum_preEG.csv
             total=\$( cat ${sample_id}.combined.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.fa | grep -c ">TransABySS" )
-            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_preEG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}_sum_preEG.csv
 
             #Summary of transcripts after EvidentialGenes
-            echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}.sum_EG.txt
-            echo -e "- Individual ${sample_id} \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Total transcripts:" >>${sample_id}.sum_EG.txt
+            echo -e "- Number of transcripts by individual after EvidentialGenes\\n" >>${sample_id}_sum_EG.txt
+            echo -e "- Individual ${sample_id} \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Total transcripts:" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Trinity" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Trinity" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t SOAP" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t SOAP" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Velvet/Oases" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Velvet/Oases" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t rna-SPADES" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t rna-SPADES" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
-            echo -e "\\t Trans-ABySS" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
+            echo -e "\\t Trans-ABySS" >>${sample_id}_sum_EG.txt
             num=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
-            echo -e "\\t\\t \$num \\n" >>${sample_id}.sum_EG.txt
+            echo -e "\\t\\t \$num \\n" >>${sample_id}_sum_EG.txt
 
             # csv report after evigene
-            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}.sum_EG.csv
+            echo "Total,Trinity,SOAP,Velvet,SPADES,TransBySS" >${sample_id}_sum_EG.csv
             total=\$( cat ${sample_id}.combined.okay.fa | grep -c ">" )
             trinity=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TRINITY" )
             soap=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SOAP" )
             velvet=\$( cat ${sample_id}.combined.okay.fa | grep -c ">Velvet" )
             spades=\$( cat ${sample_id}.combined.okay.fa | grep -c ">SPADES" )
             transabyss=\$( cat ${sample_id}.combined.okay.fa | grep -c ">TransABySS" )
-            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}.sum_EG.csv
+            echo "\${total},\${trinity},\${soap},\${velvet},\${spades},\${transabyss}" >>${sample_id}_sum_EG.csv
             """
     }
 
@@ -4501,7 +4557,7 @@ if (params.onlyAsm) {
         publishDir "${workDir}/${params.outdir}/stats", mode: "copy", overwrite: true
 
         input:
-            tuple sample_id, file("${sample_id}.transdecoder.stats") from transdecoder_summary
+            tuple sample_id, file("${sample_id}_transdecoder.stats") from transdecoder_summary
 
         output:
             tuple sample_id, file("${sample_id}.sum_transdecoder.txt") into final_sum_3
@@ -4510,7 +4566,7 @@ if (params.onlyAsm) {
             """
             #Summary of Transdecoder stats
             echo -e "Summary of Transdecoder \\n" >>${sample_id}.sum_transdecoder.txt
-            cat ${sample_id}.transdecoder.stats >>${sample_id}.sum_transdecoder.txt
+            cat ${sample_id}_transdecoder.stats >>${sample_id}.sum_transdecoder.txt
             echo -e "##### \\n" >>${sample_id}.sum_transdecoder.txt
             """
     }
@@ -4815,12 +4871,14 @@ if (params.onlyAsm) {
             """
     }
 
-    report_ch = Channel.create()
-    fastp_csv.mix( size_dist, summary_evi_csv, busco3_csv, busco4_csv, transdecoder_csv, go_csv, uniprot_csv, kegg_report).groupTuple(by:0,size:9).flatten().toList().view().into(report_ch)
-
     if (!params.skipReport) {
 
+        report_ch = Channel.create()
+        fastp_csv.mix( norm_report, remove_rrna_sum, mapping_evi_results, mapping_trinity_results, rna_quast_report, size_dist, summary_evi_csv, busco3_csv, busco4_csv, busco3_heatmap, busco4_heatmap, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:16).flatten().toList().into(report_ch)
+
         process get_report {
+
+            label 'low_cpus'
 
             publishDir "${workDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
 
