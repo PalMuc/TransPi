@@ -424,8 +424,6 @@ bp
 #### BUSCO V3
 
 <br>
-<br>
-
 
 **Missing BUSCO distribution**
 ```{r busco3_dist_mis, echo=FALSE}
@@ -457,7 +455,6 @@ if (params$buscoDist == "true" && params$allBuscos == "true") {
 
 #### BUSCO V4
 
-<br>
 <br>
 
 **Missing BUSCO distribution**
