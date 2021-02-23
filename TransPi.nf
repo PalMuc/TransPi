@@ -433,8 +433,8 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results_OAS
+                tuple sample_id, file("${sample_id}.fastp.json") into fastp_stats_OAS_ch
                 tuple sample_id, file("*${sample_id}.filter.fq") into reads_ass_ch_OAS
-                tuple sample_id, file("*.csv") into fastp_csv_OAS
                 tuple sample_id, file("${sample_id}_filter.R1.fq.gz"), file("${sample_id}_filter.R2.fq.gz") into save_filter_reads
 
             script:
@@ -445,15 +445,40 @@ if (params.onlyAsm) {
                 --average_qual ${params.minQual} --overrepresentation_analysis --html ${sample_id}.fastp.html --json ${sample_id}.fastp.json \
                 --thread ${task.cpus} --report_title ${sample_id}
 
-                bash get_readstats.sh ${sample_id}.fastp.json
-                bash get_readqual.sh ${sample_id}.fastp.json
-
                 cp left-${sample_id}.filter.fq ${sample_id}_filter.R1.fq
                 cp right-${sample_id}.filter.fq ${sample_id}_filter.R2.fq
 
                 pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R1.fq
                 pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R2.fq
                 """
+        }
+
+        process fastp_stats_OAS {
+
+            label 'low_cpus'
+
+            tag "${sample_id}"
+
+            publishDir "${workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge conda-forge::pigz=2.3.4=hed695b0_1 conda-forge::jq=1.6=h14c3975_1000 bioconda::fastp=0.20.1=h8b12597_0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastp:0.20.1--h8b12597_0" : "quay.io/biocontainers/fastp:0.20.1--h8b12597_0")
+            }
+
+            input:
+                tuple sample_id, file(json) from fastp_stats_OAS_ch
+
+            output:
+                tuple sample_id, file("*.csv") into fastp_csv_OAS
+
+            script:
+                """
+                echo ${sample_id}
+                bash get_readstats.sh ${json}
+                bash get_readqual.sh ${json}
+                """
+
         }
 
         if (params.saveReads) {
@@ -1127,7 +1152,7 @@ if (params.onlyAsm) {
         // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
         }
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
@@ -1160,7 +1185,7 @@ if (params.onlyAsm) {
         // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
         }
 
         publishDir "${workDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
@@ -2460,8 +2485,8 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results
+                tuple sample_id, file("${sample_id}.fastp.json") into fastp_stats_ch
                 tuple sample_id, file("*${sample_id}.filter.fq") into reads_rna_ch
-                tuple sample_id, file("*.csv") into fastp_csv
                 tuple sample_id, file("${sample_id}_filter.R1.fq.gz"), file("${sample_id}_filter.R2.fq.gz") into save_filter_reads
 
             script:
@@ -2472,15 +2497,40 @@ if (params.onlyAsm) {
                 --average_qual ${params.minQual} --overrepresentation_analysis --html ${sample_id}.fastp.html --json ${sample_id}.fastp.json \
                 --thread ${task.cpus} --report_title ${sample_id}
 
-                bash get_readstats.sh ${sample_id}.fastp.json
-                bash get_readqual.sh ${sample_id}.fastp.json
-
                 cp left-${sample_id}.filter.fq ${sample_id}_filter.R1.fq
                 cp right-${sample_id}.filter.fq ${sample_id}_filter.R2.fq
 
                 pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R1.fq
                 pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R2.fq
                 """
+        }
+
+        process fastp_stats {
+
+            label 'low_cpus'
+
+            tag "${sample_id}"
+
+            publishDir "${workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge conda-forge::pigz=2.3.4=hed695b0_1 conda-forge::jq=1.6=h14c3975_1000 bioconda::fastp=0.20.1=h8b12597_0" : null)
+            if (params.oneContainer){ container "${params.TPcontainer}" } else {
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastp:0.20.1--h8b12597_0" : "quay.io/biocontainers/fastp:0.20.1--h8b12597_0")
+            }
+
+            input:
+                tuple sample_id, file(json) from fastp_stats_ch
+
+            output:
+                tuple sample_id, file("*.csv") into fastp_csv
+
+            script:
+                """
+                echo ${sample_id}
+                bash get_readstats.sh ${json}
+                bash get_readqual.sh ${json}
+                """
+
         }
 
         if (params.saveReads) {
@@ -2984,6 +3034,32 @@ if (params.onlyAsm) {
             tuple sample_id, file("${sample_id}.TransABySS.k*") into assemblies_ch_transabyss_busco3, assemblies_ch_transabyss_busco4
 
         script:
+            if ((workflow.containerEngine == 'singularity' || workflow.containerEngine == 'docker') && !params.oneContainer) {
+            """
+            mkdir -p /usr/local/lib/python3.8/site-packages/bin
+            cp /usr/local/bin/skip_psl_self* /usr/local/lib/python3.8/site-packages/bin/
+            echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
+
+            for x in `echo $k | tr "," " "`;do
+                echo -e "\\n-- Trans-ABySS k\${x} --\\n"
+                transabyss -k \${x} --pe ${left} ${right} --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+            done
+
+            echo -e "\\n-- Finished with the assemblies --\\n"
+
+            for x in `echo $k | tr "," " "`;do
+                sed -i "s/>/>TransABySS.k\${x}./g" ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa
+            done
+
+            cat ${sample_id}_transabyss_*/k*.transabyss.fa-final.fa >${sample_id}.TransABySS.fa
+
+            for x in `echo $k | tr "," " "`;do
+                cp ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa ${sample_id}.TransABySS.k\${x}.fa
+            done
+
+            rm -rf ${sample_id}_transabyss_*
+            """
+            } else {
             """
             echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
 
@@ -3006,6 +3082,7 @@ if (params.onlyAsm) {
 
             rm -rf ${sample_id}_transabyss_*
             """
+            }
     }
 
     all_assemblies = Channel.create()
@@ -3033,7 +3110,7 @@ if (params.onlyAsm) {
 
         script:
             def mem_MB=(task.memory.toMega())
-            if (workflow.containerEngine == 'singularity' || workflow.containerEngine == 'docker' && params.oneContainer) {
+            if ((workflow.containerEngine == 'singularity' || workflow.containerEngine == 'docker') && params.oneContainer) {
                 """
                 echo -e "\\n-- Starting EviGene --\\n"
 
@@ -3124,18 +3201,30 @@ if (params.onlyAsm) {
 
         output:
             tuple sample_id, file("log*") into mapping_evi_results
+            tuple sample_id, file("*") into mapping_evi_results_bam
 
         script:
+        if (params.saveBam) {
             """
             a=\$( echo $files $files2 )
             ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
             r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
             r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
             bowtie2-build \${ass} \${ass} --threads ${task.cpus}
-            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
-            rm *.sam
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
+            rm *.bt2
             """
-
+        } else {
+            """
+            a=\$( echo $files $files2 )
+            ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
+            r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
+            r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
+            bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
+            rm *.bam *.bt2
+            """
+        }
     }
 
     mapping_trinity_in=Channel.create()
@@ -3167,8 +3256,8 @@ if (params.onlyAsm) {
             r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
             r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
             bowtie2-build \${ass} \${ass} --threads ${task.cpus}
-            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} -S \${ass}.sam 2>&1 | tee -a log_\${ass}.txt
-            rm *.sam
+            bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
+            rm *.bam
             """
 
     }
@@ -3488,7 +3577,7 @@ if (params.onlyAsm) {
             // change container in oneContainer option
             conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
             if (params.oneContainer){ container "${params.v4container}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
             }
 
             input:
@@ -3584,7 +3673,7 @@ if (params.onlyAsm) {
             // change container in oneContainer option
             conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
             if (params.oneContainer){ container "${params.v4container}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
             }
 
             input:
@@ -3655,7 +3744,7 @@ if (params.onlyAsm) {
         // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
         }
 
         input:
@@ -4983,8 +5072,6 @@ if (params.onlyAsm) {
 
     process busco4_OE {
 
-        conda "${params.cenv}"
-
         label 'med_cpus'
 
         tag "${sample_id}"
@@ -4994,7 +5081,7 @@ if (params.onlyAsm) {
         // change container in oneContainer option
         conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
         if (params.oneContainer){ container "${params.v4container}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "quay.io/biocontainers/busco:4.0.5--pyr36_0")
+        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
         }
 
         input:
