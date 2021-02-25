@@ -56,7 +56,7 @@ conda_c() {
         if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
             echo -e "\n\t -- Conda is installed (v4.8 or higher). Checking environment... --\n"
             #Check environment
-            check_env=$( conda info -e | grep -c "TransPi" )
+            check_env=$( conda info -e | awk '$1 == "TransPi" {print $2}' | wc -l )
 	        if [ "$check_env" -eq 0 ];then
                 echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
                 if [ -f transpi_env.yml ];then
