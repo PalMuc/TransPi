@@ -419,6 +419,7 @@ uniprot_meta () {
             echo -e "\n\n\t -- Downloading current metazoan protein dataset from UNIPROT -- \n"
             echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
             curl -o uniprot_metazoa_33208.fasta.gz "https://www.uniprot.org/uniprot/?query=taxonomy:33208&format=fasta&compress=yes&include=no"
+            echo -e "\n\t -- Uncompressing uniprot_metazoa_33208.fasta.gz ... -- \n"
             gunzip uniprot_metazoa_33208.fasta.gz
             date -u >.lastrun.txt
             uni_c
