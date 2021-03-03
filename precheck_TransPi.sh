@@ -546,7 +546,7 @@ evi_c () {
         echo -e "\n\t -- EvidentialGene is already installed -- \n"
     fi
 }
-trisql_c () {
+trisql_container () {
     if [ ! -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
         echo -e -n "\n\t    Do you want to install the custom sqlite database? (y or n): "
@@ -568,6 +568,51 @@ trisql_c () {
             ;;
             *)
                 echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+                trisql_container
+            ;;
+        esac
+    elif [ -e *.sqlite ];then
+        echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
+        DB=$( cat .lastrun.txt )
+        echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
+    fi
+}
+trisql_c () {
+    source ~/.bashrc
+    check_conda=$( command -v conda )
+    if [ "$check_conda" == "" ];then
+        echo -e "\n\t\e[31m -- Looks like conda is not installed--\e[39m\n"
+        exit 0
+    fi
+    if [ ! -e *.sqlite ];then
+        echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
+        echo -e -n "\n\t    Do you want to install the custom sqlite database? (y or n): "
+        read ans
+        case $ans in
+            [yY] | [yY][eE][sS])
+                condaRoot=$( conda info --json | grep "CONDA_ROOT" | cut -f 2 -d ":" | tr -d "," | tr -d " " | tr -d "\"" )
+                if [ -f ${condaRoot}/etc/profile.d/conda.sh ];then
+                    source ${condaRoot}/etc/profile.d/conda.sh
+                    conda activate TransPi
+                    check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+                    if [ $check_sql -eq 0 ];then
+                        echo -e "\n\t -- Script \"Build_Trinotate_Boilerplate_SQLite_db.pl\" from Trinotate cannot be found -- \n"
+                        echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                        exit 0
+                    elif [ $check_sql -eq 1 ];then
+                        echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
+                        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                        rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
+                        date -u >.lastrun.txt
+                    fi
+                fi
+            ;;
+            [nN] | [nN][oO])
+                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/DBs/sqlite_db". Then rerun the pre-check  --\e[39m\n"
+                exit 0
+            ;;
+            *)
+                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
                 trisql_c
             ;;
         esac
@@ -581,11 +626,9 @@ buildsql_c () {
     cd ${mypwd}
     if [ -d DBs/sqlite_db/ ];then
         cd DBs/sqlite_db/
-        trisql_c
     else
         mkdir -p DBs/sqlite_db/
         cd DBs/sqlite_db/
-        trisql_c
     fi
 }
 pfam_c() {
@@ -620,6 +663,7 @@ pfam_c() {
 bus_env4 () {
     echo -e "\n\t -- Creating BUSCO V4 environment --\n"
     conda create -n busco4 -c conda-forge -c bioconda busco=4.1.4=py_0 -y
+    conda clean -a -y
 }
 bus4 () {
     cd $mypwd
@@ -643,7 +687,7 @@ get_var_container () {
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
     echo "Tsql=$mypwd/DBs/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
-    echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "unpdate=$( if [ -f ${mypwd}/DBs/uniprot_db/.lastrun.txt ];then cat ${mypwd}/DBs/uniprot_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
@@ -673,7 +717,7 @@ get_var () {
     echo "pfname=Pfam-A.hmm" >>${mypwd}/.varfile.sh
     echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
     echo "Tsql=$mypwd/DBs/sqlite_db/*.sqlite" >>${mypwd}/.varfile.sh
-    echo "unpdate=$( cat ${mypwd}/uniprot_db/.lastrun.txt )" >>${mypwd}/.varfile.sh
+    echo "unpdate=$( if [ -f ${mypwd}/DBs/uniprot_db/.lastrun.txt ];then cat ${mypwd}/DBs/uniprot_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
@@ -708,6 +752,7 @@ pipeline_steup() {
             nextflow_c
             evi_c
             buildsql_c
+            trisql_container
             pfam_c
             echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
             get_var_container
@@ -721,6 +766,7 @@ pipeline_steup() {
             nextflow_c
             evi_c
             buildsql_c
+            trisql_c
             pfam_c
             bus4
             echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
