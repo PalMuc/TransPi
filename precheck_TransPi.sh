@@ -789,6 +789,9 @@ elif [ ! -d "$mypwd" ];then
     echo -e "\n\t -- Please provide a valid PATH to run TransPi -- \n"
     exit 0
 elif [ -d "$mypwd" ];then
+    if [ ${mypwd} == "." ];then
+        export mypwd=$(pwd)
+    fi
     cd $mypwd
     pipeline_steup
 fi
