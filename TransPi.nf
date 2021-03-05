@@ -2461,9 +2461,8 @@ if (params.onlyAsm) {
     skip_filter_ch = Channel.create()
     skip_filter_only_ch = Channel.create()
     skip_norm_ch = Channel.create()
-    skip_norm_only_ch = Channel.create()
     skip_busco_dist = Channel.create()
-    report_reads.into( skip_filter_ch, skip_filter_only_ch, skip_norm_ch, skip_norm_only_ch, skip_busco_dist )
+    report_reads.into( skip_filter_ch, skip_filter_only_ch, skip_norm_ch, skip_busco_dist )
 
     if (!params.skipFilter) {
 
@@ -2487,7 +2486,7 @@ if (params.onlyAsm) {
                 tuple sample_id, file("*.fastp.{json,html}") into fastp_results
                 tuple sample_id, file("${sample_id}.fastp.json") into fastp_stats_ch
                 tuple sample_id, file("*${sample_id}.filter.fq") into reads_rna_ch
-                tuple sample_id, file("${sample_id}_filter.R1.fq.gz"), file("${sample_id}_filter.R2.fq.gz") into save_filter_reads
+                tuple sample_id, file("left-${sample_id}.filter.fq"), file("right-${sample_id}.filter.fq") into save_filter_reads
 
             script:
                 """
@@ -2496,12 +2495,6 @@ if (params.onlyAsm) {
                 fastp -i ${reads[0]} -I ${reads[1]} -o left-${sample_id}.filter.fq -O right-${sample_id}.filter.fq --detect_adapter_for_pe \
                 --average_qual ${params.minQual} --overrepresentation_analysis --html ${sample_id}.fastp.html --json ${sample_id}.fastp.json \
                 --thread ${task.cpus} --report_title ${sample_id}
-
-                cp left-${sample_id}.filter.fq ${sample_id}_filter.R1.fq
-                cp right-${sample_id}.filter.fq ${sample_id}_filter.R2.fq
-
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R1.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R2.fq
                 """
         }
 
@@ -2513,9 +2506,9 @@ if (params.onlyAsm) {
 
             publishDir "${workDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge conda-forge::pigz=2.3.4=hed695b0_1 conda-forge::jq=1.6=h14c3975_1000 bioconda::fastp=0.20.1=h8b12597_0" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::jq=1.6=h14c3975_1000 " : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastp:0.20.1--h8b12597_0" : "quay.io/biocontainers/fastp:0.20.1--h8b12597_0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
             }
 
             input:
@@ -2537,9 +2530,16 @@ if (params.onlyAsm) {
 
             process save_filter_reads {
 
+                label 'med_cpus'
+
                 tag "${sample_id}"
 
-                publishDir "${workDir}/${params.outdir}/saveReads/filtering", mode: "copy", overwrite: true, pattern: "*_R{1,2}.filter.fq.gz"
+                publishDir "${workDir}/${params.outdir}/saveReads/filter", mode: "copy", overwrite: true, pattern: "*_R{1,2}.filter.fq.gz"
+
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+                }
 
                 input:
                     tuple sample_id, file(r1), file(r2) from save_filter_reads
@@ -2549,8 +2549,10 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    cat $r1 >${sample_id}_filter.R1.fq.gz
-                    cat $r2 >${sample_id}_filter.R2.fq.gz
+                    cat $r1 >${sample_id}_filter.R1.fq
+                    cat $r2 >${sample_id}_filter.R2.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R1.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_filter.R2.fq
                     """
             }
         }
@@ -2569,7 +2571,7 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            publishDir "${workDir}/${params.outdir}/rRNA_reads", mode: "copy", overwrite: true
+            publishDir "${workDir}/${params.outdir}/rRNA_reads", mode: "copy", overwrite: true, pattern: "*.log"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::sortmerna=4.2.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -2581,6 +2583,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("*rRNA.R*.fq") into reads_rna_ass
+                tuple sample_id, file("${sample_id}_rRNA_reads.R1.fq"), file("${sample_id}_rRNA_reads.R2.fq"), file("${sample_id}_no_rRNA.R1.fq"), file("${sample_id}_no_rRNA.R2.fq") into save_rrna_reads
                 tuple sample_id, file("${sample_id}_remove_rRNA.log") into remove_rrna_sum
 
             script:
@@ -2604,6 +2607,42 @@ if (params.onlyAsm) {
                 """
             }
         }
+
+        if (params.saveReads) {
+
+            process save_rrna_reads {
+
+                label 'med_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${workDir}/${params.outdir}/saveReads/rRNA", mode: "copy", overwrite: true, pattern: "*.gz"
+
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+                }
+
+                input:
+                    tuple sample_id, file(r1), file(r2), file(r3), file (r4) from save_rrna_reads
+
+                output:
+                    tuple sample_id, file("*.gz") into save_rrna_reads_out
+
+                script:
+                    """
+                    cat $r1 >${sample_id}_rRNA_reads.R1.fq
+                    cat $r2 >${sample_id}_rRNA_reads.R2.fq
+                    cat $r3 >${sample_id}_no_rRNA.R1.fq
+                    cat $r4 >${sample_id}_no_rRNA.R2.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_rRNA_reads.R1.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_rRNA_reads.R2.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_no_rRNA.R1.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_no_rRNA.R2.fq
+                    """
+            }
+        }
+
     } else {
         reads_rna_ch
             .into{ reads_rna_ass; skip_rna_ch }
@@ -2632,9 +2671,9 @@ if (params.onlyAsm) {
 
             tag "${sample_id}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda trinity=2.9.1 pigz=2.3.4" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda trinity=2.9.1=h8b12597_1" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-13733e73a40b40f427f5bc7edcfbd4f0dbd27ae0:fcba8b2e03b4c752f3076b94d7c315f77345e143-0" : "quay.io/biocontainers/mulled-v2-13733e73a40b40f427f5bc7edcfbd4f0dbd27ae0:fcba8b2e03b4c752f3076b94d7c315f77345e143-0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinity:2.9.1--h8b12597_1" : "quay.io/biocontainers/trinity:2.9.1--h8b12597_1")
             }
 
             input:
@@ -2643,7 +2682,7 @@ if (params.onlyAsm) {
             output:
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( norm_reads_soap, norm_reads_velvet, norm_reads_trinity, norm_reads_spades, norm_reads_transabyss, reads_rna_quast )
                 tuple sample_id, file("left-${sample_id}.norm.fq"), file("right-${sample_id}.norm.fq") into ( mapping_reads_trinity, mapping_reads_evi, mapping_symbiont )
-                tuple sample_id, file("${sample_id}_norm.R1.fq.gz"), file("${sample_id}_norm.R2.fq.gz") into ( save_norm_reads )
+                tuple sample_id, file("left-"${sample_id}".norm.fq"), file("right-"${sample_id}".norm.fq") into save_norm_reads
                 tuple sample_id, file("${sample_id}_normStats.txt") into norm_report
 
             script:
@@ -2666,11 +2705,7 @@ if (params.onlyAsm) {
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
 
-                mv left.norm.fq ${sample_id}_norm.R1.fq
-                mv right.norm.fq ${sample_id}_norm.R2.fq
-
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
+                rm \$(readlink -e left.norm.fq) \$(readlink -e right.norm.fq ) left.norm.fq right.norm.fq
                 """
             } else if (params.skipFilter && !params.rRNAfilter) {
                 """
@@ -2691,11 +2726,7 @@ if (params.onlyAsm) {
                 cp left.norm.fq left-"${sample_id}".norm.fq
                 cp right.norm.fq right-"${sample_id}".norm.fq
 
-                mv left.norm.fq ${sample_id}_norm.R1.fq
-                mv right.norm.fq ${sample_id}_norm.R2.fq
-
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
-                pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
+                rm \$(readlink -e left.norm.fq) \$(readlink -e right.norm.fq ) left.norm.fq right.norm.fq
                 """
             }
         }
@@ -2704,20 +2735,29 @@ if (params.onlyAsm) {
 
             process save_norm_reads {
 
+                label 'med_cpus'
+
                 tag "${sample_id}"
 
-                publishDir "${workDir}/${params.outdir}/saveReads/normalization", mode: "copy", overwrite: true, pattern: "*_R{1,2}.norm.fq.gz"
+                publishDir "${workDir}/${params.outdir}/saveReads/normalization", mode: "copy", overwrite: true, pattern: "*.gz"
+
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+                }
 
                 input:
                     tuple sample_id, file(r1), file(r2) from save_norm_reads
 
                 output:
-                    tuple sample_id, file("*.norm.fq.gz") into save_norm_reads_out
+                    tuple sample_id, file("*.gz") into save_norm_reads_out
 
                 script:
                     """
-                    cat $r1 >${sample_id}_norm.R1.fq.gz
-                    cat $r2 >${sample_id}_norm.R2.fq.gz
+                    cat $r1 >${sample_id}_norm.R1.fq
+                    cat $r2 >${sample_id}_norm.R2.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
+                    pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
                     """
             }
         }
