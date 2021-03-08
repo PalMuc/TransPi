@@ -2632,12 +2632,12 @@ if (params.onlyAsm) {
                 script:
                     """
                     cat $r1 >${sample_id}_rRNA_reads.R1.fq
-                    cat $r2 >${sample_id}_rRNA_reads.R2.fq
-                    cat $r3 >${sample_id}_no_rRNA.R1.fq
-                    cat $r4 >${sample_id}_no_rRNA.R2.fq
                     pigz --best --force -p ${task.cpus} -r ${sample_id}_rRNA_reads.R1.fq
+                    cat $r2 >${sample_id}_rRNA_reads.R2.fq
                     pigz --best --force -p ${task.cpus} -r ${sample_id}_rRNA_reads.R2.fq
+                    cat $r3 >${sample_id}_no_rRNA.R1.fq
                     pigz --best --force -p ${task.cpus} -r ${sample_id}_no_rRNA.R1.fq
+                    cat $r4 >${sample_id}_no_rRNA.R2.fq
                     pigz --best --force -p ${task.cpus} -r ${sample_id}_no_rRNA.R2.fq
                     """
             }
