@@ -2508,7 +2508,7 @@ if (params.onlyAsm) {
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::jq=1.6=h14c3975_1000 " : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/jq:1.6" : "quay.io/biocontainers/jq:1.6)
             }
 
             input:
@@ -2538,7 +2538,7 @@ if (params.onlyAsm) {
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/pigz:2.3.4" : "quay.io/biocontainers/pigz:2.3.4")
                 }
 
                 input:
@@ -2620,7 +2620,7 @@ if (params.onlyAsm) {
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/pigz:2.3.4" : "quay.io/biocontainers/pigz:2.3.4")
                 }
 
                 input:
@@ -2743,7 +2743,7 @@ if (params.onlyAsm) {
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/NAME_HERE" : "quay.io/biocontainers/NAME_HERE")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/pigz:2.3.4" : "quay.io/biocontainers/pigz:2.3.4")
                 }
 
                 input:
@@ -2755,8 +2755,8 @@ if (params.onlyAsm) {
                 script:
                     """
                     cat $r1 >${sample_id}_norm.R1.fq
-                    cat $r2 >${sample_id}_norm.R2.fq
                     pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R1.fq
+                    cat $r2 >${sample_id}_norm.R2.fq
                     pigz --best --force -p ${task.cpus} -r ${sample_id}_norm.R2.fq
                     """
             }
