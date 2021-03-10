@@ -10,6 +10,7 @@
  ```
 
 [![Prepint](http://d2538ggaoe6cji.cloudfront.net/sites/default/files/images/favicon.ico)](https://doi.org/10.1101/2021.02.18.431773)[**Preprint**](https://doi.org/10.1101/2021.02.18.431773) &ensp;[![Chat on Gitter](https://img.shields.io/gitter/room/PalMuc/TransPi.svg?colorB=26af64&style=popout)](https://gitter.im/PalMuc/TransPi) &ensp;[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)&ensp;[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)&ensp;[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
+[![release](https://img.shields.io/github/v/release/PalMuc/TransPi?label=release&logo=github)](https://github.com/PalMuc/TransPi/releases/latest)
 
 # Table of contents
 * [General info](#General-info)
