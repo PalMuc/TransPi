@@ -739,7 +739,7 @@ get_var () {
         -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
 }
-pipeline_steup() {
+pipeline_setup() {
     echo -e "\n\t -- Conda or containers (e.g. docker, singularity) -- \n"
     echo -e -n "\n\t    Do you plan to run TransPi with containers (i.e. Singularity or Docker)? (y or n): "
     read ans
@@ -775,7 +775,7 @@ pipeline_steup() {
         ;;
         *)
             echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
-            pipeline_steup
+            pipeline_setup
         ;;
     esac
 }
@@ -790,5 +790,5 @@ elif [ ! -d "$mypwd" ];then
     exit 0
 elif [ -d "$mypwd" ];then
     cd $mypwd
-    pipeline_steup
+    pipeline_setup
 fi
