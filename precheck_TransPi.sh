@@ -454,9 +454,9 @@ uniprot_c () {
         cd DBs/uniprot_db/
         myuni=$( pwd )
         echo -e "\n\t -- UNIPROT database directory found at: $myuni -- \n"
-        myfasta=$( ls -1 * | egrep '.fasta|.fa' | wc -l )
+        myfasta=$( ls -1 | egrep '.fasta|.fa' | wc -l )
         if [ $myfasta -eq 0 ];then
-            myfastagz=$( ls -1 * | egrep '.fasta.gz|.fa.gz' | wc -l )
+            myfastagz=$( ls -1 | egrep '.fasta.gz|.fa.gz' | wc -l )
             if [ $myfastagz -eq 0 ];then
                 echo -e "\n\t -- Directory \"$myuni\" is empty --\n"
                 uniprot_meta
