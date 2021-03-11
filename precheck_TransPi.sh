@@ -45,7 +45,7 @@ source_c() {
     fi
 }
 conda_c() {
-    source ~/.bashrc
+    source_c
     cd $mypwd
     #Check conda and environment
     check_conda=$( command -v conda )
@@ -116,11 +116,11 @@ dir_c () {
 #temporary function for busco V3
 busv3_get () {
     v3name=$1
-    if [ `cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" | wc -l` -eq 1 ];then
+    if [ `cat ${confDir}/conf/busV3list.txt | grep "${v3name}" | wc -l` -eq 1 ];then
         if [ -d ${v3name}_odb9 ];then
             export busnaV3=${v3name}_odb9
         else
-            tname=$( cat ${mypwd}/conf/busV3list.txt | grep "${v3name}" )
+            tname=$( cat ${confDir}/conf/busV3list.txt | grep "${v3name}" )
             wget $tname
             tar -xf ${v3name}_odb9.tar.gz
             export busnaV3=${v3name}_odb9
@@ -139,17 +139,17 @@ bus_dow () {
         mkdir -p DBs/busco_db
         cd DBs/busco_db
         bname=$( echo $name | cut -f 1 -d "_" )
-        if [ `cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
+        if [ `cat ${confDir}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
             echo -e "\n\t -- Downloading BUSCO V4 \"$name\" database --\n";wait
-            wname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
+            wname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
             wget $wname
             echo -e "\n\t -- Preparing files ... --\n";wait
-            tname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            tname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
             tar -xf ${tname}*.tar.gz
             rm ${tname}*.tar.gz
             echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
         fi
-        dname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        dname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
         #get buscov3
         busv3_get $dname
         if [ -d ${dname}_odb10 ];then
@@ -158,7 +158,7 @@ bus_dow () {
     elif [ -d DBs/busco_db/ ];then
         cd DBs/busco_db
         bname=$( echo $name | cut -f 1 -d "_" )
-        dname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+        dname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
         if [ -d ${dname}_odb10 ];then
             #get buscov3
             busv3_get $dname
@@ -166,17 +166,17 @@ bus_dow () {
             export busna=${dname}_odb10
         else
             bname=$( echo $name | cut -f 1 -d "_" )
-            if [ `cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
+            if [ `cat ${confDir}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
                 echo -e "\n\t -- Downloading BUSCO V4 \"$name\" database --\n";wait
-                wname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
+                wname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
                 wget $wname
                 echo -e "\n\t -- Preparing files ... --\n";wait
-                tname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+                tname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
                 tar -xvf ${tname}*.tar.gz
                 rm ${tname}*.tar.gz
                 echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
             fi
-            dname=$( cat ${mypwd}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
+            dname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
             #get buscov3
             busv3_get $dname
             if [ -d ${dname}_odb10 ];then
@@ -190,21 +190,21 @@ bus_c () {
     echo -e "\n\t -- Selecting BUSCO V4 database -- \n"
     PS3="
     Please select one (1-5): "
-    if [ -f ${mypwd}/conf/busV4list.txt ];then
-    select var in `cat ${mypwd}/conf/busV4list.txt | grep "###" | tr -d "#"`;do
+    if [ -f ${confDir}/conf/busV4list.txt ];then
+    select var in `cat ${confDir}/conf/busV4list.txt | grep "###" | tr -d "#"`;do
     case $var in
         BACTERIA)
             echo -e "\n\t You selected BACTERIA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##BACTERIA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
     	    case $var1 in
     	        MAIN_MENU)
                     bus_c
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -220,20 +220,20 @@ bus_c () {
             echo -e "\n\tYou selected EUKARYOTA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##EUKARYOTA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
         	case $var1 in
         	    MAIN_MENU)
                     bus_c
                 ;;
                 Arthropoda_\(Phylum\))
-                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##ARTHROPODA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -245,14 +245,14 @@ bus_c () {
                     done
                 ;;
                 Fungi_\(Kingdom\))
-                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##FUNGI/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -264,14 +264,14 @@ bus_c () {
                     done
                 ;;
                 Plants_\(Kingdom\))
-                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##PLANTS/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -283,14 +283,14 @@ bus_c () {
                     done
                 ;;
                 Protists_\(Clade\))
-                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##PROTIST/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -302,14 +302,14 @@ bus_c () {
                     done
                 ;;
                 Vertebrata_\(Sub_phylum\))
-                    select var2 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+                    select var2 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##VERTEBRATA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
                     case $var2 in
                     MAIN_MENU)
                         bus_c
                     ;;
                     *)
                     if [ "$var2" != "" ];then
-                        if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
+                        if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var2"` -ge 1 ];then
                             bus_dow $var2
                         fi
                     else
@@ -322,7 +322,7 @@ bus_c () {
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -338,14 +338,14 @@ bus_c () {
             echo -e "\n\tYou selected ARCHAEA. Which specific database? \n"
             PS3="
 	    Please select database: "
-            select var1 in `cat ${mypwd}/conf/busV4list.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
+            select var1 in `cat ${confDir}/conf/busV4list.txt | sed -n "/##ARCHAEA/,/#MAIN/p" | grep -v "##" | tr -d "#"`;do
             case $var1 in
             	MAIN_MENU)
                     bus_c
                 ;;
                 *)
                 if [ "$var1" != "" ];then
-                    if [ `cat ${mypwd}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
+                    if [ `cat ${confDir}/conf/busV4list.txt | grep -c "$var1"` -ge 1 ];then
                         bus_dow $var1
                     fi
                 else
@@ -789,6 +789,18 @@ elif [ ! -d "$mypwd" ];then
     echo -e "\n\t -- Please provide a valid PATH to run TransPi -- \n"
     exit 0
 elif [ -d "$mypwd" ];then
-    cd $mypwd
+    if [ ${mypwd} == "." ];then
+        mypwd=$(pwd)
+        confDir=$(pwd)
+        cd $mypwd
+    elif [ ${mypwd} == $(pwd) ]; then
+        confDir=$(pwd)
+        cd $mypwd
+    else
+        confDir=$( dirname ${BASH_SOURCE} )
+        if [ ${confDir} == "." ];then
+             confDir=$(pwd)
+        fi
+    fi
     pipeline_setup
 fi
