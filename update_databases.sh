@@ -1,13 +1,7 @@
 #!/usr/bin env bash
-mypwd=$( pwd )
-db_c () {
-    if [ ! -d DBs ];then
-        mkdir DBs
-    fi
-}
+export mypwd="$1"
 pfam_c() {
-    #Check PFAM files
-    cd $mypwd
+    cd $installDir
     if [ ! -d DBs/hmmerdb/ ];then
         echo -e "\n\t -- Creating directory for the HMMER database --\n"
         mkdir -p DBs/hmmerdb/
@@ -30,14 +24,49 @@ pfam_c() {
 }
 sqld(){
     rm -rf *
-    echo -e "\n\t -- Custom sqlite database for Trinotate will be installed -- \n"
-    echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
-    wget https://github.com/Trinotate/Trinotate/archive/Trinotate-v3.2.1.tar.gz
-    tar -xf Trinotate-v3.2.1.tar.gz
-    mv Trinotate-Trinotate-v3.2.1/ Trinotate_build_scripts/
-    ./Trinotate_build_scripts/admin/Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-    rm uniprot_sprot.dat.gz
-    date -u >.lastrun.txt
+    source ~/.bashrc
+    check_conda=$( command -v conda )
+    if [ "$check_conda" == "" ];then
+        echo -e "\n\t\e[31m -- Looks like conda is not installed--\e[39m\n"
+        exit 0
+    fi
+    if [ ! -e *.sqlite ];then
+        echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
+        echo -e -n "\n\t    Do you want to install the custom sqlite database? (y or n): "
+        read ans
+        case $ans in
+            [yY] | [yY][eE][sS])
+                condaRoot=$( conda info --json | grep "CONDA_ROOT" | cut -f 2 -d ":" | tr -d "," | tr -d " " | tr -d "\"" )
+                if [ -f ${condaRoot}/etc/profile.d/conda.sh ];then
+                    source ${condaRoot}/etc/profile.d/conda.sh
+                    conda activate TransPi
+                    check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
+                    if [ $check_sql -eq 0 ];then
+                        echo -e "\n\t -- Script \"Build_Trinotate_Boilerplate_SQLite_db.pl\" from Trinotate cannot be found -- \n"
+                        echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
+                        exit 0
+                    elif [ $check_sql -eq 1 ];then
+                        echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
+                        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+                        rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
+                        date -u >.lastrun.txt
+                    fi
+                fi
+            ;;
+            [nN] | [nN][oO])
+                echo -e "\n\t\e[31m -- ERROR: Generate the custom trinotate sqlite database at "${mypwd}/DBs/sqlite_db". Then rerun the pre-check  --\e[39m\n"
+                exit 0
+            ;;
+            *)
+                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
+                trisql_c
+            ;;
+        esac
+    elif [ -e *.sqlite ];then
+        echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
+        DB=$( cat .lastrun.txt )
+        echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
+    fi
     pfam_c
 }
 ddate() {
@@ -69,7 +98,7 @@ ddate() {
             ;;
             [nN] | [nN][oO])
                 echo -e "\n\n\t -- Exiting program -- \n"
-                exit 0
+                exit
             ;;
             *)
                 echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
@@ -79,9 +108,9 @@ ddate() {
     fi
 }
 downd() {
-    cd $mypwd
+    cd $installDir
     if [ ! -d DBs/sqlite_db/ ];then
-        echo -e "\n\t -- SQLite directory not found at ${mypwd}/DBs -- \n"
+        echo -e "\n\t -- SQLite directory not found at ${installDir}/DBs -- \n"
         echo -e -n "\n\t -- Do you want to create the directory and istall the last version of the databses? (y or n): "
         read ans
         case $ans in
@@ -100,7 +129,7 @@ downd() {
             ;;
         esac
     elif [ -d DBs/sqlite_db/ ];then
-        echo -e "\n\t -- SQLite direcotry found at ${mypwd}/DBs -- \n"
+        echo -e "\n\t -- SQLite direcotry found at ${installDir}/DBs -- \n"
         cd DBs/sqlite_db/
         if [ ! -e *.sqlite ];then
             echo -e "\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
@@ -131,8 +160,23 @@ message(){
     echo -e "\n###################################################################\n"
     echo -e "\n  Script for updating the databases used by TransPi \n"
     echo -e "\n  - SwissProt, PFAM, eggNOG, GO, and Trinotate SQL database - \n"
+    echo -e "\n  You need the TransPi conda environment installed and the PATH to install/update the DBs \n"
+    echo -e "\n  Example: /home/ubuntu/TransPi/ \n"
     echo -e "\n###################################################################\n"
 }
-message
-db_c
-downd
+if [ "$mypwd" == "" ] || [ "$mypwd" == "-h" ] || [ "$mypwd" == "-help" ] || [ "$mypwd" == "--help" ];then
+    message
+elif [ ! -d "$mypwd" ];then
+    echo -e "\n\t -- Please provide a valid PATH to install/update the DBs -- \n"
+    exit 0
+elif [ -d "$mypwd" ];then
+    if [ ${mypwd} == "." ];then
+        mypwd=$(pwd)
+        installDir=$(pwd)
+    elif [ ${mypwd} == $(pwd) ]; then
+        installDir=$(pwd)
+    else
+        installDir=${mypwd}
+    fi
+    downd
+fi
