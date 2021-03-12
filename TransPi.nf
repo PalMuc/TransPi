@@ -1366,137 +1366,6 @@ if (params.onlyAsm) {
         .fromFilePairs("${launchDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
         .into{ annotation_ch_transdecoder_OA; annotation_ch_transdecoderB_OA; assembly_ch_rnammer_OA }
 
-    process custom_diamond_db_OA {
-
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
-        }
-
-        script:
-            """
-            cd ${params.pipeInstall}
-            echo -e "-- Checking if Diamond database folder is present --\\n"
-            if [ ! -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
-                mkdir -p DBs/diamonddb_custom/
-                cd DBs/diamonddb_custom
-                cp ${params.uniprot} .
-                diamond makedb --in ${params.uniname} -d ${params.uniname}
-                export unidb=`pwd`/${params.uniname}
-                cd ../
-            elif [ -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
-                cd DBs/diamonddb_custom
-                if [ ! -e ${params.uniname}.dmnd ];then
-                    echo -e "-- Diamond database not present, creating one --\\n"
-                    cp ${params.uniprot} .
-                    diamond makedb --in ${params.uniname} -d ${params.uniname}
-                    export unidb=`pwd`/${params.uniname}
-                elif [ -e ${params.uniname}.dmnd  ];then
-                    echo -e "-- Diamond database already created --\\n"
-                    export unidb=`pwd`/${params.uniname}
-                fi
-                cd ../
-            fi
-            """
-    }
-
-    process hmmer_db_OA {
-
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
-        }
-
-        script:
-            """
-            cd ${params.pipeInstall}
-            echo -e "-- Checking if HMMER database folder is present --\\n"
-            if [ -d DBs/hmmerdb/ ];then
-                echo -e "-- Folder is present. Checking if HMMER database is built --\\n"
-                cd DBs/hmmerdb
-                if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database not present, creating one --\\n"
-                    hmmpress ${params.pfname}
-                    export pf=`pwd`/${params.pfname}
-                elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database already created --\\n"
-                    export pf=`pwd`/${params.pfname}
-                fi
-                cd ../
-            fi
-            """
-    }
-
-    process swiss_diamond_db_OA {
-
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
-        }
-
-        script:
-            """
-            cd ${params.pipeInstall}/DBs/sqlite_db
-            if [ -e uniprot_sprot.pep ];then
-                cd ${params.pipeInstall}
-                if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
-                    mkdir -p DBs/diamonddb_swiss
-                    cd DBs/diamonddb_swiss
-                    cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
-                    diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                    export swissdb=`pwd`/uniprot_sprot.pep
-                elif [ -d DBs/diamonddb_swiss/ ];then
-                    cd DBs/diamonddb_swiss
-                    if [ ! -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database not present, creating one --\\n"
-                        cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
-                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                        export swissdb=`pwd`/uniprot_sprot.pep
-                    elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\\n"
-                        export swissdb=`pwd`/uniprot_sprot.pep
-                    fi
-                fi
-            elif [ ! -e uniprot_sprot.pep ];then
-                cd ${params.pipeInstall}
-                if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
-                    mkdir -p DBs/diamonddb_swiss
-                    cd DBs/diamonddb_swiss
-                    wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
-                    EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
-                    rm ind.*
-                    mv uniprot_sprot.dat.gz.pep uniprot_sprot.pep
-                    diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                    export swissdb=`pwd`/uniprot_sprot.pep
-                elif [ -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
-                    cd DBs/diamonddb_swiss
-                    if [ ! -e uniprot_sprot.pep.dmnd ];then
-                        if [ ! -e uniprot_sprot.pep ];then
-                            echo -e "-- Diamond database not present, creating one --\\n"
-                            wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
-                            EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
-                            rm ind.*
-                            mv uniprot_sprot.dat.gz.pep uniprot_sprot.pep
-                            diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                            export swissdb=`pwd`/uniprot_sprot.pep
-                        elif [ -e uniprot_sprot.pep ];then
-                            diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                            export swissdb=`pwd`/uniprot_sprot.pep
-                        fi
-                    elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\\n"
-                        export swissdb=`pwd`/uniprot_sprot.pep
-                    fi
-                fi
-            fi
-            """
-    }
-
     if (params.shortTransdecoder) {
 
         process transdecoder_short_OA {
@@ -1516,31 +1385,28 @@ if (params.onlyAsm) {
                 tuple sample_id, file(assembly) from annotation_ch_transdecoder_OA
 
             output:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
+                tuple sample_id, file("${assembly}"), file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
                 tuple sample_id, file("${sample_id}.*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
-                tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
+                tuple sample_id, file("${assembly}") into transdecoder_assembly_ch_trinotate_OA
                 tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary_OA
                 tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv_OA
                 tuple sample_id, file("${sample_id}.*.transdecoder.{cds,gff,bed}") into transdecoder_files_OA
 
             script:
                 """
-                cp ${assembly} ${sample_id}_asssembly.fasta
-
                 echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                TransDecoder.LongOrfs -t ${assembly}
+                TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
 
                 echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
                 echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-                TransDecoder.Predict -t ${assembly}
+                TransDecoder.Predict -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
 
                 echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
                 echo -e "\\n-- Calculating statistics... --\\n"
-
                 #Calculate statistics of Transdecoder
                 echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.*.transdecoder.pep | grep -c ">" )
@@ -1561,8 +1427,11 @@ if (params.onlyAsm) {
                 n3prime=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                 internal=\$( cat ${sample_id}.*.transdecoder.pep  | grep -c "ORF type:internal" )
                 echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
-
                 echo -e "\\n-- Done with statistics --\\n"
+
+                cp ${assembly} ${assembly}.tmp
+                rm ${assembly}
+                mv ${assembly}.tmp ${assembly}
 
                 echo -e "\\n-- DONE with TransDecoder --\\n"
                 """
@@ -1623,12 +1492,27 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
+                    dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
 
                     echo -e "\\n-- Starting Diamond (blastp) --\\n"
-
-                    diamond blastp -d \$unidb -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
-
+                    if [ ! -d \${dbPATH} ];then
+                        echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
+                        exit 0
+                    elif [ -d \${dbPATH} ];then
+                        if [ ! -e \${dbPATH}/${params.uniname} ];then
+                            echo "File \${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
+                            exit 0
+                        elif [ -e \${dbPATH}/${params.uniname} ];then
+                            if [ ! -e \${dbPATH}/${params.uniname}.dmnd ];then
+                                cp \${dbPATH}/${params.uniname} .
+                                diamond makedb --in ${params.uniname} -d ${params.uniname} -p ${task.cpus}
+                                diamond blastp -d ${params.uniname}.dmnd -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
+                            elif [ -e \${dbPATH}/${params.uniname}.dmnd ];then
+                                cp \${dbPATH}/${params.uniname}.dmnd .
+                                diamond blastp -d ${params.uniname}.dmnd -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
+                            fi
+                        fi
+                    fi
                     echo -e "\\n-- Done with Diamond (blastp) --\\n"
                     """
             }
@@ -1654,16 +1538,36 @@ if (params.onlyAsm) {
 
                 script:
                     """
+                    dbPATH=${params.pipeInstall}/DBs/hmmerdb/
                     echo -e "\\n-- Starting HMMER --\\n"
-
-                    hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfloc} ${pep}
-
+                    if [ ! -d \${dbPATH} ];then
+                        echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
+                        exit 0
+                    elif [ -d \${dbPATH} ];then
+                        if [ ! -e \${dbPATH}/${params.pfname} ];then
+                            echo "File \${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
+                            exit 0
+                        elif [ -e \${dbPATH}/${params.pfname} ];then
+                            if [ ! -e \${dbPATH}/${params.pfname}.h3f ] && [ ! -e \${dbPATH}/${params.pfname}.h3i ] && [ ! -e \${dbPATH}/${params.pfname}.h3m ] && [ ! -e \${dbPATH}/${params.pfname}.h3p ];then
+                                cp \${dbPATH}/${params.pfname} .
+                                hmmpress ${params.pfname}
+                                hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
+                            elif [ -s \${dbPATH}/${params.pfname}.h3f ] && [ -s \${dbPATH}/${params.pfname}.h3i ] && [ -s \${dbPATH}/${params.pfname}.h3m ] && [ -s \${dbPATH}/${params.pfname}.h3p ];then
+                                cp \${dbPATH}/${params.pfname}.* .
+                                hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
+                            else
+                                cp \${dbPATH}/${params.pfname} .
+                                hmmpress ${params.pfname}
+                                hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
+                            fi
+                        fi
+                    fi
                     echo -e "\\n-- Done with HMMER --\\n"
                     """
             }
 
             transdecoder_predict_OA_ch=Channel.create()
-            annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).into(transdecoder_predict_OA_ch)
+            annotation_ch_transdecoderB_OA.mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).into(transdecoder_predict_OA_ch)
 
             process transdecoder_predict_OA {
 
@@ -1682,7 +1586,7 @@ if (params.onlyAsm) {
                     tuple sample_id, file(files) from transdecoder_predict_OA_ch
 
                 output:
-                    tuple sample_id, file("${sample_id}*.transdecoder.pep"), file("${sample_id}_asssembly.fasta") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
+                    tuple sample_id, file("${assembly}"), file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_diamond_OA, transdecoder_ch_diamond_custom_OA )
                     tuple sample_id, file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_trinotate_OA, transdecoder_ch_hmmer_OA, transdecoder_ch_signalp_OA, transdecoder_ch_tmhmm_OA )
                     tuple sample_id, file("${sample_id}_asssembly.fasta") into transdecoder_assembly_ch_trinotate_OA
                     tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary_OA
@@ -1691,31 +1595,23 @@ if (params.onlyAsm) {
 
                 script:
                     """
-                    a=\$( echo $files )
-                    ass=\$( echo \$a | tr " " "\\n" | grep -v "pfam.domtblout" | grep ".fa" )
-                    dia=\$( echo \$a | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
-                    pfa=\$( echo \$a | tr " " "\\n" | grep ".pfam.domtblout" )
-
-                    cp \${ass} tmp.fasta
-
-                    rm \${ass}
-
-                    mv tmp.fasta ${sample_id}_asssembly.fasta
+                    ass=\$( echo $files | tr " " "\\n" | grep -v "pfam.domtblout" | grep ".fa" )
+                    dia=\$( echo $files | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
+                    pfa=\$( echo $files | tr " " "\\n" | grep ".pfam.domtblout" )
 
                     echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                    TransDecoder.LongOrfs -t ${sample_id}_asssembly.fasta --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.LongOrfs -t \${ass} --output_dir ${sample_id}.transdecoder_dir
 
                     echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
                     echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-                    TransDecoder.Predict -t ${sample_id}_asssembly.fasta --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia} --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.Predict -t \${ass} --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia} --output_dir ${sample_id}.transdecoder_dir
 
                     echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
                     echo -e "\\n-- Calculating statistics... --\\n"
-
                     #Calculate statistics of Transdecoder
                     echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                     orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
@@ -1749,8 +1645,11 @@ if (params.onlyAsm) {
                     n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                     internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
                     echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
-
                     echo -e "\\n-- Done with statistics --\\n"
+
+                    cp ${assembly} ${assembly}.tmp
+                    rm ${assembly}
+                    mv ${assembly}.tmp ${assembly}
 
                     echo -e "\\n-- DONE with TransDecoder --\\n"
                     """
@@ -1769,7 +1668,7 @@ if (params.onlyAsm) {
         }
 
         input:
-            tuple sample_id, file(transdecoder), file(assembly) from transdecoder_ch_diamond_OA
+            tuple sample_id, file(assembly), file(transdecoder) from transdecoder_ch_diamond_OA
 
         output:
             tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6") into trinotate_ch_diamondX_OA
@@ -1777,21 +1676,38 @@ if (params.onlyAsm) {
 
         script:
             """
-            swissdb=${params.pipeInstall}/DBs/diamonddb_swiss/uniprot_sprot.pep
+            dbPATH=${params.pipeInstall}/DBs/diamonddb_swiss/
 
-            #Diamond (BLAST) Homologies
-
-            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-
-            diamond blastx -d \$swissdb -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastx) --\\n"
-
-            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-
-            diamond blastp -d \$swissdb -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+            echo -e "\\n-- Starting Diamond --\\n"
+            if [ ! -d \${dbPATH} ];then
+                echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
+                exit 0
+            elif [ -d \${dbPATH} ];then
+                if [ ! -e \${dbPATH}/uniprot_sprot.pep ];then
+                    echo "File \${dbPATH}/uniprot_sprot.pep not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -e \${dbPATH}/uniprot_sprot.pep ];then
+                    if [ ! -e \${dbPATH}/uniprot_sprot.pep.dmnd ];then
+                        cp \${dbPATH}/uniprot_sprot.pep .
+                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep -p ${task.cpus}
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d uniprot_sprot.pep.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d uniprot_sprot.pep.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    elif [ -e \${dbPATH}/uniprot_sprot.pep.dmnd ];then
+                        cp \${dbPATH}/uniprot_sprot.pep.dmnd .
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d uniprot_sprot.pep.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d uniprot_sprot.pep.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    fi
+                fi
+            fi
+            echo -e "\\n-- Done with Diamond --\\n"
             """
     }
 
@@ -1807,7 +1723,7 @@ if (params.onlyAsm) {
         }
 
         input:
-            tuple sample_id, file(transdecoder), file(assembly) from transdecoder_ch_diamond_custom_OA
+            tuple sample_id, file(assembly), file(transdecoder) from transdecoder_ch_diamond_custom_OA
 
         output:
             tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6") into trinotate_ch_diamondX_custom_OA
@@ -1815,21 +1731,38 @@ if (params.onlyAsm) {
 
         script:
             """
-            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
+            dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
 
-            #Diamond (BLAST) Homologies
-
-            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-
-            diamond blastx -d \$unidb -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastx) --\\n"
-
-            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-
-            diamond blastp -d \$unidb -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+            echo -e "\\n-- Starting Diamond --\\n"
+            if [ ! -d \${dbPATH} ];then
+                echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
+                exit 0
+            elif [ -d \${dbPATH} ];then
+                if [ ! -e \${dbPATH}/${params.uniname} ];then
+                    echo "File \${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -e \${dbPATH}/${params.uniname} ];then
+                    if [ ! -e \${dbPATH}/${params.uniname}.dmnd ];then
+                        cp \${dbPATH}/${params.uniname} .
+                        diamond makedb --in ${params.uniname} -d ${params.uniname} -p ${task.cpus}
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d ${params.uniname}.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d ${params.uniname}.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    elif [ -e \${dbPATH}/${params.uniname}.dmnd ];then
+                        cp \${dbPATH}/${params.uniname}.dmnd .
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d ${params.uniname}.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d ${params.uniname}.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    fi
+                fi
+            fi
+            echo -e "\\n-- Done with Diamond --\\n"
             """
     }
 
@@ -1845,18 +1778,38 @@ if (params.onlyAsm) {
         }
 
         input:
-            tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_hmmer_OA
+            tuple sample_id, file(transdecoder_pep) from transdecoder_ch_hmmer_OA
 
         output:
             tuple sample_id, file("${sample_id}.TrinotatePFAM.out") into trinotate_ch_hmmer_OA
 
         script:
             """
+            dbPATH=${params.pipeInstall}/DBs/hmmerdb/
 
-            echo -e "\\n-- Starting with HMMER --\\n"
-
-            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.*.transdecoder.pep >pfam.log
-
+            echo -e "\\n-- Starting HMMER --\\n"
+            if [ ! -d \${dbPATH} ];then
+                echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
+                exit 0
+            elif [ -d \${dbPATH} ];then
+                if [ ! -e \${dbPATH}/${params.pfname} ];then
+                    echo "File \${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -e \${dbPATH}/${params.pfname} ];then
+                    if [ ! -e \${dbPATH}/${params.pfname}.h3f ] && [ ! -e \${dbPATH}/${params.pfname}.h3i ] && [ ! -e \${dbPATH}/${params.pfname}.h3m ] && [ ! -e \${dbPATH}/${params.pfname}.h3p ];then
+                        cp \${dbPATH}/${params.pfname} .
+                        hmmpress ${params.pfname}
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${transdecoder_pep} >pfam.log
+                    elif [ -s \${dbPATH}/${params.pfname}.h3f ] && [ -s \${dbPATH}/${params.pfname}.h3i ] && [ -s \${dbPATH}/${params.pfname}.h3m ] && [ -s \${dbPATH}/${params.pfname}.h3p ];then
+                        cp \${dbPATH}/${params.pfname}.* .
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${transdecoder_pep} >pfam.log
+                    else
+                        cp \${dbPATH}/${params.pfname} .
+                        hmmpress ${params.pfname}
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${transdecoder_pep} >pfam.log
+                    fi
+                fi
+            fi
             echo -e "\\n-- Done with HMMER --\\n"
             """
     }
@@ -1870,7 +1823,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp_OA
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_signalp_OA
 
             output:
                 tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp_OA
@@ -1881,7 +1834,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- Starting with SignalP --\\n"
 
-                ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.*.transdecoder.pep
+                ${params.signalp} -f short -n ${sample_id}.signalp.out ${transdecoder_pep}
 
                 echo -e "\\n-- Done with SignalP --\\n"
                 """
@@ -1892,7 +1845,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp_OA
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_signalp_OA
 
             output:
                 tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp_OA
@@ -1913,7 +1866,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm_OA
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_tmhmm_OA
 
             output:
                 tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm_OA
@@ -1924,7 +1877,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- Starting with tmHMM --\\n"
 
-                ${params.tmhmm} --short < ${sample_id}.*.transdecoder.pep >${sample_id}.tmhmm.out
+                ${params.tmhmm} --short < ${transdecoder_pep} >${sample_id}.tmhmm.out
 
                 echo -e "\\n-- Done with tmHMM --\\n"
                 """
@@ -1935,7 +1888,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm_OA
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_tmhmm_OA
 
             output:
                 tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm_OA
@@ -3273,7 +3226,7 @@ if (params.onlyAsm) {
 
                 script:
                 	"""
-                	diamond makedb --in ${seqs} -d diamond_database
+                	diamond makedb --in ${seqs} -d diamond_database -p ${task.cpus}
                 	"""
             }
 
@@ -3803,7 +3756,7 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
-                tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
+                tuple sample_id, file("${assembly}"), file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                 tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
                 tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
                 tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
@@ -3812,18 +3765,17 @@ if (params.onlyAsm) {
                 """
                 echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                TransDecoder.LongOrfs -t ${assembly}
+                TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
 
                 echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
                 echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-                TransDecoder.Predict -t ${assembly}
+                TransDecoder.Predict -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
 
                 echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
                 echo -e "\\n-- Calculating statistics... --\\n"
-
                 #Calculate statistics of Transdecoder
                 echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
@@ -3844,8 +3796,11 @@ if (params.onlyAsm) {
                 n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                 internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
                 echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
-
                 echo -e "\\n-- Done with statistics --\\n"
+
+                cp ${assembly} ${assembly}.tmp
+                rm ${assembly}
+                mv ${assembly}.tmp ${assembly}
 
                 echo -e "\\n-- DONE with TransDecoder --\\n"
                 """
@@ -3910,20 +3865,20 @@ if (params.onlyAsm) {
                 dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
 
                 echo -e "\\n-- Starting Diamond (blastp) --\\n"
-                if [ ! -d ${dbPATH} ];then
-                    echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                if [ ! -d \${dbPATH} ];then
+                    echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
                     exit 0
-                elif [ -d ${dbPATH} ];then
-                    if [ ! -e ${dbPATH}/${params.uniname} ];then
-                        echo "File ${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
+                elif [ -d \${dbPATH} ];then
+                    if [ ! -e \${dbPATH}/${params.uniname} ];then
+                        echo "File \${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
                         exit 0
-                    elif [ -e ${dbPATH}/${params.uniname} ];then
-                        if [ ! -e ${dbPATH}/${params.uniname}.dmnd ];then
-                            cp ${dbPATH}/${params.uniname} .
-                            diamond makedb --in ${params.uniname} -d ${params.uniname}
+                    elif [ -e \${dbPATH}/${params.uniname} ];then
+                        if [ ! -e \${dbPATH}/${params.uniname}.dmnd ];then
+                            cp \${dbPATH}/${params.uniname} .
+                            diamond makedb --in ${params.uniname} -d ${params.uniname} -p ${task.cpus}
                             diamond blastp -d ${params.uniname}.dmnd -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
-                        elif [ -e ${dbPATH}/${params.uniname}.dmnd ];then
-                            cp ${dbPATH}/${params.uniname}.dmnd .
+                        elif [ -e \${dbPATH}/${params.uniname}.dmnd ];then
+                            cp \${dbPATH}/${params.uniname}.dmnd .
                             diamond blastp -d ${params.uniname}.dmnd -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
                         fi
                     fi
@@ -3955,23 +3910,23 @@ if (params.onlyAsm) {
                 """
                 dbPATH=${params.pipeInstall}/DBs/hmmerdb/
                 echo -e "\\n-- Starting HMMER --\\n"
-                if [ ! -d ${dbPATH} ];then
-                    echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                if [ ! -d \${dbPATH} ];then
+                    echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
                     exit 0
-                elif [ -d ${dbPATH} ];then
-                    if [ ! -e ${dbPATH}/${params.pfname} ];then
-                        echo "File ${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
+                elif [ -d \${dbPATH} ];then
+                    if [ ! -e \${dbPATH}/${params.pfname} ];then
+                        echo "File \${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
                         exit 0
-                    elif [ -e ${dbPATH}/${params.pfname} ];then
-                        if [ ! -e ${dbPATH}/${params.pfname}.h3f ] && [ ! -e ${dbPATH}/${params.pfname}.h3i ] && [ ! -e ${dbPATH}/${params.pfname}.h3m ] && [ ! -e ${dbPATH}/${params.pfname}.h3p ];then
-                            cp ${dbPATH}/${params.pfname} .
+                    elif [ -e \${dbPATH}/${params.pfname} ];then
+                        if [ ! -e \${dbPATH}/${params.pfname}.h3f ] && [ ! -e \${dbPATH}/${params.pfname}.h3i ] && [ ! -e \${dbPATH}/${params.pfname}.h3m ] && [ ! -e \${dbPATH}/${params.pfname}.h3p ];then
+                            cp \${dbPATH}/${params.pfname} .
                             hmmpress ${params.pfname}
                             hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
-                        elif [ -s ${dbPATH}/${params.pfname}.h3f ] && [ -s ${dbPATH}/${params.pfname}.h3i ] && [ -s ${dbPATH}/${params.pfname}.h3m ] && [ -s ${dbPATH}/${params.pfname}.h3p ];then
-                            cp ${dbPATH}/${params.pfname}.* .
+                        elif [ -s \${dbPATH}/${params.pfname}.h3f ] && [ -s \${dbPATH}/${params.pfname}.h3i ] && [ -s \${dbPATH}/${params.pfname}.h3m ] && [ -s \${dbPATH}/${params.pfname}.h3p ];then
+                            cp \${dbPATH}/${params.pfname}.* .
                             hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
                         else
-                            cp ${dbPATH}/${params.pfname} .
+                            cp \${dbPATH}/${params.pfname} .
                             hmmpress ${params.pfname}
                             hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
                         fi
@@ -3983,7 +3938,6 @@ if (params.onlyAsm) {
 
         transdecoder_predict_ch=Channel.create()
         transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, evigene_ch_transdecoderB ).groupTuple(by:0,size:3).into(transdecoder_predict_ch)
-        // from OA  annotation_ch_transdecoderB_OA.flatten().toList().mix(transdecoder_predict_diamond_OA,transdecoder_predict_hmmer_OA).groupTuple(by:0,size:3).into(transdecoder_predict_OA_ch)
 
         process transdecoder_predict {
 
@@ -4003,32 +3957,30 @@ if (params.onlyAsm) {
 
             output:
                 tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
-                tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
+                tuple sample_id, file("${assembly}"), file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                 tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
                 tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
                 tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
             script:
                 """
-                a=\$( echo $files )
-                ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
-                dia=\$( echo \$a | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
-                pfa=\$( echo \$a | tr " " "\\n" | grep ".pfam.domtblout" )
+                ass=\$( echo $files | tr " " "\\n" | grep ".combined.okay.fa" )
+                dia=\$( echo $files | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
+                pfa=\$( echo $files | tr " " "\\n" | grep ".pfam.domtblout" )
 
                 echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                TransDecoder.LongOrfs -t \${ass}
+                TransDecoder.LongOrfs -t \${ass} --output_dir ${sample_id}.transdecoder_dir
 
                 echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
                 echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-                TransDecoder.Predict -t \${ass} --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia}
+                TransDecoder.Predict -t \${ass} --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia} --output_dir ${sample_id}.transdecoder_dir
 
                 echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
                 echo -e "\\n-- Calculating statistics... --\\n"
-
                 #Calculate statistics of Transdecoder
                 echo "- Transdecoder (long, with homology) stats for ${sample_id}" >${sample_id}_transdecoder.stats
                 orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
@@ -4062,16 +4014,16 @@ if (params.onlyAsm) {
                 n3prime=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:3prime_partial" )
                 internal=\$( cat ${sample_id}*.transdecoder.pep  | grep -c "ORF type:internal" )
                 echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
-
                 echo -e "\\n-- Done with statistics --\\n"
+
+                cp ${assembly} ${assembly}.tmp
+                rm ${assembly}
+                mv ${assembly}.tmp ${assembly}
 
                 echo -e "\\n-- DONE with TransDecoder --\\n"
                 """
         }
     }
-
-    diamond_trinotate = Channel.create()
-    evigene_ch_diamond.mix(transdecoder_ch_diamond).groupTuple(by:0,size:2).into(diamond_trinotate)
 
     process swiss_diamond_trinotate {
 
@@ -4085,7 +4037,7 @@ if (params.onlyAsm) {
         }
 
         input:
-            tuple sample_id, file(files) from diamond_trinotate
+            tuple sample_id, file(assembly), file(transdecoder) from transdecoder_ch_diamond
 
         output:
             tuple sample_id, file("${sample_id}.diamond_blastx.outfmt6") into trinotate_ch_diamondX
@@ -4095,34 +4047,31 @@ if (params.onlyAsm) {
             """
             dbPATH=${params.pipeInstall}/DBs/diamonddb_swiss/
 
-            assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
-            transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
-
             echo -e "\\n-- Starting Diamond --\\n"
-            if [ ! -d ${dbPATH} ];then
-                echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+            if [ ! -d \${dbPATH} ];then
+                echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
                 exit 0
-            elif [ -d ${dbPATH} ];then
-                if [ ! -e ${dbPATH}/uniprot_sprot.pep ];then
-                    echo "File ${dbPATH}/uniprot_sprot.pep not found. Run the precheck to fix this issue"
+            elif [ -d \${dbPATH} ];then
+                if [ ! -e \${dbPATH}/uniprot_sprot.pep ];then
+                    echo "File \${dbPATH}/uniprot_sprot.pep not found. Run the precheck to fix this issue"
                     exit 0
-                elif [ -e ${dbPATH}/uniprot_sprot.pep ];then
-                    if [ ! -e ${dbPATH}/uniprot_sprot.pep.dmnd ];then
-                        cp ${dbPATH}/uniprot_sprot.pep .
-                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                elif [ -e \${dbPATH}/uniprot_sprot.pep ];then
+                    if [ ! -e \${dbPATH}/uniprot_sprot.pep.dmnd ];then
+                        cp \${dbPATH}/uniprot_sprot.pep .
+                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep -p ${task.cpus}
                         echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-                        diamond blastx -d uniprot_sprot.pep.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+                        diamond blastx -d uniprot_sprot.pep.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
                         echo -e "\\n-- Done with Diamond (blastx) --\\n"
                         echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-                        diamond blastp -d uniprot_sprot.pep.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+                        diamond blastp -d uniprot_sprot.pep.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
                         echo -e "\\n-- Done with Diamond (blastp)  --\\n"
-                    elif [ -e ${dbPATH}/uniprot_sprot.pep.dmnd ];then
-                        cp ${dbPATH}/uniprot_sprot.pep.dmnd .
+                    elif [ -e \${dbPATH}/uniprot_sprot.pep.dmnd ];then
+                        cp \${dbPATH}/uniprot_sprot.pep.dmnd .
                         echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-                        diamond blastx -d uniprot_sprot.pep.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+                        diamond blastx -d uniprot_sprot.pep.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
                         echo -e "\\n-- Done with Diamond (blastx) --\\n"
                         echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-                        diamond blastp -d uniprot_sprot.pep.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+                        diamond blastp -d uniprot_sprot.pep.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
                         echo -e "\\n-- Done with Diamond (blastp)  --\\n"
                     fi
                 fi
@@ -4130,9 +4079,6 @@ if (params.onlyAsm) {
             echo -e "\\n-- Done with Diamond --\\n"
             """
     }
-
-    custom_diamond = Channel.create()
-    evigene_ch_trinotate_custom.mix(transdecoder_ch_diamond_custom).groupTuple(by:0,size:2).into(custom_diamond)
 
     process custom_diamond_trinotate {
 
@@ -4146,7 +4092,7 @@ if (params.onlyAsm) {
         }
 
         input:
-            tuple sample_id, file(files) from custom_diamond
+            tuple sample_id, file(assembly), file(transdecoder) from transdecoder_ch_diamond_custom
 
         output:
             tuple sample_id, file("${sample_id}.custom.diamond_blastx.outfmt6") into trinotate_ch_diamondX_custom
@@ -4156,34 +4102,31 @@ if (params.onlyAsm) {
             """
             dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
 
-            assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
-            transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
-
             echo -e "\\n-- Starting Diamond --\\n"
-            if [ ! -d ${dbPATH} ];then
-                echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+            if [ ! -d \${dbPATH} ];then
+                echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
                 exit 0
-            elif [ -d ${dbPATH} ];then
-                if [ ! -e ${dbPATH}/${params.uniname} ];then
-                    echo "File ${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
+            elif [ -d \${dbPATH} ];then
+                if [ ! -e \${dbPATH}/${params.uniname} ];then
+                    echo "File \${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
                     exit 0
-                elif [ -e ${dbPATH}/${params.uniname} ];then
-                    if [ ! -e ${dbPATH}/${params.uniname}.dmnd ];then
-                        cp ${dbPATH}/${params.uniname} .
-                        diamond makedb --in ${params.uniname} -d ${params.uniname}
+                elif [ -e \${dbPATH}/${params.uniname} ];then
+                    if [ ! -e \${dbPATH}/${params.uniname}.dmnd ];then
+                        cp \${dbPATH}/${params.uniname} .
+                        diamond makedb --in ${params.uniname} -d ${params.uniname} -p ${task.cpus}
                         echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-                        diamond blastx -d ${params.uniname}.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+                        diamond blastx -d ${params.uniname}.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
                         echo -e "\\n-- Done with Diamond (blastx) --\\n"
                         echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-                        diamond blastp -d ${params.uniname}.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+                        diamond blastp -d ${params.uniname}.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
                         echo -e "\\n-- Done with Diamond (blastp)  --\\n"
-                    elif [ -e ${dbPATH}/${params.uniname}.dmnd ];then
-                        cp ${dbPATH}/${params.uniname}.dmnd .
+                    elif [ -e \${dbPATH}/${params.uniname}.dmnd ];then
+                        cp \${dbPATH}/${params.uniname}.dmnd .
                         echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-                        diamond blastx -d ${params.uniname}.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+                        diamond blastx -d ${params.uniname}.dmnd -q ${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
                         echo -e "\\n-- Done with Diamond (blastx) --\\n"
                         echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-                        diamond blastp -d ${params.uniname}.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+                        diamond blastp -d ${params.uniname}.dmnd -q ${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
                         echo -e "\\n-- Done with Diamond (blastp)  --\\n"
                     fi
                 fi
@@ -4204,7 +4147,7 @@ if (params.onlyAsm) {
         }
 
         input:
-            tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_hmmer
+            tuple sample_id, file(transdecoder_pep) from transdecoder_ch_hmmer
 
         output:
             tuple sample_id, file("${sample_id}.TrinotatePFAM.out") into trinotate_ch_hmmer
@@ -4214,25 +4157,25 @@ if (params.onlyAsm) {
             dbPATH=${params.pipeInstall}/DBs/hmmerdb/
 
             echo -e "\\n-- Starting HMMER --\\n"
-            if [ ! -d ${dbPATH} ];then
-                echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+            if [ ! -d \${dbPATH} ];then
+                echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
                 exit 0
-            elif [ -d ${dbPATH} ];then
-                if [ ! -e ${dbPATH}/${params.pfname} ];then
-                    echo "File ${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
+            elif [ -d \${dbPATH} ];then
+                if [ ! -e \${dbPATH}/${params.pfname} ];then
+                    echo "File \${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
                     exit 0
-                elif [ -e ${dbPATH}/${params.pfname} ];then
-                    if [ ! -e ${dbPATH}/${params.pfname}.h3f ] && [ ! -e ${dbPATH}/${params.pfname}.h3i ] && [ ! -e ${dbPATH}/${params.pfname}.h3m ] && [ ! -e ${dbPATH}/${params.pfname}.h3p ];then
-                        cp ${dbPATH}/${params.pfname} .
+                elif [ -e \${dbPATH}/${params.pfname} ];then
+                    if [ ! -e \${dbPATH}/${params.pfname}.h3f ] && [ ! -e \${dbPATH}/${params.pfname}.h3i ] && [ ! -e \${dbPATH}/${params.pfname}.h3m ] && [ ! -e \${dbPATH}/${params.pfname}.h3p ];then
+                        cp \${dbPATH}/${params.pfname} .
                         hmmpress ${params.pfname}
-                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
-                    elif [ -s ${dbPATH}/${params.pfname}.h3f ] && [ -s ${dbPATH}/${params.pfname}.h3i ] && [ -s ${dbPATH}/${params.pfname}.h3m ] && [ -s ${dbPATH}/${params.pfname}.h3p ];then
-                        cp ${dbPATH}/${params.pfname}.* .
-                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${transdecoder_pep} >pfam.log
+                    elif [ -s \${dbPATH}/${params.pfname}.h3f ] && [ -s \${dbPATH}/${params.pfname}.h3i ] && [ -s \${dbPATH}/${params.pfname}.h3m ] && [ -s \${dbPATH}/${params.pfname}.h3p ];then
+                        cp \${dbPATH}/${params.pfname}.* .
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${transdecoder_pep} >pfam.log
                     else
-                        cp ${dbPATH}/${params.pfname} .
+                        cp \${dbPATH}/${params.pfname} .
                         hmmpress ${params.pfname}
-                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${transdecoder_pep} >pfam.log
                     fi
                 fi
             fi
@@ -4249,7 +4192,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_signalp
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_signalp
 
             output:
                 tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp
@@ -4260,7 +4203,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- Starting with SignalP --\\n"
 
-                ${params.signalp} -f short -n ${sample_id}.signalp.out ${sample_id}.combined.okay.fa.transdecoder.pep
+                ${params.signalp} -f short -n ${sample_id}.signalp.out ${transdecoder_pep}
 
                 echo -e "\\n-- Done with SignalP --\\n"
                 """
@@ -4271,7 +4214,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_signalp
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_signalp
 
             output:
                 tuple sample_id, file("${sample_id}.signalp.out") into trinotate_ch_signalp
@@ -4292,7 +4235,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") from transdecoder_ch_tmhmm
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_tmhmm
 
             output:
                 tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm
@@ -4303,7 +4246,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- Starting with tmHMM --\\n"
 
-                ${params.tmhmm} --short < ${sample_id}.combined.okay.fa.transdecoder.pep >${sample_id}.tmhmm.out
+                ${params.tmhmm} --short < ${transdecoder_pep} >${sample_id}.tmhmm.out
 
                 echo -e "\\n-- Done with tmHMM --\\n"
                 """
@@ -4314,7 +4257,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.*.transdecoder.pep") from transdecoder_ch_tmhmm
+                tuple sample_id, file(transdecoder_pep) from transdecoder_ch_tmhmm
 
             output:
                 tuple sample_id, file("${sample_id}.tmhmm.out") into trinotate_ch_tmhmm
@@ -4335,7 +4278,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_rnammer
+                tuple sample_id, file(transcriptome) from evigene_ch_rnammer
 
             output:
                 tuple sample_id, file("${sample_id}.rnammer.gff") into trinotate_ch_rnammer
@@ -4347,7 +4290,7 @@ if (params.onlyAsm) {
 
                 echo -e "\\n-- Starting with RNAMMER --\\n"
 
-                RnammerTranscriptome.pl --transcriptome ${sample_id}.combined.okay.fa --path_to_rnammer ${params.rnam}
+                RnammerTranscriptome.pl --transcriptome ${transcriptome} --path_to_rnammer ${params.rnam}
 
                 mv ${sample_id}.combined.okay.fa.rnammer.gff ${sample_id}.rnammer.gff
 
@@ -4360,7 +4303,7 @@ if (params.onlyAsm) {
             tag "${sample_id}"
 
             input:
-                tuple sample_id, file(assembly) from evigene_ch_rnammer
+                tuple sample_id, file(transcriptome) from evigene_ch_rnammer
 
             output:
                 tuple sample_id, file("${sample_id}.rnammer.gff") into trinotate_ch_rnammer
