@@ -2306,137 +2306,6 @@ if (params.onlyAsm) {
 
     println("\n\tRunning the full TransPi analysis\n")
 
-    process custom_diamond_db {
-
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
-        }
-
-        script:
-            """
-            cd ${params.pipeInstall}
-            echo -e "-- Checking if Diamond database folder is present --\\n"
-            if [ ! -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
-                mkdir -p DBs/diamonddb_custom/
-                cd DBs/diamonddb_custom
-                cp ${params.uniprot} .
-                diamond makedb --in ${params.uniname} -d ${params.uniname}
-                export unidb=`pwd`/${params.uniname}
-                cd ../
-            elif [ -d DBs/diamonddb_custom/ ];then
-                echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
-                cd DBs/diamonddb_custom
-                if [ ! -e ${params.uniname}.dmnd ];then
-                    echo -e "-- Diamond database not present, creating one --\\n"
-                    cp ${params.uniprot} .
-                    diamond makedb --in ${params.uniname} -d ${params.uniname}
-                    export unidb=`pwd`/${params.uniname}
-                elif [ -e ${params.uniname}.dmnd  ];then
-                    echo -e "-- Diamond database already created --\\n"
-                    export unidb=`pwd`/${params.uniname}
-                fi
-                cd ../
-            fi
-            """
-    }
-
-    process hmmer_db {
-
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/hmmer:3.3--he1b5a44_0" : "quay.io/biocontainers/hmmer:3.3--he1b5a44_0")
-        }
-
-        script:
-            """
-            cd ${params.pipeInstall}
-            echo -e "-- Checking if HMMER database folder is present --\\n"
-            if [ -d DBs/hmmerdb/ ];then
-                echo -e "-- Folder is present. Checking if HMMER database is built --\\n"
-                cd DBs/hmmerdb
-                if [ ! -e ${params.pfname}.h3f ] && [ ! -e ${params.pfname}.h3i ] && [ ! -e ${params.pfname}.h3m ] && [ ! -e ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database not present, creating one --\\n"
-                    hmmpress ${params.pfname}
-                    export pf=`pwd`/${params.pfname}
-                elif [ -s ${params.pfname}.h3f ] && [ -s ${params.pfname}.h3i ] && [ -s ${params.pfname}.h3m ] && [ -s ${params.pfname}.h3p ];then
-                    echo -e "-- HMMER database already created --\\n"
-                    export pf=`pwd`/${params.pfname}
-                fi
-                cd ../
-            fi
-            """
-    }
-
-    process swiss_diamond_db {
-
-        conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
-        if (params.oneContainer){ container "${params.TPcontainer}" } else {
-        container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/diamond:0.9.30--h56fc30b_0" : "quay.io/biocontainers/diamond:0.9.30--h56fc30b_0")
-        }
-
-        script:
-            """
-            cd ${params.pipeInstall}/DBs/sqlite_db
-            if [ -e uniprot_sprot.pep ];then
-                cd ${params.pipeInstall}
-                if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
-                    mkdir -p DBs/diamonddb_swiss
-                    cd DBs/diamonddb_swiss
-                    cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
-                    diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                    export swissdb=`pwd`/uniprot_sprot.pep
-                elif [ -d DBs/diamonddb_swiss/ ];then
-                    cd DBs/diamonddb_swiss
-                    if [ ! -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database not present, creating one --\\n"
-                        cp ${params.pipeInstall}/DBs/sqlite_db/uniprot_sprot.pep .
-                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                        export swissdb=`pwd`/uniprot_sprot.pep
-                    elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\\n"
-                        export swissdb=`pwd`/uniprot_sprot.pep
-                    fi
-                fi
-            elif [ ! -e uniprot_sprot.pep ];then
-                cd ${params.pipeInstall}
-                if [ ! -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is not present, creating one and the Diamond database --\\n"
-                    mkdir -p DBs/diamonddb_swiss
-                    cd DBs/diamonddb_swiss
-                    wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
-                    EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
-                    rm ind.*
-                    mv uniprot_sprot.dat.gz.pep uniprot_sprot.pep
-                    diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                    export swissdb=`pwd`/uniprot_sprot.pep
-                elif [ -d DBs/diamonddb_swiss/ ];then
-                    echo -e "-- Folder is present. Checking if Diamond database is built --\\n"
-                    cd DBs/diamonddb_swiss
-                    if [ ! -e uniprot_sprot.pep.dmnd ];then
-                        if [ ! -e uniprot_sprot.pep ];then
-                            echo -e "-- Diamond database not present, creating one --\\n"
-                            wget http://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
-                            EMBL_swissprot_parser.pl uniprot_sprot.dat.gz ind
-                            rm ind.*
-                            mv uniprot_sprot.dat.gz.pep uniprot_sprot.pep
-                            diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                            export swissdb=`pwd`/uniprot_sprot.pep
-                        elif [ -e uniprot_sprot.pep ];then
-                            diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
-                            export swissdb=`pwd`/uniprot_sprot.pep
-                        fi
-                    elif [ -e uniprot_sprot.pep.dmnd ];then
-                        echo -e "-- Diamond database already created --\\n"
-                        export swissdb=`pwd`/uniprot_sprot.pep
-                    fi
-                fi
-            fi
-            """
-    }
-
     if (!params.skipQC) {
 
         process fasqc {
@@ -4038,12 +3907,27 @@ if (params.onlyAsm) {
 
             script:
                 """
-                unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
+                dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
 
                 echo -e "\\n-- Starting Diamond (blastp) --\\n"
-
-                diamond blastp -d \$unidb -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
-
+                if [ ! -d ${dbPATH} ];then
+                    echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -d ${dbPATH} ];then
+                    if [ ! -e ${dbPATH}/${params.uniname} ];then
+                        echo "File ${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
+                        exit 0
+                    elif [ -e ${dbPATH}/${params.uniname} ];then
+                        if [ ! -e ${dbPATH}/${params.uniname}.dmnd ];then
+                            cp ${dbPATH}/${params.uniname} .
+                            diamond makedb --in ${params.uniname} -d ${params.uniname}
+                            diamond blastp -d ${params.uniname}.dmnd -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
+                        elif [ -e ${dbPATH}/${params.uniname}.dmnd ];then
+                            cp ${dbPATH}/${params.uniname}.dmnd .
+                            diamond blastp -d ${params.uniname}.dmnd -q ${pep} -p ${task.cpus} -f 6 -k 1 -e 0.00001 >${sample_id}.diamond_blastp.outfmt6
+                        fi
+                    fi
+                fi
                 echo -e "\\n-- Done with Diamond (blastp) --\\n"
                 """
         }
@@ -4069,10 +3953,30 @@ if (params.onlyAsm) {
 
             script:
                 """
+                dbPATH=${params.pipeInstall}/DBs/hmmerdb/
                 echo -e "\\n-- Starting HMMER --\\n"
-
-                hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfloc} ${pep}
-
+                if [ ! -d ${dbPATH} ];then
+                    echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -d ${dbPATH} ];then
+                    if [ ! -e ${dbPATH}/${params.pfname} ];then
+                        echo "File ${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
+                        exit 0
+                    elif [ -e ${dbPATH}/${params.pfname} ];then
+                        if [ ! -e ${dbPATH}/${params.pfname}.h3f ] && [ ! -e ${dbPATH}/${params.pfname}.h3i ] && [ ! -e ${dbPATH}/${params.pfname}.h3m ] && [ ! -e ${dbPATH}/${params.pfname}.h3p ];then
+                            cp ${dbPATH}/${params.pfname} .
+                            hmmpress ${params.pfname}
+                            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
+                        elif [ -s ${dbPATH}/${params.pfname}.h3f ] && [ -s ${dbPATH}/${params.pfname}.h3i ] && [ -s ${dbPATH}/${params.pfname}.h3m ] && [ -s ${dbPATH}/${params.pfname}.h3p ];then
+                            cp ${dbPATH}/${params.pfname}.* .
+                            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
+                        else
+                            cp ${dbPATH}/${params.pfname} .
+                            hmmpress ${params.pfname}
+                            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.pfam.domtblout ${params.pfname} ${pep}
+                        fi
+                    fi
+                fi
                 echo -e "\\n-- Done with HMMER --\\n"
                 """
         }
@@ -4189,24 +4093,41 @@ if (params.onlyAsm) {
 
         script:
             """
-            swissdb=${params.pipeInstall}/DBs/diamonddb_swiss/uniprot_sprot.pep
+            dbPATH=${params.pipeInstall}/DBs/diamonddb_swiss/
 
             assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
             transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
 
-            #Diamond (BLAST) Homologies
-
-            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-
-            diamond blastx -d \$swissdb -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastx) --\\n"
-
-            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-
-            diamond blastp -d \$swissdb -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+            echo -e "\\n-- Starting Diamond --\\n"
+            if [ ! -d ${dbPATH} ];then
+                echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                exit 0
+            elif [ -d ${dbPATH} ];then
+                if [ ! -e ${dbPATH}/uniprot_sprot.pep ];then
+                    echo "File ${dbPATH}/uniprot_sprot.pep not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -e ${dbPATH}/uniprot_sprot.pep ];then
+                    if [ ! -e ${dbPATH}/uniprot_sprot.pep.dmnd ];then
+                        cp ${dbPATH}/uniprot_sprot.pep .
+                        diamond makedb --in uniprot_sprot.pep -d uniprot_sprot.pep
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d uniprot_sprot.pep.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d uniprot_sprot.pep.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    elif [ -e ${dbPATH}/uniprot_sprot.pep.dmnd ];then
+                        cp ${dbPATH}/uniprot_sprot.pep.dmnd .
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d uniprot_sprot.pep.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d uniprot_sprot.pep.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    fi
+                fi
+            fi
+            echo -e "\\n-- Done with Diamond --\\n"
             """
     }
 
@@ -4233,24 +4154,41 @@ if (params.onlyAsm) {
 
         script:
             """
-            unidb=${params.pipeInstall}/DBs/diamonddb_custom/${params.uniname}
+            dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
 
             assembly=\$( echo $files | tr " " "\\n" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
             transdecoder=\$( echo $files | tr " " "\\n" | grep "${sample_id}.combined.okay.fa.transdecoder.pep" )
 
-            #Diamond (BLAST) Homologies
-
-            echo -e "\\n-- Starting with Diamond (blastx) --\\n"
-
-            diamond blastx -d \$unidb -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastx) --\\n"
-
-            echo -e "\\n-- Starting with Diamond (blastp) --\\n"
-
-            diamond blastp -d \$unidb -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
-
-            echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+            echo -e "\\n-- Starting Diamond --\\n"
+            if [ ! -d ${dbPATH} ];then
+                echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                exit 0
+            elif [ -d ${dbPATH} ];then
+                if [ ! -e ${dbPATH}/${params.uniname} ];then
+                    echo "File ${dbPATH}/${params.uniname} not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -e ${dbPATH}/${params.uniname} ];then
+                    if [ ! -e ${dbPATH}/${params.uniname}.dmnd ];then
+                        cp ${dbPATH}/${params.uniname} .
+                        diamond makedb --in ${params.uniname} -d ${params.uniname}
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d ${params.uniname}.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d ${params.uniname}.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    elif [ -e ${dbPATH}/${params.uniname}.dmnd ];then
+                        cp ${dbPATH}/${params.uniname}.dmnd .
+                        echo -e "\\n-- Starting with Diamond (blastx) --\\n"
+                        diamond blastx -d ${params.uniname}.dmnd -q \${assembly} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastx.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastx) --\\n"
+                        echo -e "\\n-- Starting with Diamond (blastp) --\\n"
+                        diamond blastp -d ${params.uniname}.dmnd -q \${transdecoder} -p ${task.cpus} -f 6 -k 1 -e 0.001 >${sample_id}.custom.diamond_blastp.outfmt6
+                        echo -e "\\n-- Done with Diamond (blastp)  --\\n"
+                    fi
+                fi
+            fi
+            echo -e "\\n-- Done with Diamond --\\n"
             """
     }
 
@@ -4273,11 +4211,31 @@ if (params.onlyAsm) {
 
         script:
             """
+            dbPATH=${params.pipeInstall}/DBs/hmmerdb/
 
-            echo -e "\\n-- Starting with HMMER --\\n"
-
-            hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfloc} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
-
+            echo -e "\\n-- Starting HMMER --\\n"
+            if [ ! -d ${dbPATH} ];then
+                echo "Directory ${dbPATH} not found. Run the precheck to fix this issue"
+                exit 0
+            elif [ -d ${dbPATH} ];then
+                if [ ! -e ${dbPATH}/${params.pfname} ];then
+                    echo "File ${dbPATH}/${params.pfname} not found. Run the precheck to fix this issue"
+                    exit 0
+                elif [ -e ${dbPATH}/${params.pfname} ];then
+                    if [ ! -e ${dbPATH}/${params.pfname}.h3f ] && [ ! -e ${dbPATH}/${params.pfname}.h3i ] && [ ! -e ${dbPATH}/${params.pfname}.h3m ] && [ ! -e ${dbPATH}/${params.pfname}.h3p ];then
+                        cp ${dbPATH}/${params.pfname} .
+                        hmmpress ${params.pfname}
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+                    elif [ -s ${dbPATH}/${params.pfname}.h3f ] && [ -s ${dbPATH}/${params.pfname}.h3i ] && [ -s ${dbPATH}/${params.pfname}.h3m ] && [ -s ${dbPATH}/${params.pfname}.h3p ];then
+                        cp ${dbPATH}/${params.pfname}.* .
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+                    else
+                        cp ${dbPATH}/${params.pfname} .
+                        hmmpress ${params.pfname}
+                        hmmscan --cpu ${task.cpus} --domtblout ${sample_id}.TrinotatePFAM.out ${params.pfname} ${sample_id}.combined.okay.fa.transdecoder.pep >pfam.log
+                    fi
+                fi
+            fi
             echo -e "\\n-- Done with HMMER --\\n"
             """
     }
