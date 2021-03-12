@@ -2975,7 +2975,7 @@ if (params.onlyAsm) {
             tuple sample_id, file(assemblies) from all_assemblies
 
         output:
-            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_transdecoderB, evigene_ch_diamond, evigene_ch_rnammer, evigene_ch_trinotate, evigene_ch_trinotate_custom, evi_dist, evi_filt, evigene_ch_rna_quast, mapping_evi )
+            tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, evigene_ch_transdecoder, evigene_ch_transdecoderB, evigene_ch_rnammer, evigene_ch_trinotate, evi_dist, evi_filt, evigene_ch_rna_quast, mapping_evi )
             tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
 
         script:
