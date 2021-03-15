@@ -71,7 +71,7 @@ conda_c() {
             fi
         fi
     else
-        echo -e "\n\t -- Conda is not intalled. Please install Anaconda (https://www.anaconda.com) and rerun this script --\n"
+        echo -e "\n\t -- Conda is not intalled --\n"
         echo -e -n "\n\t    Do you want to install Anaconda? (y,n,exit): "
         read ans
         case $ans in
