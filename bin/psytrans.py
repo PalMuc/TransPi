@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-### TODO Big code refactoring: remove any reference to corals and zoox and symb and host, just replace with species1, species2
+# Script was modified from original to use python3
 
 import argparse
 import array
