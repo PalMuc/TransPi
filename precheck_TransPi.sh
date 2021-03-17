@@ -817,7 +817,7 @@ get_var () {
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
     echo -e "\n\t -- INFO to use in TransPi --\n"
-    echo -e "\t Installation PATH:\t\t $mypwd"
+    echo -e "\t Installation PATH:\t $mypwd"
     echo -e "\t BUSCO V4 database:\t $busco4db"
     echo -e "\t UNIPROT database:\t $uniprot"
     echo -e "\t UNIPROT last update:\t $unpdate"
@@ -986,7 +986,7 @@ message(){
 
     #########################################################################################
     #                                                                                       #
-    #                    TransPi precheck script                                            #
+    #                             TransPi precheck script                                   #
     #                                                                                       #
     #   Options available:                                                                  #
     #                                                                                       #
