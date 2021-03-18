@@ -15,9 +15,29 @@ source_c() {
         source ~/.bashrc
     fi
 }
+conda_only() {
+    source_c
+    #Check conda and environment
+    check_conda=$( command -v conda )
+    if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
+        echo -e "\n\t -- Conda seems to be installed in your system --\n"
+        ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." )
+        vern=4.8
+        if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
+            echo -e "\n\t -- Conda is installed (v4.8 or higher). Checking environment... --\n"
+        fi
+    else
+        echo -e "\n\t -- Conda is not intalled --\n"
+        os_c
+        echo -e "\n\t -- Starting Anaconda installation -- \n"
+        bash Anaconda3-20*.sh
+        echo -e "\n\t -- Installation done -- \n"
+        rm Anaconda3-20*.sh
+        source_c
+    fi
+}
 conda_c() {
     source_c
-    cd $mypwd
     #Check conda and environment
     check_conda=$( command -v conda )
     if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
@@ -30,11 +50,11 @@ conda_c() {
             check_env=$( conda info -e | awk '$1 == "TransPi" {print $2}' | wc -l )
 	        if [ "$check_env" -eq 0 ];then
                 echo -e "\n\t -- TransPi environment has not been created. Checking environment file... --\n"
-                if [ -f transpi_env.yml ];then
+                if [ -f ${confDir}/transpi_env.yml ];then
                     echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
-                    conda env create -f transpi_env.yml
+                    conda env create -f ${confDir}/transpi_env.yml
                 else
-                    echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please check requirements and rerun the pre-check --\e[39m\n"
+                    echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please run the precheck in the TransPi directory. See manual for more info --\e[39m\n"
                     exit 0
                 fi
             elif [ "$check_env" -eq 1 ];then
@@ -49,16 +69,17 @@ conda_c() {
         echo -e "\n\t -- Installation done -- \n"
         rm Anaconda3-20*.sh
         source_c
-        if [ -f transpi_env.yml ];then
+        if [ -f ${confDir}/transpi_env.yml ];then
             echo -e "\n\t -- TransPi environment file found. Creating environment... --\n"
-            conda env create -f transpi_env.yml
+            conda env create -f ${confDir}/transpi_env.yml
         else
-            echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please check requirements and rerun the pre-check --\e[39m\n"
+            echo -e "\n\t\e[31m -- ERROR: TransPi environment file not found (transpi_env.yml). Please run the precheck in the TransPi directory. See manual for more info --\e[39m\n"
             exit 0
         fi
     fi
 }
 dir_c () {
+    cd $mypwd
     if [ ! -d scripts/ ];then
         mkdir scripts
     fi
@@ -322,7 +343,7 @@ bus_c () {
     break
     done
     else
-        echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"busV4list.txt\" is available. Please check requirements and rerun the pre-check --\e[39m\n\n"
+        echo -e "\n\t\e[31m -- ERROR: Please make sure that file \"busV4list.txt\" is available. Please run the precheck in the TransPi directory. See manual for more info --\e[39m\n\n"
 	    exit 0
     fi
 }
@@ -503,38 +524,22 @@ nextflow_c () {
     fi
 }
 evi_c () {
-	cd $mypwd
+	cd ${confDir}
     check_evi=$( command -v tr2aacds.pl | wc -l )
     if [ $check_evi -eq 0 ];then
-        if [ ! -d scripts/evigene/ ];then
-        echo -e "\n\t -- EvidentialGene is not installed -- \n"
-        echo -e "\n\t -- If you will use TransPi container (-profile TransPiContainer) you do not need it."
-        echo -e "\t -- Otherwise, please answer yes to the following question -- \n"
-        echo -e -n "\n\t    Do you want to install EvidentialGene? (y or n): "
-        read ans
-        case $ans in
-            [yY] | [yY][eE][sS])
-                cd scripts
-                echo -e "\n\t -- Downloading EvidentialGene -- \n"
-                wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_older/evigene19may14.tar
-                tar -xf evigene19may14.tar
-                rm evigene19may14.tar
-                echo -e "\n\t -- Done with EvidentialGene -- \n"
-            ;;
-            [nN] | [nN][oO])
-                echo -e "\n\n\t\e[31m -- ERROR: Download and Install EvidentialGene. Then rerun the pre-check  --\e[39m\n"
-                exit 0
-            ;;
-            *)
-                echo -e "\n\n\t\e[31m -- Yes or No answer not specified. Try again --\e[39m\n"
-                evi_c
-            ;;
-        esac
+        if [ ! -d ${confDir}/scripts/evigene/ ];then
+            echo -e "\n\t -- EvidentialGene is not installed -- \n"
+            mkdir -p ${confDir}/scripts && cd ${confDir}/scripts
+            echo -e "\n\t -- Downloading EvidentialGene -- \n"
+            wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_older/evigene19may14.tar
+            tar -xf evigene19may14.tar
+            rm evigene19may14.tar
+            echo -e "\n\t -- Done with EvidentialGene -- \n"
         else
-            echo -e "\n\t -- EvidentialGene directory was found at ${mypwd}/scripts (local installation) -- \n"
+            echo -e "\n\t -- EvidentialGene directory was found at ${confDir}/scripts (local installation) -- \n"
         fi
     elif [ $check_evi -eq 1 ];then
-        echo -e "\n\t -- EvidentialGene is already installed -- \n"
+        echo -e "\n\t -- EvidentialGene is already installed and in the PATH  -- \n"
     fi
 }
 trisql_container () {
@@ -574,7 +579,6 @@ trisql_c () {
                 echo -e "\n\t\e[31m -- Verify your conda installation --\e[39m\n"
                 exit 0
             elif [ $check_sql -eq 1 ];then
-                echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
                 Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                 rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
                 date -u >.lastrun.txt
@@ -785,7 +789,7 @@ get_var_container () {
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
     echo -e "\n\t -- INFO to use in TransPi --\n"
-    echo -e "\t Installation PATH:\t\t $mypwd"
+    echo -e "\t Installation PATH:\t $mypwd"
     echo -e "\t BUSCO V4 database:\t $busco4db"
     echo -e "\t UNIPROT database:\t $uniprot"
     echo -e "\t UNIPROT last update:\t $unpdate"
@@ -793,7 +797,7 @@ get_var_container () {
     echo -e "\t PFAM last update:\t $pfdate"
     echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
-    cat template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
+    cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|busco3db|busco3db=\"${busco3db}\"|" >nextflow.config
     rm .varfile.sh
@@ -811,7 +815,7 @@ get_var () {
     echo "unpdate=\"$( if [ -f ${mypwd}/DBs/uniprot_db/.lastrun.txt ];then cat ${mypwd}/DBs/uniprot_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
-    echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "TransPi" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
+    echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep -w "TransPi\"" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
@@ -825,7 +829,7 @@ get_var () {
     echo -e "\t PFAM last update:\t $pfdate"
     echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
-    cat template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
+    cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
@@ -838,54 +842,113 @@ get_var_user() {
     echo "uniprot=${uniprot}" >>${mypwd}/.varfile.sh
     echo "pfloc=${pfloc}" >>${mypwd}/.varfile.sh
     echo "pfname=${pfname}" >>${mypwd}/.varfile.sh
+    echo "nextflow=$mypwd/nextflow" >>${mypwd}/.varfile.sh
     echo "Tsql=${Tsql}" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
     echo -e "\n\t -- INFO to use in TransPi --\n"
-    echo -e "\t Installation PATH:\t\t $mypwd"
+    echo -e "\t Installation PATH:\t $mypwd"
     echo -e "\t Using your DBs\t\t"
     echo -e "\t BUSCO V4 database:\t $busco4db"
     echo -e "\t UNIPROT database:\t $uniprot"
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
-    cat template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
+    cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
         -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
 }
 container_pipeline_setup() {
-    echo -e "\n\t -- Installing databases only -- \n"
-    dir_c
-    bus_c
-    uniprot_c
-    nextflow_c
-    evi_c
-    buildsql_c
-    trisql_container
-    pfam_c
-    echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-    get_var_container
+    if [ "${userVar}" == "y" ];then
+        nextflow_c
+        evi_c
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var_user
+    else
+        echo -e "\n\t -- Installing databases only -- \n"
+        dir_c
+        bus_c
+        uniprot_c
+        nextflow_c
+        evi_c
+        buildsql_c
+        trisql_container
+        pfam_c
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var_container
+    fi
+}
+single_container_pipeline_setup() {
+    if [ "${userVar}" == "y" ];then
+        nextflow_c
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var_user
+    else
+        echo -e "\n\t -- Installing databases only -- \n"
+        dir_c
+        bus_c
+        uniprot_c
+        nextflow_c
+        buildsql_c
+        trisql_container
+        pfam_c
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var_container
+    fi
 }
 conda_pipeline_setup() {
-    echo -e "\n\t -- Installing conda and the databases -- \n"
-    conda_c
-    dir_c
-    bus_c
-    uniprot_c
-    nextflow_c
-    evi_c
-    buildsql_c
-    trisql_c
-    pfam_c
-    bus4
-    echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-    get_var
+    if [ "${userVar}" == "y" ];then
+        echo -e "\n\t -- Installing conda --\n"
+        conda_only
+        nextflow_c
+        evi_c
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var_user
+    else
+        echo -e "\n\t -- Installing conda and the databases -- \n"
+        conda_only
+        dir_c
+        bus_c
+        uniprot_c
+        nextflow_c
+        evi_c
+        buildsql_c
+        trisql_c
+        pfam_c
+        bus4
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var
+    fi
+}
+single_conda_pipeline_setup() {
+    if [ "${userVar}" == "y" ];then
+        echo -e "\n\t -- Installing conda --\n"
+        conda_c
+        nextflow_c
+        evi_c
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var_user
+    else
+        echo -e "\n\t -- Installing conda and the databases -- \n"
+        conda_c
+        dir_c
+        bus_c
+        uniprot_c
+        nextflow_c
+        evi_c
+        buildsql_c
+        trisql_c
+        pfam_c
+        bus4
+        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
+        get_var
+    fi
 }
 user_buscoDBv3(){
     echo -e "\n\t -- PATH where to locate your BUSCO v3 file -- "
     echo -e "\n\t -- Example: /home/ubuntu/myDB/metazoa_odb9 -- "
-    echo -e -n "\n\t -- Provide the PATH where to locate your BUSCO v3  file: "
+    echo -e -n "\n\t -- Provide the PATH where to locate your BUSCO v3 file: "
     read -e ans
     if [ -d ${ans} ];then
         echo -e "\n\t -- File ${ans} found -- \n"
@@ -955,10 +1018,7 @@ userDBs(){
     user_uniDB
     user_pfDB
     user_sqlDB
-    nextflow_c
-    evi_c
-    echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-    get_var_user
+    userVar=y
 }
 dbs(){
     echo -e "\n\t -- Either TransPi install the DBs for you or you provide the PATH of the DBs -- \n"
@@ -980,6 +1040,15 @@ dbs(){
             dbs
         ;;
     esac
+    if [ "$1" == "1" ];then
+        single_conda_pipeline_setup
+    elif [ "$1" == "2" ];then
+        container_pipeline_setup
+    elif [ "$1" == "3" ];then
+        single_container_pipeline_setup
+    elif [ "$1" == "4" ];then
+        conda_pipeline_setup
+    fi
 }
 message(){
     echo "
@@ -992,19 +1061,25 @@ message(){
     #                                                                                       #
     #        1- Install conda (if neccesary) and DBs                                        #
     #                                                                                       #
-    #            Use TransPi with a single TransPi conda enviroment                         #
+    #               Runs of TransPi with a single TransPi conda enviroment                  #
     #                                                                                       #
-    #        2- Install DBs only                                                            #
+    #        2- Install DBs for containers (docker or singularity)                          #
     #                                                                                       #
-    #            Use TransPi with docker or singularity                                     #
-    #                    or                                                                 #
-    #            Use TransPi with individual conda enviroments handle by nextflow           #
+    #               Runs of TransPi with individual containers per process                  #
     #                                                                                       #
-    #        3- Update DBs                                                                  #
+    #        3- Install DBs for TransPi container (docker or singularity)                   #
     #                                                                                       #
-    #            SwissProt, PFAM, SQL DB used for annotation (requires conda)               #
+    #               Runs of TransPi with a single TransPi container                         #
     #                                                                                       #
-    #        4- Exit                                                                        #
+    #        4- Install DBs for conda enviroments                                           #
+    #                                                                                       #
+    #               Runs of TransPi with individual enviroments per process                 #
+    #                                                                                       #
+    #        5- Update DBs                                                                  #
+    #                                                                                       #
+    #               SwissProt, PFAM, SQL DB used for annotation (requires conda)            #
+    #                                                                                       #
+    #        6- Exit                                                                        #
     #                                                                                       #
     #########################################################################################
 
@@ -1014,19 +1089,14 @@ moption(){
     echo -e -n "\t Which option you want? "
     read ans
     case $ans in
-        1)
-            dbs
-            conda_pipeline_setup
+        1 | 2 | 3 | 4)
+            dbs $ans
         ;;
-        2)
-            dbs
-            container_pipeline_setup
-        ;;
-        3)
+        5)
             echo -e "\n\t -- Updating DBs -- \n"
             downd
         ;;
-        4)
+        6)
             echo -e "\n\t -- Exit -- \n"
             exit 0
         ;;
@@ -1057,14 +1127,15 @@ main(){
         if [ ${mypwd} == "." ];then
             mypwd=$(pwd)
             confDir=$(pwd)
-            cd $mypwd
         elif [ ${mypwd} == $(pwd) ]; then
             confDir=$(pwd)
-            cd $mypwd
         else
+            cd ${mypwd} && mypwd=$(pwd) && cd -
             confDir=$( dirname ${BASH_SOURCE} )
             if [ ${confDir} == "." ];then
                  confDir=$(pwd)
+            else
+                cd ${confDir} && confDir=$(pwd)
             fi
         fi
         message
