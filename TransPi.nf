@@ -53,8 +53,8 @@ def helpMessage() {
             --fullHelp              Display this message and examples for running TransPi
 
         Output options:
-            --outdir 	            Name of output directory. Default "results"
-            -w, -work 	            Name of working directory. Default "work". Only one dash is needed for -work since it is a nextflow function.
+            --outdir                Name of output directory. Default "results"
+            -w, -work               Name of working directory. Default "work". Only one dash is needed for -work since it is a nextflow function.
             --tracedir              Name for directory to save pipeline trace files. Default "pipeline_info"
 
         Additional analyses:
@@ -62,13 +62,13 @@ def helpMessage() {
                 --rRNAdb                PATH to database of rRNA sequences to use for filtering of rRNA. Default ""
 
             --filterSpecies         Perform psytrans filtering of transcriptome. Default "false" Requires options --host and --symbiont
-                --host 	                PATH to host (or similar) protein file. Default ""
-                --symbiont     	        PATH to symbionts (or similar) protein files. Default ""
+                --host                  PATH to host (or similar) protein file. Default ""
+                --symbiont              PATH to symbionts (or similar) protein files. Default ""
 
             --psyval       	        Psytrans value to train model. Default "160"
-            --allBuscos       	    Run BUSCO analysis in all assemblies. Default "false"
+            --allBuscos             Run BUSCO analysis in all assemblies. Default "false"
             --buscoDist 	        Generate BUSCO distribution analysis. Default "false"
-            --minPerc        	    Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
+            --minPerc               Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
             --shortTransdecoder     Run Transdecoder without the homology searches. Default "false"
             --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --signalp
                 --signalp               PATH to SignalP software. Default ""
@@ -80,18 +80,18 @@ def helpMessage() {
                 --rnam                  PATH to Rnammer software. Default ""
 
         Skip options:
-            --skipQC 	            Skip FastQC step. Default "false"
+            --skipFastQC            Skip FastQC step. Default "false"
             --skipFilter 	        Skip fastp filtering step. Default "false"
             --skipKegg              Skip kegg analysis. Default "false"
             --skipReport 	        Skip generation of final TransPi report. Default "false"
 
         Others:
-            --minQual 	            Minimum quality score for fastp filtering. Default "25"
+            --minQual               Minimum quality score for fastp filtering. Default "25"
             --normMaxCov            Normalization step maximun coverage. Default "100"
             --normMinCov            Normalization step minimum coverage. Default "1"
             --pipeInstall           PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
             --myCondaInstall        PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
-                --myConda           Make TransPi use a local conda environemt with all the tools (generated with precheck)
+                --myConda               Make TransPi use a local conda environemt with all the tools (generated with precheck)
 
             --envCacheDir           PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
             --getRunInfo            Get software versions and nexftflow run info. Default "false"
@@ -143,8 +143,8 @@ def fullHelpMessage() {
             --fullHelp              Display this message and examples for running TransPi
 
         Output options:
-            --outdir 	            Name of output directory. Default "results"
-            -w, -work 	            Name of working directory. Default "work". Only one dash is needed for -work since it is a nextflow function.
+            --outdir                Name of output directory. Default "results"
+            -w, -work               Name of working directory. Default "work". Only one dash is needed for -work since it is a nextflow function.
             --tracedir              Name for directory to save pipeline trace files. Default "pipeline_info"
 
         Additional analyses:
@@ -152,13 +152,13 @@ def fullHelpMessage() {
                 --rRNAdb                PATH to database of rRNA sequences to use for filtering of rRNA. Default ""
 
             --filterSpecies         Perform psytrans filtering of transcriptome. Default "false" Requires options --host and --symbiont
-                --host 	                PATH to host (or similar) protein file. Default ""
-                --symbiont     	        PATH to symbionts (or similar) protein files. Default ""
+                --host                  PATH to host (or similar) protein file. Default ""
+                --symbiont              PATH to symbionts (or similar) protein files. Default ""
 
             --psyval       	        Psytrans value to train model. Default "160"
-            --allBuscos       	    Run BUSCO analysis in all assemblies. Default "false"
-            --buscoDist  	        Generate BUSCO distribution analysis. Default "false"
-            --minPerc        	    Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
+            --allBuscos             Run BUSCO analysis in all assemblies. Default "false"
+            --buscoDist 	        Generate BUSCO distribution analysis. Default "false"
+            --minPerc               Mininmum percentage of assemblers require for the BUSCO distribution. Default ".70"
             --shortTransdecoder     Run Transdecoder without the homology searches. Default "false"
             --withSignalP 	        Include SignalP for the annotation. Needs manual installation of CBS-DTU tools. Default "false". Requires --signalp
                 --signalp               PATH to SignalP software. Default ""
@@ -170,18 +170,18 @@ def fullHelpMessage() {
                 --rnam                  PATH to Rnammer software. Default ""
 
         Skip options:
-            --skipQC 	            Skip FastQC step. Default "false"
+            --skipFastQC            Skip FastQC step. Default "false"
             --skipFilter 	        Skip fastp filtering step. Default "false"
             --skipKegg              Skip kegg analysis. Default "false"
             --skipReport 	        Skip generation of final TransPi report. Default "false"
 
         Others:
-            --minQual 	            Minimum quality score for fastp filtering. Default "25"
+            --minQual               Minimum quality score for fastp filtering. Default "25"
             --normMaxCov            Normalization step maximun coverage. Default "100"
             --normMinCov            Normalization step minimum coverage. Default "1"
             --pipeInstall           PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
             --myCondaInstall        PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
-                --myConda           Make TransPi use a local conda environemt with all the tools (generated with precheck)
+                --myConda               Make TransPi use a local conda environemt with all the tools (generated with precheck)
 
             --envCacheDir           PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
             --getRunInfo            Get software versions and nexftflow run info. Default "false"
@@ -304,8 +304,8 @@ def checkArgs() {
     }
 }
 
-if (params.condaActivate && params.myConda && params.myCondaInstall == "") {
-    println("\n\t\033[0;31mNeed to specify the local conda installation in parameter \"myCondaInstall\" in the config file.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
+if ((params.condaActivate && params.myConda) && (params.myCondaInstall == "" || params.cenv == "")) {
+    println("\n\t\033[0;31mNeed to specify the local conda installation in parameter \"myCondaInstall\" and \"cenv\" in the config file.\n\tFor more info use `nextflow run TransPi.nf --help`\n\033[0m")
     exit 0
 }
 
@@ -321,7 +321,7 @@ if (params.all) {
             ====================================================
               TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
             ====================================================
-            TransPi.nf Directory:   ${projectDir}
+            TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
             Results Directory:      ${launchDir}/${params.outdir}
             Work Directory:         ${workDir}
@@ -338,7 +338,7 @@ if (params.all) {
             ====================================================
               TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
             ====================================================
-            TransPi.nf Directory:   ${projectDir}
+            TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
             Results Directory:      ${launchDir}/${params.outdir}
             Work Directory:         ${workDir}
@@ -350,7 +350,7 @@ if (params.all) {
             ====================================================
               TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
             ====================================================
-            TransPi.nf Directory:   ${projectDir}
+            TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
             Results Directory:      ${launchDir}/${params.outdir}
             Work Directory:         ${workDir}
@@ -366,7 +366,7 @@ if (params.all) {
             ====================================================
               TransPi - Transcriptome Analysis Pipeline v${workflow.manifest.version}
             ====================================================
-            TransPi.nf Directory:   ${projectDir}
+            TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
             Results Directory:      ${launchDir}/${params.outdir}
             Work Directory:         ${workDir}
