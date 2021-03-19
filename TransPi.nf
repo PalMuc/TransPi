@@ -1272,50 +1272,53 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 """
         }
 
-        mapping_evi_in=Channel.create()
-        mapping_evi.mix( mapping_reads_evi ).groupTuple(by:0,size:2).into(mapping_evi_in)
+        if (params.onlyAsm || params.all) {
 
-        process mapping_evigene {
+            mapping_evi_in=Channel.create()
+            mapping_evi.mix( mapping_reads_evi ).groupTuple(by:0,size:2).into(mapping_evi_in)
 
-            label 'big_cpus'
+            process mapping_evigene {
 
-            tag "${sample_id}"
+                label 'big_cpus'
 
-            publishDir "${launchDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
+                tag "${sample_id}"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
-            }
+                publishDir "${launchDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
 
-            input:
-                tuple sample_id, file(files), file(files2) from mapping_evi_in
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+                if (params.oneContainer){ container "${params.TPcontainer}" } else {
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+                }
 
-            output:
-                tuple sample_id, file("log*") into mapping_evi_results
-                tuple sample_id, file("*") into mapping_evi_results_bam
+                input:
+                    tuple sample_id, file(files), file(files2) from mapping_evi_in
 
-            script:
-            if (params.saveBam) {
-                """
-                a=\$( echo $files $files2 )
-                ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
-                r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
-                r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
-                bowtie2-build \${ass} \${ass} --threads ${task.cpus}
-                bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
-                rm *.bt2
-                """
-            } else {
-                """
-                a=\$( echo $files $files2 )
-                ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
-                r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
-                r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
-                bowtie2-build \${ass} \${ass} --threads ${task.cpus}
-                bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
-                rm *.bam *.bt2
-                """
+                output:
+                    tuple sample_id, file("log*") into mapping_evi_results
+                    tuple sample_id, file("*") into mapping_evi_results_bam
+
+                script:
+                if (params.saveBam) {
+                    """
+                    a=\$( echo $files $files2 )
+                    ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
+                    r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
+                    r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
+                    bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+                    bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
+                    rm *.bt2
+                    """
+                } else {
+                    """
+                    a=\$( echo $files $files2 )
+                    ass=\$( echo \$a | tr " " "\\n" | grep ".combined.okay.fa" )
+                    r1=\$( echo \$a | tr " " "\\n" | grep "left-" )
+                    r2=\$( echo \$a | tr " " "\\n" | grep "right-" )
+                    bowtie2-build \${ass} \${ass} --threads ${task.cpus}
+                    bowtie2 -x \${ass} -1 \${r1} -2 \${r2} -p ${task.cpus} 2>log_\${ass}.txt | samtools view -@ ${task.cpus} -bS - >\${ass}.bam
+                    rm *.bam *.bt2
+                    """
+                }
             }
         }
 
