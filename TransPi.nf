@@ -1296,46 +1296,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             }
         }
 
-        // Check (add busco3 and busco4 - DONE ) and summary creation
-        process busco3 {
-
-            label 'med_cpus'
-
-            tag "${sample_id}"
-
-            publishDir "${launchDir}/${params.outdir}/busco3", mode: "copy", overwrite: true, pattern: "*.{bus3,bus3.txt,tsv}"
-            publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
-
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
-            }
-
-            input:
-                tuple sample_id, file("${sample_id}.combined.okay.fa") from evigene_ch_busco3
-
-            output:
-                tuple sample_id, file("run_${sample_id}.TransPi.bus3") into busco3_ch
-                tuple sample_id, file("*${sample_id}.TransPi.bus3.txt") into ( busco3_summary, busco3_comp_1 )
-                tuple sample_id, file("*tsv") into busco3_transpi_tsv
-                file("busco3.version.txt") into busco3_version
-
-            script:
-                """
-                echo -e "\\n-- Starting BUSCO --\\n"
-
-                run_BUSCO.py -i ${sample_id}.combined.okay.fa -o ${sample_id}.TransPi.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
-
-                echo -e "\\n-- DONE with BUSCO --\\n"
-
-                cp run_${sample_id}.TransPi.bus3/short_summary_${sample_id}.TransPi.bus3.txt .
-                cp run_${sample_id}.TransPi.bus3/full_table_* .
-
-                v=\$( run_BUSCO.py -v | cut -f 2 -d " " )
-                echo "BUSCO3: \$v" >busco3.version.txt
-                """
-        }
-
         process busco4 {
 
             label 'med_cpus'
@@ -1346,9 +1306,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             // change container in oneContainer option
-            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
+            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_2" : null)
             if (params.oneContainer){ container "${params.v4container}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.1.3--py_2" : "ezlabgva/busco:v4.0.5_cv1")
             }
 
             input:
@@ -1505,68 +1465,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
         if (params.allBuscos) {
 
-            busco3_all = Channel.create()
-            assemblies_ch_soap_busco3.mix( assemblies_ch_velvet_busco3, assemblies_ch_spades_busco3, assemblies_ch_transabyss_busco3, assemblies_ch_trinity_busco3 ).groupTuple(by:0,size:5).into(busco3_all)
-
-            process busco3_all {
-
-                label 'med_cpus'
-
-                tag "${sample_id}"
-
-                publishDir "${launchDir}/${params.outdir}/busco3_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus3}"
-
-                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
-                if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
-                }
-
-                input:
-                    tuple sample_id, file(files) from busco3_all
-
-                output:
-                    tuple sample_id, file("*.bus3") into busco3_all_ch
-                    tuple sample_id, file("*.Trinity.bus3.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
-                    tuple sample_id, file("*.txt"), file("*.tsv") into busco3_all_sum_ch
-                    tuple sample_id, file("${sample_id}_all_busco3.tsv"), file("${sample_id}_all_assemblers.fa") into busco3_all_tsv
-
-                script:
-                    """
-                    cat input.1 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >list.txt
-                    cat input.2 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
-                    cat input.3 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
-                    cat input.4 | sed 's/, /\\n/g' | tr -d "[" | tr "]" "\\n" >>list.txt
-
-                    for x in `cat list.txt`;do
-                        ln -s \$x \$( basename \$x )
-                    done
-
-                    find . -maxdepth 1 -type l -ls | grep "Trinity" | awk -F "-> " '{print \$2}' >>list.txt
-
-                    for x in `cat list.txt`;do
-
-                        name=\$( basename \$x .fa )
-
-                        echo -e "\\n-- Starting BUSCO --\\n"
-
-                        run_BUSCO.py -i \${name}.fa -o \${name}.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
-
-                        cp run_\${name}.bus3/short* .
-                        cp run_\${name}.bus3/full_table_* .
-
-                        echo -e "\\n-- DONE with BUSCO --\\n"
-
-                    done
-
-                    echo "Busco_id,Status,Sequence,Score,Length" >.header.txt
-                    cat full_table_*.tsv | grep -v "#" | tr "\t" "," >.busco_names.txt
-                    cat .header.txt .busco_names.txt >${sample_id}_all_busco3.tsv
-                    rm .header.txt .busco_names.txt
-
-                    cat *.fa >${sample_id}_all_assemblers.fa
-                    """
-            }
-
             busco4_all = Channel.create()
             assemblies_ch_soap_busco4.mix( assemblies_ch_velvet_busco4, assemblies_ch_spades_busco4, assemblies_ch_transabyss_busco4, assemblies_ch_trinity_busco4 ).groupTuple(by:0,size:5).into(busco4_all)
 
@@ -1579,9 +1477,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 publishDir "${launchDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus4}"
 
                 // change container in oneContainer option
-                conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
+                conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_2" : null)
                 if (params.oneContainer){ container "${params.v4container}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.1.4--py_2" : "ezlabgva/busco:v4.0.5_cv1")
                 }
 
                 input:
@@ -1632,40 +1530,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
         } else {
 
-            process busco3_tri {
-
-                label 'med_cpus'
-
-                tag "${sample_id}"
-
-                publishDir "${launchDir}/${params.outdir}/busco3", mode: "copy", overwrite: true
-
-                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::busco=3.0.2=py_13" : null)
-                if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:3.0.2--py_13" : "quay.io/biocontainers/busco:3.0.2--py_13")
-                }
-
-                input:
-                    tuple sample_id, file("${sample_id}.Trinity.fa") from busco3_ch_trinity
-
-                output:
-                    tuple sample_id, file("*${sample_id}.Trinity.bus3.txt") into ( busco3_ch_trinity_sum, busco3_comp_2 )
-                    file("run_${sample_id}.Trinity.bus3")
-                    tuple sample_id, file("*tsv") into busco3_trinity_rescue
-
-                script:
-                    """
-                    echo -e "\\n-- Starting BUSCO --\\n"
-
-                    run_BUSCO.py -i ${sample_id}.Trinity.fa -o ${sample_id}.Trinity.bus3 -l ${params.busco3db} -m tran -c ${task.cpus}
-
-                    echo -e "\\n-- DONE with BUSCO --\\n"
-
-                    cp run_${sample_id}.Trinity.bus3/short_summary_${sample_id}.Trinity.bus3.txt .
-                    cp run_${sample_id}.Trinity.bus3/full_table_${sample_id}.Trinity.bus3.tsv .
-                    """
-            }
-
             process busco4_tri {
 
                 label 'med_cpus'
@@ -1675,9 +1539,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 publishDir "${launchDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
 
                 // change container in oneContainer option
-                conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_0" : null)
+                conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_2" : null)
                 if (params.oneContainer){ container "${params.v4container}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.0.5--pyr36_0" : "ezlabgva/busco:v4.0.5_cv1")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.1.4--py_2" : "ezlabgva/busco:v4.0.5_cv1")
                 }
 
                 input:
@@ -1704,44 +1568,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
         }
 
         if (params.buscoDist && params.allBuscos) {
-
-            busco3_dist_ch = Channel.create()
-            busco3_transpi_tsv.join( busco3_all_tsv ).into( busco3_dist_ch )
-
-            process busco3_dist {
-
-                label 'low_cpus'
-
-                tag "${sample_id}"
-
-                publishDir "${launchDir}/${params.outdir}/busco3_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
-
-                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
-                if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0" : "quay.io/biocontainers/mulled-v2-1e9d4f78feac0eb2c8d8246367973b3f6358defc:41ffac721ff9b03ca1121742e969d0e7d78e589f-0")
-                }
-
-                input:
-                    tuple sample_id, file(transpi_tsv), file(all_busco), file(assembly) from busco3_dist_ch
-
-                output:
-                    tuple sample_id, file("*.fasta"), file("*_table.tsv") into busco3_dist_sum
-                    tuple sample_id, file("*_table.tsv") into busco3_heatmap
-
-                script:
-                    """
-                    cat $transpi_tsv | grep -v "#" | tr "\\t" "," >>$all_busco
-                    SOS_busco.py -input_file_busco $all_busco -input_file_fasta $assembly -min ${params.minPerc} -kmers ${params.k}
-                    mv Complete_comparison_table ${sample_id}_complete_BUSCO3_table.tsv
-                    mv TransPi_comparison_table ${sample_id}_TransPi_missing_BUSCO3_table.tsv
-                    if [ -e sequences_to_add.fasta ];then
-                        mv sequences_to_add.fasta ${sample_id}_rescued_BUSCO4.fasta
-                    else
-                        touch ${sample_id}_rescued_BUSCO4.fasta
-                    fi
-                    """
-
-            }
 
             busco4_dist_ch = Channel.create()
             busco4_transpi_tsv.join( busco4_all_tsv ).into( busco4_dist_ch )
@@ -1800,34 +1626,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             }
         }
 
-        busco3_sum = Channel.create()
-        busco3_summary.mix(busco3_ch_trinity_sum).groupTuple(by:0,size:2).into(busco3_sum)
-
-        process summary_busco3_individual {
-
-            tag "${sample_id}"
-
-            publishDir "${launchDir}/${params.outdir}/stats", mode: "copy", overwrite: true
-
-            input:
-                tuple sample_id, file(files) from busco3_sum
-
-            output:
-                tuple sample_id, file("${sample_id}.sum_busco3.txt") into final_sum_2v3
-
-            script:
-                """
-                tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
-                trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
-                #Summary of BUSCO scores for the final_assemblies
-                echo -e "Summary of BUSCO V3 \\n" >>${sample_id}.sum_busco3.txt
-                echo "-- TransPi BUSCO V3 scores -- " >>${sample_id}.sum_busco3.txt
-                cat \${trans} >>${sample_id}.sum_busco3.txt
-                echo -e "\\n-- Trinity BUSCO V3 scores --" >>${sample_id}.sum_busco3.txt
-                cat \${tri} >>${sample_id}.sum_busco3.txt
-                """
-        }
-
         busco4_sum = Channel.create()
         busco4_summary.mix(busco4_ch_trinity_sum).groupTuple(by:0,size:2).into(busco4_sum)
 
@@ -1853,49 +1651,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 cat \${trans} >>${sample_id}.sum_busco4.txt
                 echo -e "\\n-- Trinity BUSCO V4 scores --" >>${sample_id}.sum_busco4.txt
                 cat \${tri} >>${sample_id}.sum_busco4.txt
-                """
-        }
-
-        busco3_comp = Channel.create()
-        busco3_comp_1.mix(busco3_comp_2).groupTuple(by:0,size:2).into(busco3_comp)
-
-        process get_busco3_comparison {
-
-            tag "${sample_id}"
-
-            publishDir "${launchDir}/${params.outdir}/figures/BUSCO3", mode: "copy", overwrite: true
-
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
-            if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0" : "quay.io/biocontainers/mulled-v2-3f431f5f8e54df68ea0029c209fce3b154f6e186:94cad00b5306639ceab6aaf211f45740560abb90-0")
-            }
-
-            input:
-                tuple sample_id, file(files) from busco3_comp
-
-            output:
-                tuple sample_id, file("${sample_id}_BUSCO3_comparison.pdf"), file("${sample_id}_BUSCO3_comparison.svg") into busco3_fig
-                tuple sample_id, file("*.csv") into busco3_csv
-
-            script:
-                """
-                set +e
-                tri=\$( echo $files | tr " " "\\n" | grep ".Trinity.bus3.txt" )
-                trans=\$( echo $files | tr " " "\\n" | grep ".TransPi.bus3.txt" )
-                bash get_busco_val.sh \${tri} \${trans} v3 ${sample_id}
-                cp ${params.pipeInstall}/bin/busco_comparison.R .
-                a=\$( cat final_spec )
-                sed -i "s/MYSPEC/\${a}/" busco_comparison.R
-                b=\$( cat final_perc )
-                sed -i "s/MYPERC/\${b}/" busco_comparison.R
-                c=\$( cat final_num )
-                sed -i "s/MYVAL/\${c}/" busco_comparison.R
-                Rscript busco_comparison.R ${sample_id}
-                mv ${sample_id}_BUSCO_comparison.pdf ${sample_id}_BUSCO3_comparison.pdf
-                mv ${sample_id}_BUSCO_comparison.svg ${sample_id}_BUSCO3_comparison.svg
-                # csv
-                sed -i 's/\$/\\n/g' final_*
-                cat final_spec final_perc final_num | tr -d "'" >${sample_id}_busco3.csv
                 """
         }
 
