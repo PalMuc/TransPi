@@ -10,7 +10,7 @@ dependencies:
   - trinity=2.9.1=h8b12597_1
   - soapdenovo-trans=1.04=ha92aebf_2
   - spades=3.14.0=h2d02072_0
-  - transabyss=2.0.1=py_6
+  - transabyss=2.0.1=pyh864c0ab_7
   - velvet=1.2.10=hed695b0_3
   - oases=0.2.09=h470a237_1
   #- busco=4.0.5 #Not working properly with the env
