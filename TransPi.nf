@@ -1085,13 +1085,15 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             script:
                 if ((workflow.containerEngine == 'singularity' || workflow.containerEngine == 'docker') && !params.oneContainer) {
                 """
+                #fix docker issue
+                cp \$( which transabyss ) .
                 mkdir -p /usr/local/lib/python3.8/site-packages/bin
                 cp /usr/local/bin/skip_psl_self* /usr/local/lib/python3.8/site-packages/bin/
                 echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
 
                 for x in `echo $k | tr "," " "`;do
                     echo -e "\\n-- Trans-ABySS k\${x} --\\n"
-                    transabyss -k \${x} --pe ${left} ${right} --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
+                    ./transabyss -k \${x} --pe ${left} ${right} --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
                 done
 
                 echo -e "\\n-- Finished with the assemblies --\\n"
