@@ -450,7 +450,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 publishDir "${launchDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
                 publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
-                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge conda-forge::pigz=2.3.4=hed695b0_1 conda-forge::jq=1.6=h14c3975_1000 bioconda::fastp=0.20.1=h8b12597_0" : null)
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::fastp=0.20.1=h8b12597_0" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
                 container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/fastp:0.20.1--h8b12597_0" : "quay.io/biocontainers/fastp:0.20.1--h8b12597_0")
                 }
@@ -3174,7 +3174,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
         }
     }
 
-    if (params.getRunInfo) {
+    if (!params.skipGetRunInfo) {
 
         process get_run_info {
 
