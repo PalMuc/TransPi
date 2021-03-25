@@ -555,7 +555,7 @@ trisql_container () {
         date -u >.lastrun.txt
     elif [ -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
-        DB=$( cat .lastrun.txt )
+        DB=$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat .lastrun.txt;else echo "N/A";fi )
         echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
     fi
 }
@@ -586,7 +586,7 @@ trisql_c () {
         fi
     elif [ -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
-        DB=$( cat .lastrun.txt )
+        DB=$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat .lastrun.txt;else echo "N/A";fi )
         echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
     fi
 }
@@ -616,7 +616,7 @@ pfam_c() {
         cd DBs/hmmerdb/
         if [ -f Pfam-A.hmm ];then
             echo -e "\n\t -- Pfam file is present and ready to be used --\n"
-            DB=$( cat .lastrun.txt )
+            DB=$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat .lastrun.txt;else echo "N/A";fi )
             echo -e "\n\t -- Pfam last update: ${DB} --\n"
         else
             echo -e "-- Downloading Pfam-A files ... --\n"
@@ -710,7 +710,7 @@ sqld(){
         esac
     elif [ -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
-        DB=$( cat .lastrun.txt )
+        DB=$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat .lastrun.txt;else echo "N/A";fi )
         echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
     fi
     pfam_u
