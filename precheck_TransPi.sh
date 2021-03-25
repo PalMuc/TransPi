@@ -87,24 +87,6 @@ dir_c () {
         mkdir DBs
     fi
 }
-#temporary function for busco V3
-busv3_get () {
-    v3name=$1
-    if [ `cat ${confDir}/conf/busV3list.txt | grep "${v3name}" | wc -l` -eq 1 ];then
-        if [ -d ${v3name}_odb9 ];then
-            export busnaV3=${v3name}_odb9
-        else
-            tname=$( cat ${confDir}/conf/busV3list.txt | grep "${v3name}" )
-            wget $tname
-            tar -xf ${v3name}_odb9.tar.gz
-            export busnaV3=${v3name}_odb9
-            rm ${v3name}_odb9.tar.gz
-        fi
-    else
-        echo -e "\n\t -- No BUSCO V3 available for ${v3name} --\n"
-        exit 0
-    fi
-}
 bus_dow () {
     name=$1
     cd $mypwd
@@ -124,8 +106,6 @@ bus_dow () {
             echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
         fi
         dname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
-        #get buscov3
-        busv3_get $dname
         if [ -d ${dname}_odb10 ];then
             export busna=${dname}_odb10
         fi
@@ -134,8 +114,6 @@ bus_dow () {
         bname=$( echo $name | cut -f 1 -d "_" )
         dname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
         if [ -d ${dname}_odb10 ];then
-            #get buscov3
-            busv3_get $dname
             echo -e "\n\t -- BUSCO V4 \"$name\" database found -- \n"
             export busna=${dname}_odb10
         else
@@ -151,8 +129,6 @@ bus_dow () {
                 echo -e "\n\t -- DONE with BUSCO V4 database --\n";wait
             fi
             dname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
-            #get buscov3
-            busv3_get $dname
             if [ -d ${dname}_odb10 ];then
                 export busna=${dname}_odb10
             fi
@@ -774,7 +750,6 @@ downd() {
 }
 get_var_container () {
     cd $mypwd
-    echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
     echo "busco4db=$mypwd/DBs/busco_db/$busna" >>${mypwd}/.varfile.sh
     echo "uniname=$unina" >>${mypwd}/.varfile.sh
     echo "uniprot=$mypwd/DBs/uniprot_db/$unina" >>${mypwd}/.varfile.sh
@@ -798,13 +773,11 @@ get_var_container () {
     echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" >nextflow.config
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
     rm .varfile.sh
 }
 get_var () {
     cd $mypwd
-    echo "busco3db=$mypwd/DBs/busco_db/$busnaV3" >${mypwd}/.varfile.sh
     echo "busco4db=$mypwd/DBs/busco_db/$busna" >>${mypwd}/.varfile.sh
     echo "uniname=$unina" >>${mypwd}/.varfile.sh
     echo "uniprot=$mypwd/DBs/uniprot_db/$unina" >>${mypwd}/.varfile.sh
@@ -831,12 +804,11 @@ get_var () {
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
 }
 get_var_user() {
     cd $mypwd
-    echo "busco3db=${busco3db}" >${mypwd}/.varfile.sh
     echo "busco4db=${busco4db}" >>${mypwd}/.varfile.sh
     echo "uniname=${uniname}" >>${mypwd}/.varfile.sh
     echo "uniprot=${uniprot}" >>${mypwd}/.varfile.sh
@@ -856,7 +828,7 @@ get_var_user() {
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
         -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|busco3db|busco3db=\"${busco3db}\"|" -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
     rm .varfile.sh
 }
 container_pipeline_setup() {
@@ -945,19 +917,6 @@ single_conda_pipeline_setup() {
         get_var
     fi
 }
-user_buscoDBv3(){
-    echo -e "\n\t -- PATH where to locate your BUSCO v3 file -- "
-    echo -e "\n\t -- Example: /home/ubuntu/myDB/metazoa_odb9 -- "
-    echo -e -n "\n\t -- Provide the PATH where to locate your BUSCO v3 file: "
-    read -e ans
-    if [ -d ${ans} ];then
-        echo -e "\n\t -- File ${ans} found -- \n"
-        export busco3db=${ans}
-    elif [ ! -d ${ans} ];then
-        echo -e "\n\t\e[31m -- File ${ans} not found -- \e[39m\n"
-        user_buscoDBv3
-    fi
-}
 user_buscoDBv4(){
     echo -e "\n\t -- PATH where to locate your BUSCO v4 file -- "
     echo -e "\n\t -- Example: /home/ubuntu/myDB/metazoa_odb10 -- "
@@ -1013,7 +972,6 @@ user_sqlDB(){
     fi
 }
 userDBs(){
-    user_buscoDBv3
     user_buscoDBv4
     user_uniDB
     user_pfDB
