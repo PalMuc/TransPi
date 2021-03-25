@@ -866,7 +866,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 tuple sample_id, file(left), file(right) from norm_reads_trinity
 
             output:
-                tuple sample_id, file("${sample_id}.Trinity.fa") into ( assemblies_ch_trinity, busco3_ch_trinity, busco4_ch_trinity, assemblies_ch_trinity_busco3, assemblies_ch_trinity_busco4, mapping_trinity )
+                tuple sample_id, file("${sample_id}.Trinity.fa") into ( assemblies_ch_trinity, busco4_ch_trinity, assemblies_ch_trinity_busco4, mapping_trinity )
                 file("trinity.version.txt") into trinity_version
 
             script:
@@ -902,7 +902,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             output:
                 tuple sample_id, file("${sample_id}.SOAP.fa") into assemblies_ch_soap
-                tuple sample_id, file("${sample_id}.SOAP.k*") into assemblies_ch_soap_busco3, assemblies_ch_soap_busco4
+                tuple sample_id, file("${sample_id}.SOAP.k*") into assemblies_ch_soap_busco4
                 file("soap.version.txt") into soap_version
 
             script:
@@ -960,7 +960,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             output:
                 tuple sample_id, file("${sample_id}.Velvet.fa") into assemblies_ch_velvet
-                tuple sample_id, file("${sample_id}.Velvet.k*") into assemblies_ch_velvet_busco3, assemblies_ch_velvet_busco4
+                tuple sample_id, file("${sample_id}.Velvet.k*") into assemblies_ch_velvet_busco4
                 file("velvet_oases.versions.txt") into velvet_version
 
             script:
@@ -1026,7 +1026,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             output:
                 tuple sample_id, file("${sample_id}.SPADES.fa") into assemblies_ch_spades
-                tuple sample_id, file("${sample_id}.SPADES.k*") into assemblies_ch_spades_busco3, assemblies_ch_spades_busco4
+                tuple sample_id, file("${sample_id}.SPADES.k*") into assemblies_ch_spades_busco4
                 file("rna_spades.version.txt") into rnaspades_version
 
             script:
@@ -1079,7 +1079,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             output:
                 tuple sample_id, file("${sample_id}.TransABySS.fa") into assemblies_ch_transabyss
-                tuple sample_id, file("${sample_id}.TransABySS.k*") into assemblies_ch_transabyss_busco3, assemblies_ch_transabyss_busco4
+                tuple sample_id, file("${sample_id}.TransABySS.k*") into assemblies_ch_transabyss_busco4
                 file("transabyss.version.txt") into transabyss_version
 
             script:
@@ -1143,7 +1143,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 tuple sample_id, file(assemblies) from evigene_ch
 
             output:
-                tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco3, evigene_ch_busco4, annotation_ch_transdecoder, annotation_ch_transdecoderB, evigene_ch_rnammer, evigene_ch_trinotate, evi_dist, evi_filt, evigene_ch_rna_quast, mapping_evi )
+                tuple sample_id, file("${sample_id}.combined.okay.fa") into ( evigene_ch_busco4, annotation_ch_transdecoder, annotation_ch_transdecoderB, evigene_ch_rnammer, evigene_ch_trinotate, evi_dist, evi_filt, evigene_ch_rna_quast, mapping_evi )
                 tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") into evigene_summary
                 file("evigene.version.txt") into evigene_version
 
@@ -1615,12 +1615,10 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     tuple sample_id, file(files) from skip_busco_dist
 
                 output:
-                    tuple sample_id, file("busco3_dist.txt") into busco3_heatmap
                     tuple sample_id, file("busco4_dist.txt") into busco4_heatmap
 
                 script:
                     """
-                    echo "BUSCO3 distribution analysis was skipped" >busco3_dist.txt
                     echo "BUSCO4 distribution analysis was skipped" >busco4_dist.txt
                     """
             }
@@ -2873,7 +2871,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
         if (!params.skipReport) {
 
         report_ch = Channel.create()
-        fastp_csv.mix( norm_report, remove_rrna_sum, mapping_evi_results, mapping_trinity_results, rna_quast_report, size_dist, summary_evi_csv, busco3_csv, busco4_csv, busco3_heatmap, busco4_heatmap, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:16).flatten().toList().into(report_ch)
+        fastp_csv.mix( norm_report, remove_rrna_sum, mapping_evi_results, mapping_trinity_results, rna_quast_report, size_dist, summary_evi_csv, busco4_csv, busco4_heatmap, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:14).flatten().toList().into(report_ch)
 
         process get_report {
 
@@ -2957,9 +2955,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     v="No info available. Check Instructions on README."
                 fi
                 echo -e "PfamA last update: \$v \\n" >>.runInfo.txt
-
-                v=\$( echo ${params.busco3db} | tr "/" "\\n" | tail -n 1 )
-                echo "BUSCO_v3_DB: \$v" >>.runInfo.txt
 
                 v=\$( echo ${params.busco4db} | tr "/" "\\n" | tail -n 1 )
                 echo "BUSCO_v4_DB: \$v" >>.runInfo.txt
