@@ -1068,9 +1068,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${launchDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transabyss=2.0.1=py_6" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transabyss=2.0.1=pyh864c0ab_7" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transabyss:2.0.1--py_6" : "quay.io/biocontainers/transabyss:2.0.1--py_6")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/transabyss:2.0.1--pyh864c0ab_7" : "quay.io/biocontainers/transabyss:2.0.1--pyh864c0ab_7")
             }
 
             input:
@@ -1083,34 +1083,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 file("transabyss.version.txt") into transabyss_version
 
             script:
-                if ((workflow.containerEngine == 'singularity' || workflow.containerEngine == 'docker') && !params.oneContainer) {
-                """
-                #fix docker issue
-                cp \$( which transabyss ) .
-                mkdir -p /usr/local/lib/python3.8/site-packages/bin
-                cp /usr/local/bin/skip_psl_self* /usr/local/lib/python3.8/site-packages/bin/
-                echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
-
-                for x in `echo $k | tr "," " "`;do
-                    echo -e "\\n-- Trans-ABySS k\${x} --\\n"
-                    ./transabyss -k \${x} --pe ${left} ${right} --outdir ${sample_id}_transabyss_\${x} --name k\${x}.transabyss.fa --threads ${task.cpus} -c 12 --length 200
-                done
-
-                echo -e "\\n-- Finished with the assemblies --\\n"
-
-                for x in `echo $k | tr "," " "`;do
-                    sed -i "s/>/>TransABySS.k\${x}./g" ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa
-                done
-
-                cat ${sample_id}_transabyss_*/k*.transabyss.fa-final.fa >${sample_id}.TransABySS.fa
-
-                for x in `echo $k | tr "," " "`;do
-                    cp ${sample_id}_transabyss_\${x}/k\${x}.transabyss.fa-final.fa ${sample_id}.TransABySS.k\${x}.fa
-                done
-
-                rm -rf ${sample_id}_transabyss_*
-                """
-                } else {
                 """
                 echo -e "\\n-- Starting Trans-ABySS assemblies --\\n"
 
@@ -1136,7 +1108,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 v=\$( transabyss --version )
                 echo "Trans-ABySS: \$v" >transabyss.version.txt
                 """
-                }
+
         }
 
     }
