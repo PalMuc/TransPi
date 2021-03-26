@@ -239,96 +239,6 @@ cat *.Trinity.fa.txt | grep "overall alignment rate"
 
 <br>
 
-### - Using BUSCO V3
-
-<br>
-<br>
-
-```{r busco3_plot, echo=FALSE}
-bus=read.csv(paste(params$sample_id,sep="","_busco3.csv"), header=FALSE)
-MYSPEC=as.character(t(bus[1,]))
-MYPERC=as.numeric(t(bus[2,]))
-MYVAL=as.numeric(t(bus[3,]))
-######################################
-
-# Edit from the orginal BUSCO plot script
-
-######################################
-#
-# BUSCO summary figure
-# @version 3.0.0
-# @since BUSCO 2.0.0
-#
-# Copyright (c) 2016-2017, Evgeny Zdobnov (ez@ezlab.org)
-# Licensed under the MIT license. See LICENSE.md file.
-#
-######################################
-my_colors <- c("#0e9aa7", "#96ceba", "#ffcc5c", "#ff6f69")
-# Bar height ratio
-my_bar_height <- 0.55
-# Legend
-my_title <- "BUSCO Assessment Results - TransPi vs Trinity"
-# Font
-my_family <- "sans"
-my_size_ratio <- 1
-species <- c(MYSPEC)
-species <- factor(species)
-species <- factor(species,levels(species)[c(length(levels(species)):1)]) # reorder your species here just by changing the values in the vector :
-percentage <- c(MYPERC)
-values <- c(MYVAL)
-######################################
-# Code to produce the graph
-labsize = 1
-if (length(levels(species)) > 10){
-  labsize = 0.66
-}
-category <- c(rep(c("Single","Duplicated","Fragmented","Missing"),c(1)))
-category <-factor(category)
-#category = factor(category,levels(category)[c(4,1,2,3)])
-category = factor(category,levels(category)[(c(4,1,2,3))])
-df = data.frame(species,percentage,values,category)
-figure <- ggplot()+
-  geom_bar(aes(y = percentage, x = species, fill = category), data = df, stat="identity", width=my_bar_height,position = position_stack(reverse=TRUE)) +
-  coord_flip() + theme_gray(base_size = 8) + scale_y_continuous(labels = c("0","20","40","60","80","100"), breaks = c(0,20,40,60,80,100))+
-  theme_gray(base_size = 8) + scale_y_continuous(labels = c("0","20","40","60","80","100"), breaks = c(0,20,40,60,80,100)) +
-  scale_fill_manual(values = my_colors,labels =c(" Complete (C) and single-copy (S)  ", " Complete (C) and duplicated (D)",
-                                                 " Fragmented (F)  ", " Missing (M)")) +
-  xlab("") + ylab("\n%BUSCOs") +
-  theme(plot.title = element_text(family=my_family, colour = "black", size = rel(2.2)*my_size_ratio, face = "bold")) +
-  theme(legend.position="top",legend.title = element_blank()) +
-  theme(legend.text = element_text(family=my_family, size = rel(1.2)*my_size_ratio)) +
-  theme(panel.background = element_rect(color="#FFFFFF", fill="white")) +
-  theme(panel.grid.minor = element_blank()) +
-  theme(panel.grid.major = element_blank()) +
-  theme(axis.text.y = element_text(family=my_family, colour = "black", size = rel(1.66)*my_size_ratio,face="italic")) +
-  theme(axis.text.x = element_text(family=my_family, colour = "black", size = rel(1.66)*my_size_ratio)) +
-  theme(axis.line = element_line(size=1*my_size_ratio, colour = "black")) +
-  theme(axis.ticks.length = unit(.85, "cm")) +
-  theme(axis.ticks.y = element_line(colour="white", size = 0)) +
-  theme(axis.ticks.x = element_line(colour="#222222")) +
-  theme(axis.ticks.length = unit(0.4, "cm")) +
-  theme(axis.title.x = element_text(family=my_family, size=rel(1.2)*my_size_ratio)) +
-  guides(fill = guide_legend(override.aes = list(colour = NULL))) +
-  guides(fill=guide_legend(nrow=2,byrow=TRUE))
-for(i in rev(c(1:length(levels(species))))){
-  detailed_values <- values[species==species[species==levels(species)[i]]]
-  total_buscos <- sum(detailed_values)
-  figure <- figure +
-    annotate("text", label=paste("C:", detailed_values[1] + detailed_values[2], " [S:", detailed_values[1], ", D:", detailed_values[2], "], F:", detailed_values[3], ", M:", detailed_values[4], ", n:", total_buscos, sep=" "),
-             y=30, x = i, size = labsize*3*my_size_ratio, colour = "black", hjust=0, family=my_family)
-}
-bp <-ggplotly(figure)
-bp <- bp %>% layout(title = "BUSCO Results - TransPi vs Trinity")
-bp <- bp %>% layout(legend = list(x=10,y=.5))
-bp <- bp %>% config(toImageButtonOptions=list(format='svg',filename='busco3_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
-bp
-```
-
-<br>
-<br>
-<br>
-<br>
-
 ### - Using BUSCO V4
 
 <br>
@@ -421,36 +331,6 @@ bp
 
 ### - BUSCO Distribution
 
-#### BUSCO V3
-
-<br>
-
-**Missing BUSCO distribution**
-```{r busco3_dist_mis, echo=FALSE}
-if (params$buscoDist == "true" && params$allBuscos == "true") {
-    system("cat *_missing_BUSCO3_table.tsv | sed -e 's/Missing/0/g' -e 's/Fragmented/1/g' -e 's/Duplicated/2/g' -e 's/Complete/3/g' >BUSCO3_missing_table.tsv")
-    writeLines("\t\t\t\tHEATMAP")
-    csv=read.csv("BUSCO3_missing_table.tsv", header=TRUE, sep="\t")
-    c=melt(csv,id.vars = 'Busco.ID')
-    dec=c(0,.25,.25,.50,.50,.75,.75,1)
-    my_colors <- c("#081D58","#081D58", "#2280B8","#2280B8", "#99D6B9", "#99D6B9","#f8f9fc","#f8f9fc")
-    colz <- setNames(data.frame(dec, my_colors), NULL)
-    fig <- plot_ly(c,x=~variable, y=~Busco.ID, z=~value, colorscale=colz, reversescale=T, type = "heatmap",
-                  colorbar=list(tickmode='array', tickvals=c(.35,1.1,1.87,2.60), thickness=30,
-                  ticktext= c("Missing","Fragmented","Duplicated","Complete"), len=0.4))
-    fig <- fig %>% layout(xaxis=list(title="", showline = TRUE, mirror = TRUE, tickfont=list(size=8)),
-                  yaxis=list(title="BUSCO ID", tickmode="auto", nticks=length(csv$Busco.ID),
-                  tickfont=list(size=6), showline = TRUE, mirror = TRUE))
-    fig <- fig %>% config(toImageButtonOptions=list(format='svg',filename='busco3_TransPi_missing_distribution_plot', height= 500, width= 800, scale= 1), displaylogo = FALSE)
-    fig
-} else {
-    writeLines("\n--------------------------------------------------------------\n")
-    cat(readLines(list.files(pattern="busco3_dist.txt")) , sep = '\n')
-    writeLines("\n--------------------------------------------------------------\n")
-}
-```
-
-<br>
 <br>
 
 #### BUSCO V4
@@ -605,6 +485,8 @@ if (params$skipKegg == "true") {
 }
 ```
 
+<br>
+<br>
 <br>
 <br>
 <br>
