@@ -1259,9 +1259,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 publishDir "${launchDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
 
-                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.3.5.1=py36he513fc3_0" : null)
+                conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.4.2=py36hff7a194_2 bioconda::samtools=1.11=h6270b1f_0" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
-                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/bowtie2:2.3.5.1--py36he513fc3_0" : "quay.io/biocontainers/bowtie2:2.3.5.1--py36he513fc3_0")
+                container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-c742dccc9d8fabfcff2af0d8d6799dbc711366cf:b42a120d4ad2b0f6626127964d8bcc9ada05ed03-0" : "quay.io/biocontainers/mulled-v2-c742dccc9d8fabfcff2af0d8d6799dbc711366cf:b42a120d4ad2b0f6626127964d8bcc9ada05ed03-0")
                 }
 
                 input:

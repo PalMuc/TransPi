@@ -37,4 +37,6 @@ dependencies:
   - pigz=2.3.4=hed695b0_1
   - libsvm=3.16=2
   - sortmerna=4.2.0=0
-  - bowtie2=2.3.5.1=py36he513fc3_0
+  #- bowtie2=2.3.5.1=py36he513fc3_0
+  - bowtie2=2.4.2=py36hff7a194_2
+  - samtools=1.11=h6270b1f_0
