@@ -13,8 +13,6 @@ dependencies:
   - transabyss=2.0.1=pyh864c0ab_7
   - velvet=1.2.10=hed695b0_3
   - oases=0.2.09=h470a237_1
-  #- busco=4.0.5 #Not working properly with the env
-  - busco=3.0.2=py_13
   - transdecoder=5.5.0=pl526_2
   - trinotate=3.2.1=pl526_0
   - diamond=0.9.30=h56fc30b_0
