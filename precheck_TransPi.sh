@@ -4,7 +4,7 @@ os_c() {
     OS="$(uname)"
     if [ "$OS" == "Linux" ]; then
         echo -e "\n\t -- Downloading Linux Anaconda3 installation -- \n"
-        curl -o Anaconda3-2020.02-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+        curl -o Anaconda3-2020.11-Linux-x86_64.sh https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
     else
         echo -e "\n\t\e[31m -- ERROR: Are you in a Linux system? Please check requirements and rerun the pre-check --\e[39m\n"
         exit 0
