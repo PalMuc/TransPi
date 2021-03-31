@@ -33,7 +33,7 @@ else:
 ########################
 ########################
 
-PSYTRANS_VERSION = '1.0.0'
+PSYTRANS_VERSION = '2.0.0'
 
 HOST_NAME     = 'species1'
 SYMB_NAME     = 'species2'
