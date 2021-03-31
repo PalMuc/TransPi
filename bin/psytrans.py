@@ -2,6 +2,9 @@
 
 # Script was modified from original to use python3
 
+#Copyright © 2014 Sylvain Forêt & Jue-Sheng Ong.
+#psytrans  is a free  software and comes with ABSOLUTELY NO WARRANTY.  You are welcome to redistribute it under the terms of the GNU General Public License
+
 import argparse
 import array
 import gzip
