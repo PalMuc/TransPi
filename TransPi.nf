@@ -323,7 +323,7 @@ if (params.all) {
             ====================================================
             TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
-            Results Directory:      ${launchDir}/${params.outdir}
+            Results Directory:      ${params.outdir}
             Work Directory:         ${workDir}
             TransPi DBs:            ${params.pipeInstall}
             Uniprot DB:             ${params.uniprot}
@@ -340,7 +340,7 @@ if (params.all) {
             ====================================================
             TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
-            Results Directory:      ${launchDir}/${params.outdir}
+            Results Directory:      ${params.outdir}
             Work Directory:         ${workDir}
             TransPi DBs:            ${params.pipeInstall}
             Uniprot DB:             ${params.uniprot}
@@ -352,7 +352,7 @@ if (params.all) {
             ====================================================
             TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
-            Results Directory:      ${launchDir}/${params.outdir}
+            Results Directory:      ${params.outdir}
             Work Directory:         ${workDir}
             TransPi DBs:            ${params.pipeInstall}
             Busco DB:               ${params.busco4db}
@@ -368,7 +368,7 @@ if (params.all) {
             ====================================================
             TransPi.nf Directory:   ${projectDir}/TransPi.nf
             Launch Directory:       ${launchDir}
-            Results Directory:      ${launchDir}/${params.outdir}
+            Results Directory:      ${params.outdir}
             Work Directory:         ${workDir}
             TransPi DBs:            ${params.pipeInstall}
             Busco DB:               ${params.busco4db}
@@ -409,7 +409,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/fastqc", mode: "copy", overwrite: true
+                publishDir "${params.outdir}/fastqc", mode: "copy", overwrite: true
                 publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::fastqc=0.11.9=0" : null)
@@ -447,7 +447,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+                publishDir "${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
                 publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::fastp=0.20.1=h8b12597_0" : null)
@@ -482,7 +482,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
+                publishDir "${params.outdir}/filter", mode: "copy", overwrite: true, pattern: "*.fastp.{json,html}"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::jq=1.6=h14c3975_1000 " : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -512,7 +512,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                     tag "${sample_id}"
 
-                    publishDir "${launchDir}/${params.outdir}/saveReads/filter", mode: "copy", overwrite: true, pattern: "*_R{1,2}.filter.fq.gz"
+                    publishDir "${params.outdir}/saveReads/filter", mode: "copy", overwrite: true, pattern: "*_R{1,2}.filter.fq.gz"
 
                     conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
                     if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -549,7 +549,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/rRNA_reads", mode: "copy", overwrite: true, pattern: "*.log"
+                publishDir "${params.outdir}/rRNA_reads", mode: "copy", overwrite: true, pattern: "*.log"
                 publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "bioconda::sortmerna=4.2.0" : null)
@@ -600,7 +600,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                     tag "${sample_id}"
 
-                    publishDir "${launchDir}/${params.outdir}/saveReads/rRNA", mode: "copy", overwrite: true, pattern: "*.gz"
+                    publishDir "${params.outdir}/saveReads/rRNA", mode: "copy", overwrite: true, pattern: "*.gz"
 
                     conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
                     if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -723,7 +723,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                     tag "${sample_id}"
 
-                    publishDir "${launchDir}/${params.outdir}/saveReads/normalization", mode: "copy", overwrite: true, pattern: "*.gz"
+                    publishDir "${params.outdir}/saveReads/normalization", mode: "copy", overwrite: true, pattern: "*.gz"
 
                     conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "conda-forge::pigz=2.3.4=hed695b0_1" : null)
                     if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -854,7 +854,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
+            publishDir "${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinity=2.9.1=h8b12597_1" : null)
@@ -888,7 +888,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
+            publishDir "${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::soapdenovo-trans=1.04=ha92aebf_2" : null)
@@ -946,7 +946,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
+            publishDir "${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda velvet=1.2.10 oases=0.2.09" : null)
@@ -1012,7 +1012,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
+            publishDir "${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::spades=3.14.0=h2d02072_0" : null)
@@ -1065,7 +1065,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
+            publishDir "${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transabyss=2.0.1=pyh864c0ab_7" : null)
@@ -1131,7 +1131,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.fa"
+            publishDir "${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::cd-hit=4.8.1 bioconda::exonerate=2.4 bioconda::blast=2.2.31" : null)
@@ -1219,7 +1219,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/rnaQuast", mode: "copy", overwrite: true, pattern: "*.{rna_quast,csv}"
+            publishDir "${params.outdir}/rnaQuast", mode: "copy", overwrite: true, pattern: "*.{rna_quast,csv}"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::rnaquast=2.0.1=0" : null)
@@ -1257,7 +1257,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/mapping", mode: "copy", overwrite: true
+                publishDir "${params.outdir}/mapping", mode: "copy", overwrite: true
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.4.2=py36hff7a194_2 bioconda::samtools=1.11=h6270b1f_0" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -1302,7 +1302,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/busco4", mode: "copy", overwrite: true, pattern: "*.{bus4,bus4.txt,tsv}"
+            publishDir "${params.outdir}/busco4", mode: "copy", overwrite: true, pattern: "*.{bus4,bus4.txt,tsv}"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             // change container in oneContainer option
@@ -1349,7 +1349,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/mapping", mode: "copy", overwrite: true, pattern: "log*"
+            publishDir "${params.outdir}/mapping", mode: "copy", overwrite: true, pattern: "log*"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::bowtie2=2.4.2=py36hff7a194_2 bioconda::samtools=1.11=h6270b1f_0" : null)
@@ -1382,7 +1382,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/stats", mode: "copy", overwrite: true
 
             input:
                 tuple sample_id, file("${sample_id}.combined.fa"), file("${sample_id}.combined.okay.fa") from evigene_summary
@@ -1474,7 +1474,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/busco4_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus4}"
+                publishDir "${params.outdir}/busco4_all", mode: "copy", overwrite: true, pattern: "*.{tsv,txt,bus4}"
 
                 // change container in oneContainer option
                 conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_2" : null)
@@ -1536,7 +1536,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/busco4", mode: "copy", overwrite: true
+                publishDir "${params.outdir}/busco4", mode: "copy", overwrite: true
 
                 // change container in oneContainer option
                 conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_2" : null)
@@ -1578,7 +1578,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
+                publishDir "${params.outdir}/busco4_dist", mode: "copy", overwrite: true, pattern: "*.{tsv,fasta}"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -1631,7 +1631,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/stats", mode: "copy", overwrite: true
 
             input:
                 tuple sample_id, file(files) from busco4_sum
@@ -1659,7 +1659,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/figures/BUSCO4", mode: "copy", overwrite: true
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -1715,7 +1715,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true, pattern: "*.{csv,stats,cds,gff,bed,pep}"
+                publishDir "${params.outdir}/transdecoder", mode: "copy", overwrite: true, pattern: "*.{csv,stats,cds,gff,bed,pep}"
                 publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
@@ -1827,7 +1827,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+                publishDir "${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::diamond=0.9.30=h56fc30b_0" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -1873,7 +1873,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true
+                publishDir "${params.outdir}/transdecoder", mode: "copy", overwrite: true
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::hmmer=3.3=he1b5a44_0" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -1925,7 +1925,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/transdecoder", mode: "copy", overwrite: true, pattern: "*.{csv,stats,cds,gff,bed,pep}"
+                publishDir "${params.outdir}/transdecoder", mode: "copy", overwrite: true, pattern: "*.{csv,stats,cds,gff,bed,pep}"
 
                 conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::transdecoder=5.5.0=pl526_2" : null)
                 if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -2316,7 +2316,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/trinotate", mode: "copy", overwrite: true, pattern: "*.{terms.txt,xls}"
+            publishDir "${params.outdir}/trinotate", mode: "copy", overwrite: true, pattern: "*.{terms.txt,xls}"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.1=pl526_0" : null)
@@ -2456,7 +2456,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/figures/GO", mode: "copy", overwrite: true, pattern: "*.{svg,pdf,txt}"
+            publishDir "${params.outdir}/figures/GO", mode: "copy", overwrite: true, pattern: "*.{svg,pdf,txt}"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
@@ -2515,7 +2515,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/figures/CustomUniProt", mode: "copy", overwrite: true
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -2570,7 +2570,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 tag "${sample_id}"
 
-                publishDir "${launchDir}/${params.outdir}/figures/kegg", mode: "copy", overwrite: true
+                publishDir "${params.outdir}/figures/kegg", mode: "copy", overwrite: true
 
                 input:
                     tuple sample_id, file(kegg) from kegg_paths
@@ -2634,7 +2634,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/stats", mode: "copy", overwrite: true
 
             input:
                 tuple sample_id, file("${sample_id}_transdecoder.stats") from transdecoder_summary
@@ -2655,7 +2655,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             tag "${sample_id}"
 
-            publishDir "${launchDir}/${params.outdir}/stats", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/stats", mode: "copy", overwrite: true
 
             input:
                 tuple sample_id, file("${sample_id}.GO.terms.txt") from trinotate_summary
@@ -2830,7 +2830,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                     tag "${sample_id}"
 
-                	publishDir "${launchDir}/${params.outdir}/psytrans_output/", mode: "copy", overwrite: true, pattern: "*.{fasta}"
+                	publishDir "${params.outdir}/psytrans_output/", mode: "copy", overwrite: true, pattern: "*.{fasta}"
                     publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
                     conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda biopython=1.78 pandas=1.1.2 numpy=1.18.1" : null)
@@ -2865,19 +2865,47 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             }
         }
     }
+    if (params.all || params.onlyAnn) {
+
+        if (params.addAnnotation) {
+            process add_annotation_info {
+
+                label 'med_cpus'
+
+                tag "${sample_id}"
+
+                publishDir "${params.outdir}/addAnnotation/", mode: "copy", overwrite: true, pattern: "*.{fasta}"
+                publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
+
+                input:
+                    file(assembly), file(annotation) from
+
+                output:
+                    file("*.fasta") into
+
+                script:
+                    """
+
+                    """
+            }
+
+        }
+
+    }
+
     // check channles and try to do one report only
     if (params.all) {
 
         if (!params.skipReport) {
 
         report_ch = Channel.create()
-        fastp_csv.mix( norm_report, remove_rrna_sum, mapping_evi_results, mapping_trinity_results, rna_quast_report, size_dist, summary_evi_csv, busco4_csv, busco4_heatmap, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:14).flatten().toList().into(report_ch)
+        fastp_csv.mix( norm_report, remove_rrna_sum, mapping_evi_results, mapping_trinity_results, rna_quast_report, size_dist, summary_evi_csv, busco4_csv, busco4_heatmap, transdecoder_csv, go_csv, uniprot_csv, kegg_report ).groupTuple(by:0,size:14).map{ it.flatten().toList() }.into(report_ch)
 
         process get_report {
 
             label 'low_cpus'
 
-            publishDir "${launchDir}/${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
+            publishDir "${params.outdir}/report", mode: "copy", overwrite: true, pattern: "*.{html,pdf}"
 
             conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge -c bioconda r-reshape2=1.4.4 r-plotly=4.9.2.1 plotly-orca=3.4.2 r-ggplot2=3.3.0 r-svglite=1.2.3 r-ggthemes=4.2.0 r-knitr=1.29 r-rmarkdown=2.3 r-kableextra=1.1.0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
@@ -2886,7 +2914,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             input:
                 file(files) from report_ch
-                    .collect()
+                    .map{ it.flatten() }
 
             output:
                 file("*html") into final_report
@@ -2905,7 +2933,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
         process get_run_info {
 
-            publishDir "${launchDir}/${params.outdir}/", mode: "copy", overwrite: true
+            publishDir "${params.outdir}/", mode: "copy", overwrite: true
 
             output:
                file(".runInfo.txt") into run_info
