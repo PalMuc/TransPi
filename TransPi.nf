@@ -1704,7 +1704,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             println("\n\tRunning only annotation analysis\n")
             Channel
                 .fromFilePairs("${launchDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
-                .into{ annotation_ch_transdecoder; annotation_ch_transdecoderB; assembly_ch_rnammer }
+                .into{ annotation_ch_transdecoder; annotation_ch_transdecoderB; assembly_ch_rnammer; evigene_ch_rnammer; evigene_ch_trinotate; evi_dist}
         }
 
         if (params.shortTransdecoder) {
@@ -1869,7 +1869,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             process transdecoder_hmmer {
 
-                label 'med_cpus'
+                label 'low_cpus'
 
                 tag "${sample_id}"
 
