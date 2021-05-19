@@ -18,18 +18,30 @@ for line in open(args.trinotate_file, 'r'):
     line = line.strip()
     lineSplit = line.split("\t")
     if args.db_name == "swissprot" and args.db_type == "nucl":
-        if lineSplit[8] != ".":
-            print(">" + lineSplit[0] + " SwissProt_Blastx: " + lineSplit[2].split("^")[0])
+        if lineSplit[2] != ".":
+            print(">" + lineSplit[0] + " SwissProt_Blastx:" + lineSplit[2].split("^")[0])
+            uniProtCount += 1
+        else:
+            print(">" + lineSplit[0] + " SwissProt_Blastx:" + "noHit")
             uniProtCount += 1
     elif args.db_name == "swissprot" and args.db_type == "prot":
         if lineSplit[6] != ".":
-            print(">" + lineSplit[0] + " SwissProt_Blastp: " + lineSplit[6].split("^")[0])
+            print(">" + lineSplit[0] + " SwissProt_Blastp:" + lineSplit[6].split("^")[0])
+            swissProtCount += 1
+        else:
+            print(">" + lineSplit[0] + " SwissProt_Blastp:" + "noHit")
             swissProtCount += 1
     elif args.db_name == "uniprot" and args.db_type == "nucl":
-        if lineSplit[8] != ".":
-            print(">" + lineSplit[0] + " UniProt_Blastx: " + lineSplit[7].split("^")[0])
+        if lineSplit[7] != ".":
+            print(">" + lineSplit[0] + " UniProt_Blastx:" + lineSplit[7].split("^")[0])
+            uniProtCount += 1
+        else:
+            print(">" + lineSplit[0] + " UniProt_Blastx:" + "noHit")
             uniProtCount += 1
     elif args.db_name == "uniprot" and args.db_type == "prot":
         if lineSplit[8] != ".":
-            print(">" + lineSplit[0] + " UniProt_Blastp: " + lineSplit[8].split("^")[0])
+            print(">" + lineSplit[0] + " UniProt_Blastp:" + lineSplit[8].split("^")[0])
+            uniProtCount += 1
+        else:
+            print(">" + lineSplit[0] + " UniProt_Blastp:" + "noHit")
             uniProtCount += 1
