@@ -2028,7 +2028,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             script:
                 """
-                dbPATH=${params.pipeInstall}/DBs/diamonddb_swiss/
+                dbPATH=${params.pipeInstall}/DBs/sqlite_db/
 
                 echo -e "\\n-- Starting Diamond --\\n"
                 if [ ! -d \${dbPATH} ];then
@@ -2086,7 +2086,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
             script:
                 """
-                dbPATH=${params.pipeInstall}/DBs/diamonddb_custom/
+                dbPATH=${params.pipeInstall}/DBs/uniprot_db/
 
                 echo -e "\\n-- Starting Diamond --\\n"
                 if [ ! -d \${dbPATH} ];then
