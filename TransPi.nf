@@ -1236,6 +1236,16 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 file("rnaquast.version.txt") into rnaquast_version
 
             script:
+                if (params.onlyEvi){
+                """
+                rnaQUAST.py --transcripts ${r1} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
+                echo "Category,Value" >${sample_id}_rnaQUAST.csv
+                cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep -v "METRICS" |  sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' | sed 's/>,/>/g' | grep [0-9] >>${sample_id}_rnaQUAST.csv
+                cat ${sample_id}.rna_quast/*_output/basic_metrics.txt | grep "Genes" | sed 's/\\(\\ \\)* \\([0-9]\\)/,\\2/g' >>${sample_id}_rnaQUAST.csv
+                v=\$( rnaQUAST.py | grep "QUALITY ASSESSMENT" | head -n1 | awk -F " v." '{print \$2}' )
+                echo "rnaQUAST: \$v" >rnaquast.version.txt
+                """
+                } else {
                 """
                 rnaQUAST.py --transcripts ${assembly} -1 ${r1} -2 ${r2} -o ${sample_id}.rna_quast -t ${task.cpus} --blat
                 echo "Category,Value" >${sample_id}_rnaQUAST.csv
@@ -1244,6 +1254,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 v=\$( rnaQUAST.py | grep "QUALITY ASSESSMENT" | head -n1 | awk -F " v." '{print \$2}' )
                 echo "rnaQUAST: \$v" >rnaquast.version.txt
                 """
+                }
         }
 
         if (params.onlyAsm || params.all) {
