@@ -1728,7 +1728,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                 output:
                     tuple sample_id, file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
-                    tuple sample_id, file("${assembly}"), file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
+                    tuple sample_id, file("${assembly}"), file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                     tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
                     tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
                     tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
