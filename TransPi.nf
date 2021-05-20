@@ -1727,7 +1727,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     tuple sample_id, file(assembly) from annotation_ch_transdecoder
 
                 output:
-                    tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
+                    tuple sample_id, file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
                     tuple sample_id, file("${assembly}"), file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                     tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
                     tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
@@ -1751,15 +1751,15 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     echo -e "\\n-- Calculating statistics... --\\n"
                     #Calculate statistics of Transdecoder
                     echo "- Transdecoder (short,no homolgy) stats for ${sample_id}" >${sample_id}_transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c ">" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c ">" )
                     echo -e "Total number of ORFs: \$orfnum \\n" >>${sample_id}_transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:complete" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep| grep -c "ORF type:complete" )
                     echo -e "\\t ORFs type=complete: \$orfnum \\n" >>${sample_id}_transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:5prime_partial" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep| grep -c "ORF type:5prime_partial" )
                     echo -e "\\t ORFs type=5prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:3prime_partial" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:3prime_partial" )
                     echo -e "\\t ORFs type=3prime_partial: \$orfnum \\n" >>${sample_id}_transdecoder.stats
-                    orfnum=\$( cat ${sample_id}.combined.okay.fa.transdecoder.pep | grep -c "ORF type:internal" )
+                    orfnum=\$( cat ${sample_id}*.transdecoder.pep | grep -c "ORF type:internal" )
                     echo -e "\\t ORFs type=internal: \$orfnum \\n">>${sample_id}_transdecoder.stats
                     # csv for report
                     echo "Sample,Total_orf,orf_complete,orf_5prime_partial,orf_3prime_partial,orf_internal" >${sample_id}_transdecoder.csv
@@ -1936,15 +1936,15 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     tuple sample_id, file(files) from transdecoder_predict_ch
 
                 output:
-                    tuple sample_id, file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
-                    tuple sample_id, file("*.combined.okay.fasta"), file("${sample_id}.combined.okay.fa.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
+                    tuple sample_id, file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_hmmer, transdecoder_ch_signalp, transdecoder_ch_tmhmm, transdecoder_ch_trinotate )
+                    tuple sample_id, file("${sample_id}_assembly.fasta"), file("${sample_id}*.transdecoder.pep") into ( transdecoder_ch_diamond, transdecoder_ch_diamond_custom )
                     tuple sample_id, file("${sample_id}_transdecoder.stats") into transdecoder_summary
                     tuple sample_id, file("${sample_id}_transdecoder.csv") into transdecoder_csv
                     tuple sample_id, file("${sample_id}*.transdecoder.{cds,gff,bed}") into transdecoder_files
 
                 script:
                     """
-                    ass=\$( echo $files | tr " " "\\n" | grep ".combined.okay.fa" )
+                    ass=\$( echo $files | tr " " "\\n" | grep -v ".diamond_blastp.outfmt6" | grep -v ".pfam.domtblout" | grep ".fa" )
                     dia=\$( echo $files | tr " " "\\n" | grep ".diamond_blastp.outfmt6" )
                     pfa=\$( echo $files | tr " " "\\n" | grep ".pfam.domtblout" )
 
@@ -1996,9 +1996,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     echo "${sample_id},\${total},\${complete},\${n5prime},\${n3prime},\${internal}" >>${sample_id}_transdecoder.csv
                     echo -e "\\n-- Done with statistics --\\n"
 
-                    cp \${ass} \${ass}.tmp
-                    rm \${ass}
-                    mv \${ass}.tmp \${ass%.fa}.fasta
+                    mv \${ass} ${sample_id}_assembly.fasta
 
                     echo -e "\\n-- DONE with TransDecoder --\\n"
                     """
