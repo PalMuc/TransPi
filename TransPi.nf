@@ -3013,20 +3013,31 @@ workflow.onComplete {
     new File("${workDir}/.runInfo.txt").delete()
     def allVersions = new File("${workDir}/.runInfo.txt")
     fileList.each{ allVersions.append(new File(it).getText()) }
-    new File( "${launchDir}/${params.outdir}/RUN_INFO.txt" ).withWriter { w ->
-        ["${launchDir}/${params.outdir}/.runInfo.txt", "${workDir}/.runInfo.txt"].each { f ->
+    new File( "${params.outdir}/RUN_INFO.txt" ).withWriter { w ->
+        ["${params.outdir}/.runInfo.txt", "${workDir}/.runInfo.txt"].each { f ->
         new File( f ).withReader { r -> w << r << '\n' }
         }
     }
-    new File("${launchDir}/${params.outdir}/.runInfo.txt").delete()
+    new File("${params.outdir}/.runInfo.txt").delete()
     new File("${workDir}/.runInfo.txt").delete()
 
+    if (params.onlyAnn || params.onlyAsm || params.onlyEvi) {
     log.info ( workflow.success ? \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;32mDone! Open the following reports in your browser\033[0m" \
-        + "\n\033[0;32mPipeline performance report: ${launchDir}/${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" \
-        + "\n\033[0;32mTransPi interactive report (--all): ${launchDir}/${params.outdir}/report/TransPi_Report_*.hmtl\033[0m" \
+        + "\n\033[0;32mPipeline performance report: ${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" \
         : \
         "---------------------------------------------------------------------------------" \
         + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
+
+    } else if (params.all) {
+        log.info ( workflow.success ? \
+            "---------------------------------------------------------------------------------" \
+            + "\n\033[0;32mDone! Open the following reports in your browser\033[0m" \
+            + "\n\033[0;32mPipeline performance report: ${params.outdir}/${params.tracedir}/transpi_report.html\033[0m" \
+            + "\n\033[0;32mTransPi interactive report: ${params.outdir}/report/TransPi_Report_*.hmtl\033[0m" \
+            : \
+            "---------------------------------------------------------------------------------" \
+            + "\n\033[0;31mSomething went wrong. Check error message below and/or log files.\033[0m" )
+    }
 }
