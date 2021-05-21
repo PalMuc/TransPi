@@ -2317,7 +2317,8 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
         }
 
         trinotate_ch = Channel.create()
-        evigene_ch_trinotate.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).into(trinotate_ch)
+        //map{it.flatten()} for onlyAnn issue in names
+        evigene_ch_trinotate.map{it.flatten()}.mix( transdecoder_ch_trinotate,trinotate_ch_diamondX,trinotate_ch_diamondP,trinotate_ch_diamondX_custom,trinotate_ch_diamondP_custom,trinotate_ch_hmmer,trinotate_ch_signalp,trinotate_ch_tmhmm,trinotate_ch_rnammer ).groupTuple(by:0,size:10).into(trinotate_ch)
 
         process trinotate {
 
@@ -2350,7 +2351,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     echo \${x} >>.vars.txt
                 done
 
-                assembly=\$( cat .vars.txt | grep "${sample_id}.combined.okay.fa" | grep -v "${sample_id}.combined.okay.fa.transdecoder.pep" )
+                assembly=\$( cat .vars.txt | grep -E "${sample_id}*.fa" | grep -v ".transdecoder.pep" )
                 transdecoder=\$( cat .vars.txt | grep -E "${sample_id}.*.transdecoder.pep" )
                 diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
                 diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
