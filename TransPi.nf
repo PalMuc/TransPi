@@ -2351,7 +2351,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     echo \${x} >>.vars.txt
                 done
 
-                assembly=\$( cat .vars.txt | grep -E "${sample_id}*.fa" | grep -v ".transdecoder.pep" )
+                assembly=\$( cat .vars.txt | grep -E "${sample_id}.*.fa" | grep -v ".transdecoder.pep" )
                 transdecoder=\$( cat .vars.txt | grep -E "${sample_id}.*.transdecoder.pep" )
                 diamond_blastx=\$( cat .vars.txt | grep "${sample_id}.diamond_blastx.outfmt6" )
                 diamond_blastp=\$( cat .vars.txt | grep "${sample_id}.diamond_blastp.outfmt6" )
