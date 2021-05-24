@@ -1134,7 +1134,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${params.outdir}/evigene", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::cd-hit=4.8.1 bioconda::exonerate=2.4 bioconda::blast=2.2.31" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::cd-hit=4.8.1 bioconda::exonerate=2.4 bioconda::blast=2.2.31 perl=5.26" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
             container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0" : "quay.io/biocontainers/mulled-v2-962eae98c9ff8d5b31e1df7e41a355a99e1152c4:5aac6d1d2253d47aee81f01cc070a17664c86f07-0")
             }
@@ -2632,8 +2632,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             script:
                 """
                 len.py ${dist} >all_transcript_sizes.txt
-                bash get_sizes.sh all_transcript_sizes.txt
-                mv final_sizes.txt ${sample_id}_sizes.txt
+                mv all_transcript_sizes.txt ${sample_id}_sizes.txt
 
                 v=\$( python --version | cut -f 2 -d " " )
                 echo "Python: \$v" >python.version.txt
