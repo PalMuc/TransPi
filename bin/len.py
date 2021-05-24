@@ -7,4 +7,4 @@ arg1=sys.argv[1]
 
 filename=arg1
 for record in SeqIO.parse(filename, "fasta"):
-    print("ID = %s, length %i" % (record.id, len(record.seq)+1))
+    print(record.id,"\t", len(record.seq)+1)
