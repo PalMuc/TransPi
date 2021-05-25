@@ -2366,7 +2366,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 #Not using get_Trinity_gene_to_trans_map.pl since all the names are uniq
                 cat \${assembly} | awk '{print \$1}' | grep ">" | cut -c 2- >a.txt
 
-                paste a.txt a.txt >\${assembly}.gene_trans_map
+                #paste a.txt a.txt >\${assembly}.gene_trans_map - does not work in container
+                touch \${assembly}.gene_trans_map
+                for x in `cat a.txt`;do echo -e \${x}"\\t"\${x} >>\${assembly}.gene_trans_map ;done
 
                 #Get Trinotate.sqlite from folder (original)
                 cp ${params.Tsql} .
