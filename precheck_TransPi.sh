@@ -851,24 +851,6 @@ container_pipeline_setup() {
         get_var_container
     fi
 }
-single_container_pipeline_setup() {
-    if [ "${userVar}" == "y" ];then
-        nextflow_c
-        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-        get_var_user
-    else
-        echo -e "\n\t -- Installing databases only -- \n"
-        dir_c
-        bus_c
-        uniprot_c
-        nextflow_c
-        buildsql_c
-        trisql_container
-        pfam_c
-        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-        get_var_container
-    fi
-}
 conda_pipeline_setup() {
     if [ "${userVar}" == "y" ];then
         echo -e "\n\t -- Installing conda --\n"
@@ -880,30 +862,6 @@ conda_pipeline_setup() {
     else
         echo -e "\n\t -- Installing conda and the databases -- \n"
         conda_only
-        dir_c
-        bus_c
-        uniprot_c
-        nextflow_c
-        evi_c
-        buildsql_c
-        trisql_c
-        pfam_c
-        bus4
-        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-        get_var
-    fi
-}
-single_conda_pipeline_setup() {
-    if [ "${userVar}" == "y" ];then
-        echo -e "\n\t -- Installing conda --\n"
-        conda_c
-        nextflow_c
-        evi_c
-        echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
-        get_var_user
-    else
-        echo -e "\n\t -- Installing conda and the databases -- \n"
-        conda_c
         dir_c
         bus_c
         uniprot_c
@@ -999,13 +957,9 @@ dbs(){
         ;;
     esac
     if [ "$1" == "1" ];then
-        single_conda_pipeline_setup
+        conda_pipeline_setup
     elif [ "$1" == "2" ];then
         container_pipeline_setup
-    elif [ "$1" == "3" ];then
-        single_container_pipeline_setup
-    elif [ "$1" == "4" ];then
-        conda_pipeline_setup
     fi
 }
 message(){
@@ -1019,25 +973,21 @@ message(){
     #                                                                                       #
     #        1- Install conda (if neccesary) and DBs                                        #
     #                                                                                       #
-    #               Runs of TransPi with a single TransPi conda enviroment                  #
+    #               Runs of TransPi using individual conda enviroments per process          #
     #                                                                                       #
     #        2- Install DBs for containers (docker or singularity)                          #
     #                                                                                       #
     #               Runs of TransPi with individual containers per process                  #
     #                                                                                       #
-    #        3- Install DBs for TransPi container (docker or singularity)                   #
-    #                                                                                       #
-    #               Runs of TransPi with a single TransPi container                         #
-    #                                                                                       #
-    #        4- Install DBs for conda enviroments                                           #
+    #        3- Install DBs for conda enviroments                                           #
     #                                                                                       #
     #               Runs of TransPi with individual enviroments per process                 #
     #                                                                                       #
-    #        5- Update DBs                                                                  #
+    #        4- Update DBs                                                                  #
     #                                                                                       #
     #               SwissProt, PFAM, SQL DB used for annotation (requires conda)            #
     #                                                                                       #
-    #        6- Exit                                                                        #
+    #        5- Exit                                                                        #
     #                                                                                       #
     #########################################################################################
 
@@ -1047,14 +997,14 @@ moption(){
     echo -e -n "\t Which option you want? "
     read ans
     case $ans in
-        1 | 2 | 3 | 4)
+        1 | 2 | 3)
             dbs $ans
         ;;
-        5)
+        4)
             echo -e "\n\t -- Updating DBs -- \n"
             downd
         ;;
-        6)
+        5)
             echo -e "\n\t -- Exit -- \n"
             exit 0
         ;;
