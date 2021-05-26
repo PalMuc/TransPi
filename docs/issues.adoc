@@ -1,6 +1,6 @@
 We tested TransPi using the followings deployment methods:
 
-- conda = local installation done by precheck
+- conda = individual conda environments per process
 
 - docker = using TransPi container (i.e. -profile docker,TransPiContainer)
 
@@ -9,7 +9,6 @@ We tested TransPi using the followings deployment methods:
 
 [NOTE]
 Using individual container per process is working for the majority of processes. However, we found a couple os issues with some containers (e.g. transabyss). We are working to find a solution for these issues.
-
 
 
 = Reporting an issue

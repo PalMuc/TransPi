@@ -16,7 +16,6 @@ assemblies:: All individual assemblies
 evigene:: Non-redundant final transcriptome (ends with name `.combined.okay.fa`)
 rnaQuast:: rnaQUAST output
 mapping:: Mapping results
-busco3:: BUSCO V3 results
 busco4:: BUSCO V4 results
 transdecoder:: Transdecoder results
 trinotate:: Annotation results
@@ -24,7 +23,7 @@ report:: Interactive report of TransPi
 figures:: Figures created by TransPi (BUSCO comparison, Annotation, GO, etc)
 stats:: Basic stats from all steps of TransPi
 pipeline_info:: Nextflow report, trace file and others
-versions.txt:: File with all versionts of the tools used by TransPi
+RUN_INFO.txt:: File with all versions of the tools used by TransPi. Also info from the run like command and PATH
 
 .NOTES
 

@@ -9,7 +9,7 @@ To run the complete pipeline.
 [source,bash]
 ----
 nextflow run TransPi.nf --all --reads '/YOUR/READS/PATH/HERE/*_R[1,2].fastq.gz' \
-     --k 25,41,53 --maxReadLen 75 -profile conda --myConda
+     --k 25,41,53 --maxReadLen 75 -profile conda
 
 ----
 
@@ -21,7 +21,6 @@ Arguments explanations:
 --k                  kmers list to use for the assemblies
 --maxReadLen         Max read length in the library
 -profile             Use conda to run the analyses
---myConda            Use local conda installed by precheck run
 ----
 
 [CAUTION]
@@ -51,7 +50,7 @@ Example for `--onlyAsm`:
 [source,bash]
 ----
 nextflow run TransPi.nf --onlyAsm --reads '/home/rrivera/TransPi/reads/*_R[1,2].fastq.gz' \
-     --k 25,41,53 --maxReadLen 75 -profile conda --myConda
+     --k 25,41,53 --maxReadLen 75 -profile conda
 
 ----
 
@@ -65,7 +64,7 @@ Run only the Evidential Gene analysis
 Example for `--onlyEvi`:
 [source,bash]
 ----
-nextflow run TransPi.nf --onlyEvi -profile conda --myConda
+nextflow run TransPi.nf --onlyEvi -profile conda
 ----
 
 
@@ -81,7 +80,7 @@ Run only the Annotation analysis (starting from a final assembly)
 Example for `--onlyAnn`:
 [source,bash]
 ----
-nextflow run TransPi.nf --onlyAnn -profile conda --myConda
+nextflow run TransPi.nf --onlyAnn -profile conda
 ----
 
 [IMPORTANT]

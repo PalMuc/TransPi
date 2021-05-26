@@ -78,10 +78,4 @@ There are other parameters that can be changed when executing TransPi.
 
 `--pipeInstall`:: PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
 
-`--myCondaInstall`:: PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
-
-`--myConda`:: Make TransPi use a local conda environemt with all the tools (generated with precheck)
-
 `--envCacheDir`:: PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
-
-`--getVersions`:: Get software versions. Default "false"
