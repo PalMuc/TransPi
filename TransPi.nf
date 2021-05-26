@@ -1698,7 +1698,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             println("\n\tRunning only annotation analysis\n")
             Channel
                 .fromFilePairs("${launchDir}/onlyAnn/*.{fa,fasta}", size: -1, checkIfExists: true)
-                .into{ annotation_ch_transdecoder; annotation_ch_transdecoderB; assembly_ch_rnammer; evigene_ch_rnammer; evigene_ch_trinotate; evi_dist}
+                .into{ annotation_ch_transdecoder; annotation_ch_transdecoderB; evigene_ch_rnammer_ann; evigene_ch_trinotate; evi_dist_ann}
         }
 
         if (params.shortTransdecoder) {
@@ -1911,7 +1911,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             }
 
             transdecoder_predict_ch=Channel.create()
-            transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, annotation_ch_transdecoderB ).groupTuple(by:0,size:3).into(transdecoder_predict_ch)
+            transdecoder_predict_diamond.mix( transdecoder_predict_hmmer, annotation_ch_transdecoderB.map{it.flatten()} ).groupTuple(by:0,size:3).into(transdecoder_predict_ch)
 
             process transdecoder_predict {
 
@@ -2252,6 +2252,8 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     """
             }
         }
+
+        if (params.onlyAnn){ evigene_ch_rnammer_ann.map{it.flatten()}.set{evigene_ch_rnammer}}
 
         if (params.withRnammer) {
 
@@ -2595,6 +2597,8 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     """
             }
         }
+
+        if (params.onlyAnn){ evi_dist_ann.map{it.flatten()}.set{evi_dist}}
 
         process get_transcript_dist {
 
