@@ -973,21 +973,17 @@ message(){
     #                                                                                       #
     #        1- Install conda (if neccesary) and DBs                                        #
     #                                                                                       #
-    #               Runs of TransPi using individual conda enviroments per process          #
+    #               Runs of TransPi using conda                                             #
     #                                                                                       #
-    #        2- Install DBs for containers (docker or singularity)                          #
+    #        2- Install DBs for containers use                                              #
     #                                                                                       #
-    #               Runs of TransPi with individual containers per process                  #
+    #               Runs of TransPi with containers (docker or singularity)                 #
     #                                                                                       #
-    #        3- Install DBs for conda enviroments                                           #
-    #                                                                                       #
-    #               Runs of TransPi with individual enviroments per process                 #
-    #                                                                                       #
-    #        4- Update DBs                                                                  #
+    #        3- Update DBs                                                                  #
     #                                                                                       #
     #               SwissProt, PFAM, SQL DB used for annotation (requires conda)            #
     #                                                                                       #
-    #        5- Exit                                                                        #
+    #        4- Exit                                                                        #
     #                                                                                       #
     #########################################################################################
 
@@ -997,14 +993,14 @@ moption(){
     echo -e -n "\t Which option you want? "
     read ans
     case $ans in
-        1 | 2 | 3)
+        1 | 2)
             dbs $ans
         ;;
-        4)
+        3)
             echo -e "\n\t -- Updating DBs -- \n"
             downd
         ;;
-        5)
+        4)
             echo -e "\n\t -- Exit -- \n"
             exit 0
         ;;
