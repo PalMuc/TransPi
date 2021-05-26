@@ -90,9 +90,6 @@ def helpMessage() {
             --normMaxCov            Normalization step maximun coverage. Default "100"
             --normMinCov            Normalization step minimum coverage. Default "1"
             --pipeInstall           PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
-            --myCondaInstall        PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
-                --myConda               Make TransPi use a local conda environemt with all the tools (generated with precheck)
-
             --envCacheDir           PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
             --getRunInfo            Get software versions and nexftflow run info. Default "false"
 
@@ -180,9 +177,6 @@ def fullHelpMessage() {
             --normMaxCov            Normalization step maximun coverage. Default "100"
             --normMinCov            Normalization step minimum coverage. Default "1"
             --pipeInstall           PATH to TransPi directory. Default "". If precheck is used this will be added to the nextflow.config automatically.
-            --myCondaInstall        PATH to local conda environment of TransPi. Default "". Requires use of --myConda.
-                --myConda               Make TransPi use a local conda environemt with all the tools (generated with precheck)
-
             --envCacheDir           PATH for environment cache directory (either conda or containers). Default "Launch directory of pipeline"
             --getRunInfo            Get software versions and nexftflow run info. Default "false"
 
@@ -192,18 +186,7 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        I. Steps for running on a local cluster and local conda installation of TransPi
-
-            1- Run the `precheck_TransPi.sh` to install tools with conda, set up the databases and directories for TransPi
-            2- Run TransPi
-
-            Usage:
-
-                nextflow run TransPi.nf --all -profile conda --myConda OTHER_PARAMETERS_HERE
-
-        #################################################################################################
-
-        II. Steps for running on a local cluster and conda installation by Nextflow
+        I. Steps for running on a local cluster and individual conda installation by Nextflow
 
             1- Run the `precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
@@ -217,7 +200,7 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        III. Steps for running with docker
+        II. Steps for running with docker
 
             1- Run the `container_precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
@@ -231,7 +214,7 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        IV. Steps for running with singualarity
+        III. Steps for running with singualarity
 
             1- Run the `container_precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
@@ -245,7 +228,7 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        V. Steps for running with a container engine and TransPi container.
+        IV. Steps for running with a container engine and TransPi container.
 
             1- Run the `precheck_TransPi.sh` to install tools, set up the databases and directories for TransPi
             2- Run TransPi
@@ -259,7 +242,7 @@ def fullHelpMessage() {
 
         #################################################################################################
 
-        VI. Steps for running with multiple profiles.
+        V. Steps for running with multiple profiles.
 
             1- Run the `precheck_TransPi.sh` to set up the databases for TransPi
             2- Run TransPi
