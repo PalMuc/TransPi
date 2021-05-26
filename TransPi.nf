@@ -1837,7 +1837,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 script:
                     """
                     dbPATH=${params.pipeInstall}/DBs/uniprot_db/
-
                     echo -e "\\n-- Starting Diamond (blastp) --\\n"
                     if [ ! -d \${dbPATH} ];then
                         echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
@@ -2021,7 +2020,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             script:
                 """
                 dbPATH=${params.pipeInstall}/DBs/sqlite_db/
-
                 echo -e "\\n-- Starting Diamond --\\n"
                 if [ ! -d \${dbPATH} ];then
                     echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
@@ -2079,7 +2077,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             script:
                 """
                 dbPATH=${params.pipeInstall}/DBs/uniprot_db/
-
                 echo -e "\\n-- Starting Diamond --\\n"
                 if [ ! -d \${dbPATH} ];then
                     echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
@@ -2136,7 +2133,6 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             script:
                 """
                 dbPATH=${params.pipeInstall}/DBs/hmmerdb/
-
                 echo -e "\\n-- Starting HMMER --\\n"
                 if [ ! -d \${dbPATH} ];then
                     echo "Directory \${dbPATH} not found. Run the precheck to fix this issue"
@@ -2541,6 +2537,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 rm a.txt b.txt
 
                 cp ${params.pipeInstall}/conf/uni_tax.txt .
+
                 cp ${sample_id}_custom_uniprot_hits.txt ${sample_id}_custom_uniprot_hits
 
                 while read line;do
