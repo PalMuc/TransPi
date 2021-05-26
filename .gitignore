@@ -18,3 +18,4 @@ sqlite_db/
 .DS_Store
 cbs-dtu-tools.tar.gz
 Singularity
+Dockerfile
