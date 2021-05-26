@@ -10,11 +10,9 @@ dependencies:
   - trinity=2.9.1=h8b12597_1
   - soapdenovo-trans=1.04=ha92aebf_2
   - spades=3.14.0=h2d02072_0
-  - transabyss=2.0.1=py_6
+  - transabyss=2.0.1=pyh864c0ab_7
   - velvet=1.2.10=hed695b0_3
   - oases=0.2.09=h470a237_1
-  #- busco=4.0.5 #Not working properly with the env
-  - busco=3.0.2=py_13
   - transdecoder=5.5.0=pl526_2
   - trinotate=3.2.1=pl526_0
   - diamond=0.9.30=h56fc30b_0
@@ -39,4 +37,6 @@ dependencies:
   - pigz=2.3.4=hed695b0_1
   - libsvm=3.16=2
   - sortmerna=4.2.0=0
-  - bowtie2=2.3.5.1=py36he513fc3_0
+  #- bowtie2=2.3.5.1=py36he513fc3_0
+  - bowtie2=2.4.2=py36hff7a194_2
+  - samtools=1.11=h6270b1f_0
