@@ -1,6 +1,6 @@
 = TransPi Manual
 Ramón Rivera-Vicéns
-v1.0.0, 2021-02-16
+v1.1.0-rc, 2021-05-25
 :docinfo:
 :keywords: TransPi, transcriptome, assembly, annotation, Nextflow, pipeline
 :description: TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly
