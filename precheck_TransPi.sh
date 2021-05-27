@@ -833,7 +833,7 @@ get_var_user() {
 container_pipeline_setup() {
     if [ "${userVar}" == "y" ];then
         nextflow_c
-        #evi_c
+        evi_c
         echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
         get_var_user
     else
@@ -842,7 +842,7 @@ container_pipeline_setup() {
         bus_c
         uniprot_c
         nextflow_c
-        #evi_c
+        evi_c
         buildsql_c
         trisql_container
         pfam_c
@@ -855,7 +855,7 @@ conda_pipeline_setup() {
         echo -e "\n\t -- Installing conda --\n"
         conda_only
         nextflow_c
-        #evi_c
+        evi_c
         echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
         get_var_user
     else
@@ -865,7 +865,7 @@ conda_pipeline_setup() {
         bus_c
         uniprot_c
         nextflow_c
-        #evi_c
+        evi_c
         buildsql_c
         trisql_c
         pfam_c
