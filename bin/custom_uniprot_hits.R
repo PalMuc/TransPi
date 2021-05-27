@@ -16,5 +16,12 @@ p1<-ggplot(data=data, aes(x=reorder(data$V2,data$V1), y=data$V1))+
   theme(plot.title = element_text(family="sans", colour = "black", size = rel(1.5)*1, face = "bold"))
 
 
-ggsave(filename = paste(sample_name,"_custom_uniprot_hits.svg",sep=""),width = 15 ,height = 7)
-ggsave(filename = paste(sample_name,"_custom_uniprot_hits.pdf",sep=""),width = 15 ,height = 7)
+# not working in docker
+#ggsave(filename = paste(sample_name,"_custom_uniprot_hits.svg",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_custom_uniprot_hits.pdf",sep=""),width = 15 ,height = 7)
+pdf(paste(sample_name,"_custom_uniprot_hits.pdf",sep=""),width = 15 ,height = 7)
+print(p1)
+dev.off()
+svg(paste(sample_name,"_custom_uniprot_hits.svg",sep=""),width = 15 ,height = 7)
+print(p1)
+dev.off()

@@ -19,8 +19,14 @@ p1<-ggplot(data=dataCC, aes(x=reorder(dataCC$V2,dataCC$V1), y=dataCC$V1))+
   ggtitle(paste(sample_name,"Cellular Componenet GOs",sep=" "))+
   theme(plot.title = element_text(family="sans", colour = "black", size = rel(1.1)*1, face = "bold"))
 
-ggsave(filename = paste(sample_name,"_Cellular_Component.svg",sep=""),width = 15 ,height = 7)
-ggsave(filename = paste(sample_name,"_Cellular_Component.pdf",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_Cellular_Component.svg",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_Cellular_Component.pdf",sep=""),width = 15 ,height = 7)
+pdf(paste(sample_name,"_Cellular_Component.pdf",sep=""),width = 15 ,height = 7)
+print(p1)
+dev.off()
+svg(paste(sample_name,"_Cellular_Component.svg",sep=""),width = 15 ,height = 7)
+print(p1)
+dev.off()
 
 #MF
 nlim=round((head(dataMF$V1,n = 1)+150),digits = -2)
@@ -33,8 +39,14 @@ p2 <-ggplot(data=dataMF, aes(x=reorder(dataMF$V2,dataMF$V1), y=dataMF$V1))+
   ggtitle(paste(sample_name,"Molecular Function GOs",sep=" "))+
   theme(plot.title = element_text(family="sans", colour = "black", size = rel(1.1)*1, face = "bold"))
 
-ggsave(filename = paste(sample_name,"_Molecular_Function.svg",sep=""),width = 15 ,height = 7)
-ggsave(filename = paste(sample_name,"_Molecular_Function.pdf",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_Molecular_Function.svg",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_Molecular_Function.pdf",sep=""),width = 15 ,height = 7)
+pdf(paste(sample_name,"_Molecular_Function.pdf",sep=""),width = 15 ,height = 7)
+print(p2)
+dev.off()
+svg(paste(sample_name,"_Molecular_Function.svg",sep=""),width = 15 ,height = 7)
+print(p2)
+dev.off()
 
 #BP
 nlim=round((head(dataBP$V1,n = 1)+150),digits = -2)
@@ -47,5 +59,11 @@ p3<-ggplot(data=dataBP, aes(x=reorder(dataBP$V2,dataBP$V1), y=dataBP$V1))+
   ggtitle(paste(sample_name,"Biological Processes GOs",sep=" "))+
   theme(plot.title = element_text(family="sans", colour = "black", size = rel(1.1)*1, face = "bold"))
 
-ggsave(filename = paste(sample_name,"_Biological_Processes.svg",sep=""),width = 15 ,height = 7)
-ggsave(filename = paste(sample_name,"_Biological_Processes.pdf",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_Biological_Processes.svg",sep=""),width = 15 ,height = 7)
+#ggsave(filename = paste(sample_name,"_Biological_Processes.pdf",sep=""),width = 15 ,height = 7)
+pdf(paste(sample_name,"_Biological_Processes.pdf",sep=""),width = 15 ,height = 7)
+print(p3)
+dev.off()
+svg(paste(sample_name,"_Biological_Processes.svg",sep=""),width = 15 ,height = 7)
+print(p3)
+dev.off()
