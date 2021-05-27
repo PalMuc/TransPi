@@ -1,0 +1,32 @@
+
+## redo w/ updated evigene soft, input oid aablast=evg4corn.aa.btall changed params for bad utr,gaps
+pt=evg4corn
+idp=Zeamay4EVm 
+idpg=Zeamay4gEVm 
+spp=Zea_mays
+refaa=twoplants
+
+env trset=$pt.tr  aablast=$pt.aa.btall datad=`pwd` prog=./runtr2cds.sh sbatch srun_comet.sh
+env idprefix=$idp trclass=$pt.trclass  names=$pt.names species=$spp datad=`pwd` prog=./run_evgmrna2tsa.sh sbatch srun_comet.sh
+
+mkdir geno1f
+cd geno1f
+ln -s ../publicset/$pt.cds_pub.fa $pt.cds
+ln -s ../publicset/$pt.aa_pub.fa $pt.aa
+ln -s ../genoasm.fa genoasm.fa
+
+env oid=1 off=1 $evigene/scripts/prot/aaqual.sh $pt.aa
+
+## add to runtr2genome: -aablast=evgpubaa_bugref.blastp 
+env protin=$pt.aa prodb=../refset/$refaa datad=`pwd` prog=../blastpc.sh sbatch ../srun_comet.sh
+
+## do this instead:
+aablast=sdc-$refaa-$pt.aa.blastp.gz
+mbaopts="-tall -aasize $pt.aa.qual,../refset/$refaa.aa.qual"
+aabltab=sdc-refaa-$pt.aa.btall
+
+$evigene/scripts/makeblastscore3.pl $mbaopts $aablast > $aabltab 
+
+## runtr2genome2b.sh to runtr2genome3.sh : is it ready?
+env idpre=$idpg cdsseq=$pt.cds aablast=$aabltab chrseq=genoasm.fa gtag=chra datad=`pwd` prog=../runtr2genome3.sh sbatch ../srun_comet.sh
+

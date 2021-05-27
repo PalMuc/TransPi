@@ -1,0 +1,110 @@
+
+Evigene scripts for comparing  genome mapping loci versus mRNA alignment loci
+in progress, 2013 Sept., dgg
+
+0. convert gmap output (-S format) to gff as needed
+   $evigene/scripts/ests/gmapgfftab.sh gmap.out.gz ,  or 
+   gzcat gmap.out.gz | env keepat="aalen,oid,offs" src=myname skiplow=0 nopath=1 best=0 intron=-1  \
+    $evigene/scripts/gmap_to_gff.pl  > genes.gff
+   
+1. align table from genes.gff, 
+    tabulate genome mapping location, coverage, identity, exons, etc.
+
+2. diffloci : find alts not mapping to main locus, 
+   categorize as Df1 (overlap),Df2(nonover),Df3(diffscaffold)
+
+   equalgene.pl -in alts.gff -over main.gff > alt2main.eqgene 
+    
+3. sameloci : find 2+ mRNA-align loci mapping to same genome location
+
+    equalgene.pl -in all.gff -over all.gff > all.eqgene  
+    - need to check result table for paralogs, with cds aligns?
+
+4. altbest.pl : choose subset of alternates using valid intron annots,
+
+#.....................
+# align table of genome map location, coverage, identity, indels, exons, antisense, etc.
+
+#old# $evigene/scripts/ests/gff2aligntab.sh genes.gff.gz  # makes align.tab
+gunzip -c genes.gff.gz | $evigene/scripts/ests/gff2aligntab.pl | sort -k1,1 -k2,2n -k4,4 > genes.align.tab
+	
+	# genes.align.tab columns
+	# GenomeID        gespan  geor    AQueryID        quspan  match   qlen    cov     pid     path    indels  nexon 
+	#	splice  aalen   offs    aamap   sense   oid     tag
+	
+	cat genes.align.tab | cut -f1-4,7,8,12,18 | grep -v NOPA | head
+	GenomeID        gespan  geor    AQueryID        qlen    cov     nexon   oid
+	Scaffold0       5067-10366      -       Funhe2Exy3m032549t1     679     100.0   3       Funhe2Emap3m022605t1
+	Scaffold0       25351-26047     -       Funhe2Exy3m069279t1     697     100     1       Funhe2Emap3m032045t1
+	Scaffold0       25660-58049     +       Funhe2Exy3m002726t6     5016    88      25      Funhe2E6bm002559t3
+
+#.....................
+# sameloci.eqall
+	sameloci.eqall :  table of firstid, 2ndid.  Convert 2ndid to 1stid.altn
+
+$evigene/scripts/equalgene.pl -in genes.gff -over genes.gff > genes.all.eqgene
+
+## see locussametab.pl 
+## locussametab.pl -eqgene genes.all.eqgene -idtable evgmrna.pubids -alntab genes.align.tab -diffloci genes.diffloci.eqalt2main2
+
+cat genes.all.eqgene | perl -ne 'BEGIN{$MINCDS=20;}\
+($td,$od,$ad,$loc)=split"\t"; ($tg=$td)=~s/t\d+$//; @ad=grep{ not/^$tg/ } split",",$ad; \
+@sd=grep /\w/, map{ ($d,$p)=split"/"; ($p=~/^[CI]/ or $p>=$MINCDS)?$d:""; } @ad; \
+foreach $s (@sd) { @d=sort ($td,$s); print join("\t",@d)."\n"; }  ' | sort -u \
+ > genes.sameloci.eqall
+
+
+#.....................
+# diffloci.eqalt2main
+# diffloci = alts not equal to main locus, categorize as Df1 (overlap),Df2(nonover),Df3(diffscaffold)
+
+# pull main,alt.gff from all.gff, using t1..tn ID suffix.
+
+cat genes.gff | env nam=$nam perl -ne \
+'BEGIN{ $nam=$ENV{nam}; open(MG,">$nam.anmain.gff"); open(AG,">$nam.analt.gff"); open(EQ,">$nam.equalalt.tab"); } \
+if(/\tmRNA/){ ($id)=m/ID=([^;\s]+)/; ($i)=$id =~ m/t(\d+)$/; ($oid)=m/oid=(\w+)/; \
+if($i == 1) { $mid=$id; $moid=$oid||"na"; $mloc=join":",(split)[0,3,4,6]; $minfo{$mid}="$moid\t$mloc"; \
+} else { my $mid=$id; $mid=~s/t\d+$/t1/; push @{$maid{$mid}}, $id; } } \
+if($i == 1) { print MG $_; } else { print AG $_; } END{ putalleq(); } \
+sub putalleq { foreach my $mid (sort keys %minfo) { \
+my @aid=@{$maid{$mid}}; my $aid= (@aid) ? join ",", map{ "$_/C90.90" } @aid : "na"; \
+my($moid,$mloc)= split"\t",$minfo{$mid}; print EQ join("\t",$mid,$moid,$aid,$mloc)."\n"; } } ' \
+
+#skip, use all.eqgene# $evigene/scripts/equalgene.pl -in genes.anmain.gff -ov genes.anmain.gff > genes.main.eqgene
+$evigene/scripts/equalgene.pl -in genes.analt.gff -ov genes.anmain.gff > genes.alt2main.eqgene
+
+cat genes.all.eqgene | perl -ne\
+'($td,$od,$ad,$loc)=split"\t"; if($td=~/t1$/) { print join("\t",$td,$od,"$td/I100",$loc); }' \
+ > genes.main2main.eqgene
+
+cat genes.main2main.eqgene genes.alt2main.eqgene | perl -pe 's/t(\d+)/\t$1/;' | sort -k1,1 -k2,2n -k4,4  | \
+perl -ne '($gd,$ti,$od,$ad,$loc)=split; $td=$gd."t$ti"; \
+@ad=grep/\w/, map{ ($d,$v)=split"/"; ($v=~/[CI]/ or $v>=20)?$d:"" } split",",$ad; \
+@ag=grep/$gd/,@ad; @ao=grep{ not /$gd/} @ad; $same=(@ag>0)?1:0; $ao=join",",@ao; $ao||="na"; \
+if($gmain ne $gd) { $gmain=$gd; $gloc=""; } if($same and not $gloc) { $gloc=$loc; } \
+if($ltd eq $td) { $same+=$lsame; $ao="$lao,$ao"; } \
+elsif($ltd and not $lsame) { $cl="DfU"; if($lgloc) { \
+my($gr,$gb,$ge)=split/[:-]/,$lgloc;  my($tr,$tb,$te)=split/[:-]/,$lloc;\
+$cl="Df" . (($tr ne $gr)?2:($te<$gb or $tb>$te)?1:0); }  \
+$lgloc||="na"; print join("\t",$ltd,$lod,$lao,$lloc,$cl,"$lgloc/main")."\n"; } \
+($lgmain,$lgloc)= ($gmain,$gloc); \
+($ltd,$lod,$lao,$lloc,$lsame)=($td,$od,$ao,$loc,$same); '\
+ > genes.diffloci.eqalt2main
+
+
+#........
+# altbest.pl : choose subset of alternates using valid intron annots,
+# NOTE: do after above same/diff loci parsing, but need main,alt.gff for that also, and revised for this
+
+set altopts="-noCHANGEALTID -minintron=30 -mincds=33 -minexon=33 -mincoding=40 -minpcds=20 -debug "
+# -mincoding for utrbad exclusion; -minpcds alt/main cds ratio; -minintron alt/main nintron ratio
+# -mincds, -minexon for overlap-equalgene minimums; drop this and use evigene-mrna classified alts?
+
+
+$evigene/scripts/overlapfilter \
+ -intron2splice=error -pass 'exon,intron' -act markid -midtype scoresum -mark intr \
+ -over $project/intron/intron_good.gff.gz -in genes.gff.gz > genes.an1.gff
+
+# intron annotated main,alt.gff from above split script
+$evigene/scripts/altbest.pl $altopts -main genes.anmain.gff -alt genes.analt.gff -eqtab genes.equalalt.tab 
+

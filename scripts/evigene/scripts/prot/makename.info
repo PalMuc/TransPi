@@ -1,0 +1,67 @@
+
+.........
+evg perl from below : takes blastp.tall4 or blastp output fmt 7 direct (lacking sizes; possibly diff results)
+
+gunzip -c outz/sd-uniref50arptop16-dmag5xau13c2011.okay.aa.deblastp.gz | grep -v 'gnl.CDD' | $evigene/scripts/prot/namegenes.pl -names ../aaset/uniref50arptop16.aa.names -blast stdin -out uniref50arptop16-dmag5xau13c2011okay.nameb3
+# .. revise namegenes.pl -cddnames ..
+
+$evigene/scripts/prot/namegenes.pl -cddnames ../aaset/info.cdd.txt -refnames ../aaset/uniref13arpod.aa.names \
+ -blast outz/sd-uniref13arpod-dmag5xau13c2011.okboth-part23.deblastp.gz \
+ -out uniref13arpod-dmag5xau13c2011okboth-pt23.namec3
+
+which are best names?
+  uniref50arptop16-dmag5xau13c2011okay.nameb3 : direct from blastp
+  uniref50arptop16-dmag5xau13c2011.okay.namea : from blastp > tall4, align sorted
+
+## nameac2 == align sorted; namec3 == blastp bitscore sorted
+paste uniref50arptop16-dmag5xau13c2011.okay.nameac2 uniref50arptop16-dmag5xau13c2011okay.namec3s | perl -ne\
+'chomp; ($td,$da,$tdd,$db)=split"\t"; map{ s/ ;;.*//; } ($da,$db); print "$td\t$da\t$db\n" unless($da eq $db);' | less
+
+#....................
+## new format consensus picks among many names/gene using rule mix of align, common-term, best-species
+## output table:  trid  name...  pctalign  refid  repid
+## .. CDD still separate row;  -form table for all names/gene ; drop -sort, not needed/desired w/ consensus
+## .. works w/ -blast .blastp instead of .tall table, but needs len=999 in refname input
+
+$evigene/scripts/prot/namegenes.pl -form consen -cddname $cddname -refname $refname -blast $bz -out $pt.$suf
+
+foreach ptab ( uniref50arptop*.named16.tab )
+ set pt=`basename $ptab .named16.tab | sed 's/uniref50arptop.//;'`
+ set ptcount=`cut -f5 $ptab  | grep _ | sed 's/RepID:[A-Z0-9]*_//;' | sort | uniq -c | sort -k1,1nr | head`
+ echo "$pt : $ptcount"
+end
+
+dmag5xau13c2011okay : 8898 HUMAN 4794 DAPPU 2561 DROME 1214 IXOSC 811 PEDHC 375 HARSA 344 ACREC 318 9MAXI 318 CAMFO 295 MOUSE
+litova1all3evgokboth : 33466 HUMAN 8612 DROME 4165 PEDHC 3690 IXOSC 1584 ACREC 1557 HARSA 1524 TRICA 1450 CAMFO 1376 9MAXI 1357 CULQU
+pogonus1all3c.partial : 36752 HUMAN 11441 DROME 5555 PEDHC 4556 TRICA 2989 ACREC 2830 HARSA 2581 CAMFO 2015 IXOSC 1931 CULQU 1257 MOUSE
+pogonus1all3cokay : 4115 HUMAN 1410 DROME 642 TRICA 638 PEDHC 319 ACREC 290 HARSA 277 CAMFO 255 IXOSC 207 CULQU 183 9MAXI
+shrimpt1evgcokboth : 31638 HUMAN 6230 DROME 2986 PEDHC 1853 IXOSC 1602 HARSA 1501 ACREC 1393 CAMFO 1069 9MAXI 851 DAPPU 846 TRICA
+whitefly1evgc.partial : 34726 HUMAN 11616 DROME 6171 PEDHC 4792 TRICA 3385 IXOSC 2840 ACYPI 2013 HARSA 1945 ACREC 1794 CULQU 1772 CAMFO
+whitefly1evgcokay : 4549 HUMAN 1722 DROME 697 PEDHC 617 ACYPI 506 TRICA 427 IXOSC 273 ACREC 272 HARSA 248 CAMFO 215 NASVI
+
+#................
+
+set refna=uniref13arpod
+set refnames=../aaset/$refna.aa.names
+
+cat $refna-$pt.tall4 | grep -v '^Query' | sort -k1,1 -k5,5nr -k3,3nr -k2,2 | env na=$refnames perl -ne\
+'BEGIN{open(F,$ENV{na}); while(<F>){ chomp; ($rd, $rdesc)= split" ",$_,2; $rdesc{$rd}=$rdesc; } } \
+($td,$rd,$bits,$iden,$aln, $tlen, $rlen)=split; \
+if($ld and $td ne $ld) { put1(); $desc1=$lcd=""; } \
+$rdesc=$rdesc{$rd}; $named=(not $rdesc or $rdesc =~ /uncharacterized protein/i)?0:1; \
+if($td ne $ld) { $lcd = "$rdesc; aln=$aln" if($named); $aln1=$aln; $desc1="$rdesc; aln=$aln"; } \
+elsif( not $lcd and $named and $aln >= 0.6*$aln1) { $lcd= "$rdesc; aln=$aln ;; $desc1"; } \
+$ld=$td; END{put1()} sub put1{ $lcd=$desc1 if(not $lcd and $desc1); print "$ld\t$lcd\n"; }' > $refna-$pt.namea
+
+
+## CDD
+    ## CDD:176950 CHL00005, rps16, ribosomal protein S16.; len=82
+    cat $refna-$pt.tall4 | env na=../aaset/info.cdd.txt perl -ne\
+'BEGIN{open(F,$ENV{na}); while(<F>){ chomp; ($rd, $rdesc)= split" ",$_,2;
+($roid,$rshort,$rlong)= split /,\s*/,$rdesc,3;  $rlong =~ s/\s*[\.\;\[].*$//;
+if(length($rlong)>29) { $rlong =~ s/\s*[,].*$//; $rlong=substr($rlong,0,30).".." if(length($rlong)>29); }
+if($roid eq $rshort){ $rdesc=$rlong; } else { $rdesc=$rshort; $rdesc.=", $rlong" if($rlong); }
+$rdesc{$rd}="$rdesc, $roid"; } }
+($td,$cid,@val)=split; $rdesc=$rdesc{$cid}; if($ld and $td ne $ld) { print "$ld\t$lcd\n"; $lcd=""; }
+$lcd .= "$rdesc; " if($rdesc); $ld=$td; END{  print "$ld\t$lcd\n"; }' > $refna-$pt.named
+

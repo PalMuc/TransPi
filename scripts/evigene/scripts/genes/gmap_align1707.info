@@ -1,0 +1,386 @@
+
+=item gmap align parsing
+  
+  Update to  evigene/scripts/genes/gmap2evgff.pl
+  
+  .. use --align output to adjust mRNA-aatrans to chr-align aatrans
+  .. chr-align can produce better aa (longer), 
+  .. 'aa.g/aa.c' for aa-trans: capture aa.g (genome aa), ignore aa.c; may be bad vs mRNA-aatrans
+  .. use to adjust mrna genes-chr.gff, maybe/not use to adjust transcript seq? (option)
+  .. gmap align out same as -S until Alignments/Alignment for path adds rows,
+     has row prefix 'aa.g/aa.c' for aa-trans
+
+    >Daplx7b3EVm003641t32 type=mRNA; aalen=230,72%,complete; revc=1; clen=960; strand=+; offs=187-879;  
+      ^^ Evigene mRNA header, capture aalen/offs
+    Path 1: query 1..960 (960 bp) => genome daphplx16ml_scaffold_107:405,694..409,561 (3868 bp)
+    Translation: 3..879 (291 aa)
+         ^^ capture query/Target align span, Translate span/aa size
+              
+    Alignment for path 1:
+     +/-chrID:nnn-nnn (245-530)   98% ->   ...114...  0.997, 0.964
+     .. more of  Summary alignment,
+     [blank]
+                   0     .    :  ... [format]
+     +/-chrID:nnn  ACAATTTTCAAGTTATCTTGTCGTCAACTCGAAGTAGATACGTAACGCAG
+                   ||||||||||||||||||||||||||||||||||||||||||||||||||
+               245 ACAATTTTCAAGTTATCTTGTCGTCAACTCGAAGTAGATACGTAACGCAG
+
+
+=item FIRST compare gmap.align.out to genefindcds2.pl results
+
+  genefindcds2.pl may do job needed, more generally ?
+
+
+  $evigene/scripts/genefindcds2.pl -debug -nostopcodon -full=0.75 -dna $chr.fa -genes $pt.gff.gz \
+    -outgff $pt-fcds.gff -outcdna -outaa -outcds > & log.fcds1
+
+  ** need -cdna genes.mrna param to have full test of mrna vs chr aatrans,
+  
+  ====== UPDATE 170724, lots of fcds perl debugging/changes
+      -chrcds is desired, default now, gives CDS offset,exons that best match to chr, not to mrna cdsoff
+      -noshortinfix may help with better chrcds, but is foul of ncbi rule
+      -completecds extends mrna align to complete a protein on chr (200/6000), make default? 
+      -ratiocdnabest ? probably should make 1.25 default (now 1.50)
+      -nostop 
+      -full 0.75 : is this too low? ie cuts 25% of partial cds to make complete, can be many aminos
+          .. replace with nAmino cutoff? e.g. partial if have > 20 .. 30 .. 50 aa partial end
+      
+  set pt=dpx7b3splignx.fixg; 
+  set i=fcdsg
+  $evigene/scripts/genefindcds2.pl -chrcds -noshortinfix -completecds=2 \
+     -ratiocdnabest 1.25 -debug -nostopcodon -full=0.75 \
+  -dna $dpxevg/genome/gasm16ml/daphplx_gasm16ml.fa -cdna $pt.mrna -genes $pt.aan.gff \
+  -outgff $pt.$i.gff -outaa -outcds -outcdna > & log.$i$pt
+ 
+  -- check cds2aa trans
+  $evigene/scripts/cdsgff2genbank.pl -a aa -t CDS -pretty -fasta $dpxevg/genome/gasm16ml/daphplx_gasm16ml.fa \
+    -gff $pt.$i.gff > $pt.$i.cds2aa
+
+  /bio/bio-grid/daphplx/rnasm/evg5daplx/geneval/
+
+  grep -c Internalstop evg34inmiss_keep.fixg.fcds?.cds2aa
+    evg34inmiss_keep.fixg.fcdsc.cds2aa:2411 # no -chrcds
+    evg34inmiss_keep.fixg.fcdse.cds2aa:54
+    evg34inmiss_keep.fixg.fcdsf.cds2aa:54
+    evg34inmiss_keep.fixg.fcdsg.cds2aa:54  # -chrcds effect
+    evg34okinmiss.fixg.cds2aa:2633 # no -chrcds
+
+  grep -c Complete evg34inmiss_keep.fixg.fcds?.cds2aa
+    evg34inmiss_keep.fixg.fcdsc.cds2aa:2284
+    evg34inmiss_keep.fixg.fcdse.cds2aa:4480
+    evg34inmiss_keep.fixg.fcdsf.cds2aa:4389  < -100 due to RECALC_CDSOFF1707, bad
+    evg34inmiss_keep.fixg.fcdsg.cds2aa:4481  +1 due to -noshortinfix
+
+  evg5daplx/geneval/gsplignf ** large improvement here.
+  grep -c Internalstop *cds2aa
+    dpx7b3splignx.fixg.fcdsc.cds2aa:26615
+    dpx7b3splignx.fixg.fcdsg.cds2aa:1325
+  grep -c Complete *cds2aa
+    dpx7b3splignx.fixg.fcdsc.cds2aa:11642 
+    dpx7b3splignx.fixg.fcdsg.cds2aa:34888
+
+  evg5daplx/map2best     ** large improvement here.
+  grep -c Internalstop best3gs_allpubfixg*.cds2aa
+  best3gs_allpubfixg.fcdsc.cds2aa:43587
+  best3gs_allpubfixg.fcdsg.cds2aa:616
+  grep -c Complete best3gs_allpubfixg*.cds2aa
+  best3gs_allpubfixg.fcdsc.cds2aa:58275
+  best3gs_allpubfixg.fcdsg.cds2aa:99028
+
+  
+  ================
+  
+  options to test: 
+      -ratiocdnabest 1.25 : 1.50 default, keep mrna prot if ratio* chr prot 
+        ^ dont know if this has effect
+      -nodifcancel : keep when difference says not to .. ??
+      -fixcds : DO_CDSFIX per cds-exon test orf with added exondna, trim or drop cds-exons that damage orig protein
+            # .. should use this only on trasm genomap identified as bad cds2aa but w/ full-ish cdna map
+      -completecds=2 : test, is supposed to extend partial prots at end of mrna by extending mrna & check for aastart/stop
+        ^^ this helps, improves cds for a subset (120/6000 of evg34inmiss_keep.gff), adds 'cdsfix=ext' tag
+        $evigene/scripts/genefindcds2.pl -ratiocdnabest 1.25 -completecds=2 -debug -nostopcodon -full=0.75 \
+         -dna $dpxevg/genome/gasm16ml/daphplx_gasm16ml.fa -genes $pt.aan.gff -outgff $pt.fcdsb.gff -outaa -outcds -outcdna
+        
+      #skip : -reannotate : replace mRNA annotation (?)
+        : remove tags = cxlen aalen protein cdnabest cdnaorf aautrlen utroff utrprot ocds oaaln inqual intronfix xcut xdrop
+      
+    * Need to flip strand of sense=-1 to keep original prots, as per fixgenegff
+    ** use both fixgenegff and genefindcds to update? fixgene to flip antisense to protein orient
+    ** improves findcds of most sense=-1 cases.
+    
+    $evigene/scripts/genes/intronoktab.pl -offby -intron $dpxintron3okay.gff $pt.gff > $pt.intronok.tab
+    
+    $evigene/scripts/genes/fixgenegff.pl -maxutrx=999 -action 'cdsupdate' -debug \
+      -intronok $pt.intronok.tab $pt.gff > $pt.fixg.gff
+      
+    $evigene/scripts/genefindcds2.pl -completecds=2 -nostopcodon -full=0.75 -dna $chrasm \
+      -genes $pt.aan.gff -outgff $pt.fcdsb.gff -outaa -outcds -outcdna
+    
+    * may want new opt: -NOSHORTINFIX to prevent mangled alignments 
+    * Need to test split-gene handling, again ..
+      ** Need input.gff sorted so Split parts are together **
+      
+    *? add to genes.gff mRNA an: protein=MK..aatransOfmrna..; to get further aadif tests
+    * yes, then have annot: eqaa/NEaa to check changes
+  
+    -- add prots to gff
+    perl -ne 'if(/^>(\S+)/){ $prot{$id}=$aa if($id and $aa); $id=$1; $ina=1; $aa=""; } 
+    elsif(/\tmRNA\t/){ if($ina) { $prot{$id}=$aa if($id and $aa);} $ina=0; $ing=1; ($id)=m/ID=(\w+)/; $id=~s/_[CG]\d+//; 
+    if($aa=$prot{$id}){ $astop=(/,complete|,partial5/)?1:0; $aa.="*" if($astop);  s/$/;protein=$aa;/; } print; } 
+    elsif(/^\w/ and $ina) { chomp; $aa.=$_; } elsif(/^\w/ and $ing) { print; } ' \
+     ../$pt.{aa,gmap.gff} > $pt.gmapan.gff
+    
+    $evigene/scripts/genefindcds2.pl -debug -nostopcodon -full=0.75 \
+      -dna $dpxevg/genome/gasm16ml/daphplx_gasm16ml.fa -genes $pt.gmapan.gff \
+      -outgff $pt.gm2fcds.gff -outaa -outcds -outcdna >& log.fcds2$pt
+    
+  -- test daplx genes
+   pt=dpx7b5all_horevtrueadd_ok;  
+   $evigene/scripts/genefindcds2.pl -debug -nostopcodon -full=0.75 \
+   -dna $dpxevg/genome/gasm16ml/daphplx_gasm16ml.fa -genes $pt.gmap.gff \
+     -outgff $pt.gmfcds.gff -outaa -outcds -outcdna >& log.fcds1$pt
+
+  * note aamap= gmap aa.g, often has partial5 extra aa before M start (i.e. full=0.75 opt for M vs part5)
+  
+  grep  mRNA dpx7b5all_horevtrueadd_ok.gmfcds.gff |  perl -pe 's/(protein=...)\w+/$1../;' | head
+  scaffold_107	dpx7b5revc	mRNA	405663	409561	96	+	.	ID=Daplx7b3EVm003641t21;Target=Daplx7b3EVm003641t21 16 1270;
+    aamap=390;cov=98.8;indels=2/0;match=1224;nexon=10;pid=97.5;qlen=1270;cdsindel=2;clen=1270;
+    offs=233-1189;oid=Daplx5cEVm011172t1,tidbdaplx5r3eo5ridk61Loc60627;cxlen=999/1253;
+    aalen=333,79%,complete;protein=MKG..*;cdsoff=172-1173;cdsspan=405902-409481;ocds=eqn,NE0,NE8;
+    aaold=318,75%,complete;offold=233-1189
+  scaffold_107	dpx7b5revc	mRNA	405694	409561	97	+	.	ID=Daplx7b3EVm003641t32;Target=Daplx7b3EVm003641t32 1 960;
+    aamap=294;cov=100.0;indels=2/9;match=939;nexon=9;pid=96.9;qlen=960;cdsindel=-7;clen=960;
+    offs=187-879;oid=Daplx5cEVm011172t21,daplx5r3cidbak47Loc130181;cxlen=744/967;
+    aalen=248,76%,complete;protein=MKG..*;cdsoff=141-887;cdsspan=405902-409481;ocds=eqn,NE0,NE7;
+    aaold=230,72%,complete;offold=187-879
+     
+  head dpx7b5all_horevtrueadd_ok.gmfcds.aa
+  >Daplx7b3EVm003641t21 aalen=333,79%,complete; cdsoff=172-1173; cxlen=999/1253; clen=1270; qlen=1270; aaold=318,75%,complete; oid=Daplx5cEVm011172t1,tidbdaplx5r3eo5ridk61Loc60627; 
+  MKGEIGKKGDKGEIGMGTPGAVGPKGEKGIRGTTGTKGAPGSIGKDGIKGDIGPKGDKGE
+  IGVGIPGAVGPKGDMGVNGTIGATGKNGMKGEIGKKGDKGDIGMGTPGAVGPKGEKGIRG
+  TTGAKGASGSIGKYGIKGDIGQKGDKGEIGVGIPGAVGPKGDKGVNGTIGVPGIDGMKGE
+  IGKKGDKGEIGLGTPGAVGPKGERGIRGTTGAKGASGSIGKDGIKGDVGRKGDKGEIGVG
+  IPGAVGFKGKKGDTGPVGPAGPGKIQGTKGEKGEIGIKGDIGSKGDKGEIGAGIPGAAGP
+  NGPAGPKGEKGENGRKKKKPHHKFHRPTTKKPK
+     
+  -- e.g. corn genes : did this work right?
+
+  $evigene/scripts/genefindcds2.pl -debug -nostopcodon -full=0.75 -dna ../v4genoasm.fa -genes $pt-v4chr.gff.gz \
+    -outgff ${pt}-v4chr_fcds4g.gff -outcdna -outaa -outcds > & log.fcds1
+
+      
+  chr10      splcornevg45m3yx4v      mRNA    21192776        21209050        93      -       .       
+    ID=Zeamay5fEVm000011t12;cov=93%,10670/11527;pid=98.1;nexon=17;splice=60;Target=Zeamay5fEVm000011t12 3 11382;
+    gaps=361,MGap:6505-6619,RGap:11383-11527,LGap:1-2,MGap:1280-1378,;gescore=89;Name=ubiquitin-protein ligase 2;
+    clen=11527;offs=275-11074;oid=Zeamay4eEVm000011t11,..;cxlen=6285/10883;
+    aalen=2095,57%,complete;protein=MTE..*;cdsoff=273-6560;cdsspan=21205263-21198843;utrx=2,12;
+    aaold=3599,93%,complete;offold=275-11074
+    ocds=NEn,NE0,NE1,NE2,NE3,NE4,NE5,NE6,NE7,NE8,NE9,NE10,NE11,NE12,NE13;
+
+  chr1       splcornevg45m3yx4v      mRNA    298191126       298238903       100     -       .       
+    ID=Zeamay5fEVm000017t6;cov=100%,10142/10142;pid=100;nexon=26;splice=100;Target=Zeamay5fEVm000017t6 1 10142;gescore=100;Name=expressed protein;
+    clen=10142;offs=201-8387;oid=Zeamay4eEVm000017t6..;cxlen=8208/10144;
+    aalen=2736,80%,complete;protein=MST..*;cdsoff=179-8389;cdsspan=298237733-298193136;ocds=eqn,NE22;
+    aaold=2728,80%,complete;offold=201-8387
+    
+=item gmap align cmd
+
+  gmopts='--suboptimal-score=1 --min-intronlength=18 --microexon-spliceprob=1.0'
+  pt=dpx7b5all_horevtrue_ok; 
+  pt=evg34inmiss_keep
+  
+  $gmbin/gmap -B 1 -D $dpxevg/genome/gmap17 -d daphplx_gasm16ml $gmopts --align  $pt.mrna \
+   > $pt.gmap.alnout  2> $pt.gmap.log
+
+=item gmap align output
+
+>Daplx7b3EVm003641t32 type=mRNA; aalen=230,72%,complete; revc=1; clen=960; strand=+; offs=187-879;   oid=Daplx5cEVm011172t21,daplx5r3cidbak47Loc130181; organism=Daphnia_pulex; chrmap:98a,97i,960l,10x,scaffold_107:403555-409561:+; horevtrue=0/-3,-265,dapma:0/93.6,drosm:0/95.1,tribc:0/77.0;
+Paths (1):
+  Path 1: query 1..960 (960 bp) => genome daphplx16ml_scaffold_107:405,694..409,561 (3868 bp)
+    cDNA direction: sense
+    Genomic pos: daphplx_gasm16ml:6,971,427..6,975,294 (+ strand)
+    Accessions: daphplx16ml:scaffold_107:405,694..409,561 (out of 474007 bp)
+    Number of exons: 9
+    Coverage: 100.0 (query length: 960 bp)
+    Trimmed coverage: 100.0 (trimmed length: 960 bp, trimmed region: 1..960)
+    Percent identity: 97.9 (940 matches, 18 mismatches, 2 indels, 0 unknowns)
+    Non-intron gaps: 2 openings, 2 bases in cdna; 9 openings, 0 bases in genome
+    Translation: 3..879 (291 aa)
+    Amino acid changes: I19L [56]
+
+Alignments:
+  Alignment for path 1:
+
+    +daphplx16ml_scaffold_107:405694-405804  (1-111)   97% ->   ...68...  0.988, 0.952
+    +daphplx16ml_scaffold_107:405873-405995  (112-235)   98% ->   ...57...  0.942, 0.997
+    +daphplx16ml_scaffold_107:406053-406193  (236-376)   97% ->   ...57...  0.988, 0.989
+    +daphplx16ml_scaffold_107:406251-406312  (377-438)   95% ==   ...379...  0.430, 0.000
+    +daphplx16ml_scaffold_107:406692-406752  (439-499)   100% ->   ...58...  0.942, 0.997
+    +daphplx16ml_scaffold_107:406811-406951  (500-640)   99% ->   ...2009...  0.967, 1.000
+    +daphplx16ml_scaffold_107:408961-409023  (641-703)   100% ->   ...164...  0.966, 0.870
+    +daphplx16ml_scaffold_107:409188-409265  (704-781)   100% ->   ...118...  0.995, 0.955
+    +daphplx16ml_scaffold_107:409384-409561  (782-960)   96%
+
+                                0     .    :    .    :    .    :    .    :    .    :
+aa.g                            1   I  G  K  D  G  I  K  G  D  I  G  P  K  G  D  K  
+ +daphplx16ml_scaffold_107:405694 CGATTGGAAAGGATGGAATTAAGGGTGATATTGGACCAAAAGGAGACAAG
+                                  ||||||||||||||||||| ||||||||||||||||||||||| ||||||
+                                1 CGATTGGAAAGGATGGAATAAAGGGTGATATTGGACCAAAAGGTGACAAG
+aa.c                            1   I  G  K  D  G  I  K  G  D  I  G  P  K  G  D  K  
+
+                               50     .    :    .    :    .    :    .    :    .    :
+aa.g                           17 G  E  I  G  V  G  I  P  G  A  V  G  P  K  G  D  K 
+ +daphplx16ml_scaffold_107:405744 GGAGAAATAGGAGTTGGAATTCCAGGTGCTGTCGGACCTAAAGGAGACAA
+                                  |||||| |||||||||||||||||||||||||||||||||||||||||||
+                               51 GGAGAATTAGGAGTTGGAATTCCAGGTGCTGTCGGACCTAAAGGAGACAA
+aa.c                           17 G  E  L  G  V  G  I  P  G  A  V  G  P  K  G  D  K 
+
+                              100     .    :    .    :    .    :    .    :    .    :
+aa.g                           34  G  I  N  G           T  I  G  A  T  G  K  D  G  M
+ +daphplx16ml_scaffold_107:405794 GGGAATCAACGGTT...CAGGAACCATAGGAGCAACTGGAAAGGATGGAA
+                                  |||||||||||>>>...>>>||||||||||||||||||||||||||||||
+                              101 GGGAATCAACG   68    GAACCATAGGAGCAACTGGAAAGGATGGAA
+aa.c                           34  G  I  N  G           T  I  G  A  T  G  K  D  G  M
+
+                              150     .    :    .    :    .    :    .    :    .    :
+aa.g                           48   K  G  E  I  G   K  K  G  D  K  G  E  I  G  M  G 
+ +daphplx16ml_scaffold_107:405903 TGAAGGGCGAGATTGG AAAAAAAGGAGACAAGGGAGAAATTGGAATGGG
+                                  ||||||||||||||||-|||||||||||||||||||||||||||||||||
+                              142 TGAAGGGCGAGATTGGAAAAAAAAGGAGACAAGGGAGAAATTGGAATGGG
+aa.c                           48   K  G  E  I  G  K  K  R  R  Q  G  R  N  W  N  G  
+
+                              200     .    :    .    :    .    :    .    :    .    :
+aa.g                           64  T  P  G  A  V  G  P  K  G  E  K  G  I  R  G      
+ +daphplx16ml_scaffold_107:405952 AACCCCAGGTGCTGTTGGACCTAAAGGAGAAAAGGGAATTCGCGGTT...
+                                  |||||| |||||||||||||||||||||||||||||||||||||>>>...
+                              192 AACCCCTGGTGCTGTTGGACCTAAAGGAGAAAAGGGAATTCGCG   57 
+aa.c                           63 N  P  W  C  C  W  T  *                            
+
+                              250     .    :    .    :    .    :    .    :    .    :
+aa.g                           79      T  T  G  T  K  G  A  P  G  S  I  G  K  D  G  
+ +daphplx16ml_scaffold_107:406050 CAGGAACCACTGGTACCAAAGGCGCACCCGGTTCGATTGGAAAGGATGGA
+                                  >>>|||||||||||||||||||||||||||||||||||||||||||||||
+                              236    GAACCACTGGTACCAAAGGCGCACCCGGTTCGATTGGAAAGGATGGA
+                                                                                    
+
+                              300     .    :    .    :    .    :    .    :    .    :
+aa.g                           94 I  K  G  D  I  G  P  K  G  D  K  G  E  I  G  V  G 
+ +daphplx16ml_scaffold_107:406100 ATTAAGGGTGATATTGGACCAAAAGGAGACAAGGGAGAAATTGGAGTTGG
+                                  ||||||||||||||||||||||||||||||||||||||||| || |||||
+                              283 ATTAAGGGTGATATTGGACCAAAAGGAGACAAGGGAGAAATAGGTGTTGG
+                                                                                    
+
+                              350     .    :    .    :    .    :    .    :    .    :
+aa.g                          111  I  P  G  A  V  G  P  K  G  D  M  G  V  N  G      
+ +daphplx16ml_scaffold_107:406150 AATTCCAGGTGCTGTCGGACCTAAAGGAGACATGGGAGTCAACGGTT...
+                                  |||||||||||||||||||||||||||||||| |||| ||||||>>>...
+                              333 AATTCCAGGTGCTGTCGGACCTAAAGGAGACAAGGGATTCAACG   57 
+                                                                                    
+
+                              400     .    :    .    :    .    :    .    :    .    :
+aa.g                          126      T  I  G  A  T  G  K  N  G  M  K  G  E  I  G  
+ +daphplx16ml_scaffold_107:406248 CAGGAACTATCGGAGCAACTGGAAAGAATGGAATGAAGGGCGAGATTGGA
+                                  >>>|||| || ||||||||||||||| |||||||||||||||||||||||
+                              377    GAACCATGGGAGCAACTGGAAAGGATGGAATGAAGGGCGAGATTGGA
+                                                                                    
+
+                              450     .    :    .    :    .    :    .    :    .    :
+aa.g                          141 K  K  G  D  K           G  E  I  G  L  G  T  P  G 
+ +daphplx16ml_scaffold_107:406298 AAAAAAGGAGACAAGGGA...AAGGGAGAAATTGGATTGGGAACCCCTGG
+                                  |||||||||||||||===...===||||||||||||||||||||||||||
+                              424 AAAAAAGGAGACAAG   379   GGAGAAATTGGATTGGGAACCCCTGG
+                                                                                    
+
+                              500     .    :    .    :    .    :    .    :    .    :
+aa.g                          155  A  V  G  P  K  G  E  R  G  I  R  G           T  T
+ +daphplx16ml_scaffold_107:406718 TGCTGTTGGACCTAAAGGAGAAAGGGGAATTCGCGGTT...CAGGGACCA
+                                  |||||||||||||||||||||||||||||||||||>>>...>>>| ||||
+                              465 TGCTGTTGGACCTAAAGGAGAAAGGGGAATTCGCG   58    GAACCA
+                                                                                    
+
+                              550     .    :    .    :    .    :    .    :    .    :
+aa.g                          169   G  A  K  G  A  S  G  S  I  G  K  D  G  I  K  G  
+ +daphplx16ml_scaffold_107:406817 CTGGTGCAAAAGGCGCATCTGGTTCGATTGGAAAGGATGGAATTAAAGGT
+                                  ||||||||||||||||||||||||||||||||||||||||||||||||||
+                              506 CTGGTGCAAAAGGCGCATCTGGTTCGATTGGAAAGGATGGAATTAAAGGT
+                                                                                    
+
+                              600     .    :    .    :    .    :    .    :    .    :
+aa.g                          185 D  V  G  R  K  G  D  K  G  E  I  G  V  G  I  P  G 
+ +daphplx16ml_scaffold_107:406867 GATGTTGGACGGAAAGGAGATAAGGGGGAAATTGGAGTTGGAATTCCTGG
+                                  ||||||||||||||||||||||||||||||||||||||||||||||||||
+                              556 GATGTTGGACGGAAAGGAGATAAGGGGGAAATTGGAGTTGGAATTCCTGG
+                                                                                    
+
+                              650     .    :    .    :    .    :    .    :    .    :
+aa.g                          202  A  V  G  F  K  G  K  K  G  D  T  G           P  V
+ +daphplx16ml_scaffold_107:406917 TGCTGTCGGTTTTAAGGGGAAAAAAGGAGATACCGGTT...TAGGTCCAG
+                                  |||||||||||||||||||||||||||||||||||>>>...>>>||||||
+                              606 TGCTGTCGGTTTTAAGGGGAAAAAAGGAGATACCG  2009   GTCCAG
+                                                                                    
+
+                              700     .    :    .    :    .    :    .    :    .    :
+aa.g                          216   G  P  A  G  P  G  K  I  Q  G  T  K  G  E  K  G  
+ +daphplx16ml_scaffold_107:408967 TAGGCCCAGCAGGTCCGGGTAAAATCCAAGGAACTAAGGGTGAAAAAGGA
+                                  ||||||||||||||||||||||||||||||||||||||||||||||||||
+                              647 TAGGCCCAGCAGGTCCGGGTAAAATCCAAGGAACTAAGGGTGAAAAAGGA
+                                                                                    
+
+                              750     .    :    .    :    .    :    .    :    .    :
+aa.g                          232 E  I  G           I  K  G  D  I  G  S  K  G  D  K 
+ +daphplx16ml_scaffold_107:409017 GAAATTGGTT...CAGGAATCAAGGGTGACATTGGATCTAAAGGTGACAA
+                                  |||||||>>>...>>>||||||||||||||||||||||||||||||||||
+                              697 GAAATTG   164   GAATCAAGGGTGACATTGGATCTAAAGGTGACAA
+                                                                                    
+
+                              800     .    :    .    :    .    :    .    :    .    :
+aa.g                          246  G  E  I  G  A  G  I  P  G  A  A  G  P  N  G      
+ +daphplx16ml_scaffold_107:409222 AGGTGAAATTGGAGCTGGAATCCCTGGCGCTGCTGGACCAAATGGTG...
+                                  ||||||||||||||||||||||||||||||||||||||||||||>>>...
+                              738 AGGTGAAATTGGAGCTGGAATCCCTGGCGCTGCTGGACCAAATG   118
+                                                                                    
+
+                              850     .    :    .    :    .    :    .    :    .    :
+aa.g                          261      P  A  G  P  K  G  E  K  G  E  N  G  R  K  K  
+ +daphplx16ml_scaffold_107:409381 TAGGTCCTGCTGGTCCTAAAGGAGAAAAGGGTGAAAACGGTAGAAAGAAA
+                                  >>>||||||||||||||||||||||||| ||||||||  |||||||||||
+                              782    GTCCTGCTGGTCCTAAAGGAGAAAAAGGTGAAAATAGTAGAAAGAAA
+                                                                                    
+
+                              900     .    :    .    :    .    :    .    :    .    :
+aa.g                          276 K  K  P  H  H  K  F  H  R  P  T  T  K  K  P  K  * 
+ +daphplx16ml_scaffold_107:409431 AAAAAGCCACATCACAAATTCCATCGACCAACCACAAAAAAACCAAAGTA
+                                  ||||||||||||||||||||||||||||||||||||||||||||||||||
+                              829 AAAAAGCCACATCACAAATTCCATCGACCAACCACAAAAAAACCAAAGTA
+                                                                                    
+
+                              950     .    :    .    :    .    :    .    :    .    :
+                                                                                    
+ +daphplx16ml_scaffold_107:409481 GAAAAATGTTGCCCCACAAATAATGCCCATTTTGTCCTTGTGATCCATCA
+                                  |||||||||||||||||||||||||||||||||| |||| ||||||||||
+                              879 GAAAAATGTTGCCCCACAAATAATGCCCATTTTGCCCTTTTGATCCATCA
+                                                                                    
+
+                             1000     .    :    .    :    .    :  
+                                                                  
+ +daphplx16ml_scaffold_107:409531 CAGAAGAAAC GTTTTTCGGTGACAAATCTTG
+                                  ||||||||||- ||||||||||||||||||||
+                              929 CAGAAGAAACATTTTTTCGGTGACAAATCTTG
+                                                                  
+  ================================================
+
+=item aadiff (mrna_trans x gmap_align)
+
+pt=dpx7b5all_horevtrueadd_ok; cat $pt.gmap.alnout|  perl -ne \
+'if(/^>(\S+)/){ $id=$1; ($aw,$ofs)=m/(?:aalen|offs)=([^;\s]+)/g; } elsif(/
+Path (\d+):/){ $ip=$1; } elsif(/Translation: (\S+) .(\d+) aa/) {
+($ofg,$awg)=($1,$2); $ofg=~s/\.\./-/; $eqofs=eqoff($ofs,$ofg); $da=$aw - $awg;
+$ipp=($did{$id}++)?$ip:"";  print
+join("\t",$id,"off$eqofs",$ofs,$ofg,"$da.da",$aw,"$awg.aa$ipp")."\n";  } sub
+eqoff{my($ofa,$ofb)=@_; if($ofa eq $ofb){ return "eq";}
+my($ob,$oe,$gb,$ge)=map{ my($b,$e)=split/-/,$_; ($b,$e)=($e,$b) if($b>$e);
+($b,$e); } ($ofa,$ofb); return "neutr" unless($ob< $ge and $oe > $gb); return
+($ob eq $gb)?"ne3":($oe eq $ge)?"ne5":"ne"; }' \
+ | sort > $pt.gmap.aadifa
+
+=cut

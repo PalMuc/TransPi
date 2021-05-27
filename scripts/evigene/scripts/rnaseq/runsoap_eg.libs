@@ -1,0 +1,13 @@
+
+max_rd_len=110
+
+[LIB]
+rank=1
+asm_flag=3
+avg_ins=200
+p=sraf/allpe.dnorm30.fa
+
+[LIB]
+rank=1
+asm_flag=3
+f=sraf/allsr1.dnorm30.fa

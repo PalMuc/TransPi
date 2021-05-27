@@ -1,0 +1,78 @@
+
+2010.sep:  Theobroma cacao taxid=3641 Entrez records   
+Database name 	Direct links
+Nucleotide 	530
+Nucleotide EST 	159,996
+Protein 	192
+UniGene 	24,958
+#............
+
+set gmapd=$bg/mb/gmap10
+set dgenome=cacao1asm
+set dest=cacao1est
+# parts: 1est=dbEST, 2est=454 isotigs,  3est=454 reads
+
+scripts/efetchests.pl taxid=3641 to cacao1est.fa
+
+gzcat $dest.fa.gz | $gmapd/bin/gmap -D ../genome/gmap -d $dgenome -n 4 -S  >& $dest.gmap.out &
+
+#old.gzcat $dest.gmap*.out.gz | $pa/scripts/gmap_to_gff.pl > $dest.gff
+gzcat estout/$ena.gmap.out.gz | env intron=1 src=$nn $evigene/scripts/gmap_to_gff.pl > $ena.gmap.gff
+
+
+cat $dest.gff | perl -ne\
+'if(/\tmatch/){ ($v)=m/pid=(\d+)/; ($v1)=(split)[5]; $p=($v < 85 or /nexon=1/ or /path=/)?0:1; \
+$le=$lb=$lr=0; } elsif($p and /\tHSP/) { ($r,$b,$e,$o) = (split)[0,3,4,6]; if($le){ \
+($ib,$ie)=($le+1,$b-1); ($ib,$ie)=($lb-1,$e+1) if(abs($lb-$e) < abs($le-$b)); \
+($ib,$ie)=($ie,$ib) if($ib>$ie); $v=join("\t",$r,"es","intron",$ib,$ie,1,$o); $in{$v}++; } \
+($lr,$lb,$le,$lo)=($r,$b,$e,$o); } \
+END{ foreach $in (sort keys %in) { $n=$in{$in}; $in =~ s/\t1(\t[+-])/\t$n$1/; print "$in\t.\n"; } }'\
+ > $dest.intron.gff
+
+cat $dest.gff | grep 'exon' | perl -pe\
+'s/\texon/\tep/; s/;Target=.*$//; s/Parent=/src=E;pri=7;grp=/;' | sort -k1,1 -k4,4n -k5,5n | perl -ne \
+'($r,$s,$t,$b,$e,$v,$o,$x,$at)=split; $n++; if($lr eq $r and $b==$lb and $e==$le and $o eq $lo)\
+{ $v += $lv; $nd++; } else { $at.=";mult=".(1+$nd) if($nd); \
+print join("\t",$lr,$s,$t,$lb,$le,$lv,$lo,".",$at)."\n" if($le); $nd=0; } \
+($lr,$lb,$le,$lv,$lo)=($r,$b,$e,$v,$o);  ' > hint-est.hints
+
+## paired-est hints == grouped for gene prediction
+cat $dest.paired.idtab hint-est.hints | perl -ne'if(/^mated/) { chomp; ($mm,$md,$lb,$gb)=split"\t"; \
+$md =~ s/\.\d$//; $md{$gb}= $md; } else { ($g)=m/grp=([^;\s]+)/; $g=~s/_[CG]\d+//;  $m=$md{$g}; \
+s/grp=$g/grp=mp:$m/ if($m); print; }' > hint-est.hint2
+
+
+#..... updates .......
+
+# gmap.out to .gff, more info than gmap -f2/gff
+gzcat estout/$ena.gmap.out.gz | env intron=1 src=$nn $evigene/scripts/gmap_to_gff.pl > $ena.gmap.gff
+
+#.... pull introns ....
+cat {cacao1est_genbank,reads}*gmap.gff | grep intron | sort -k1,1 -k4,4n -k5,5n -k2,2 | perl -ne \
+'s/^#i.//; @v= split"\t"; ($r,$s,$b,$e,$pr,$o)=@v[0,1,3,4,5,6]; next if($pr<1 or $b<1); $n=1; $v[5]=$n; \
+$s=~s/^(er\.|rd\.|cacao1est_)//;  $s=~s/cgba.//; $s=~s/\d$//; $v[1]=$s; \
+if($lr eq $r and $lb == $b and $le == $e and $lo eq $o){ $lv[5]+=$n; $lv[1].=",$s"; @v=@lv; } \
+elsif(@lv) { %s=map{$_,1} split",",$lv[1]; @s=sort keys %s; $lv[1]=(@s>2)?"smult":join".",@s; \
+print join("\t",@lv) if @lv; } ($lr,$lb,$le,$lo)=($r,$b,$e,$o); @lv=@v; \
+END{print join("\t",@lv);} ' > reads.intron.gff2
+
+#..... intron.diff .......
+echo $eset ; cat estgff_cir/$eset*.gmap.gff estgff_mars/$eset*.gmap.gff | grep intron | perl -ne'($r,$b,$e)=(split)[0,3,4
+]; $w=1+$e-$b; $r=~s/scaffold_/Ma/; ($rn)=$r=~m/(\d+)/; $xnext=000 if($rn>10 or $rn==0); ($d)=m/Parent=(\w+)/; $inw{$d}{$
+r}+=$w; $inc{$d}{$r}++; $inw{All}{$r}+=$d; $inc{All}{$r}++; $rs{$r}++; END{ @r1=grep /Ma/, sort keys %rs; @r2=grep /Tc/ ,
+ sort keys %rs; foreach $d (sort keys %inc) { @r=sort keys %{$inc{$d}}; ($r1)=grep /Ma/, @r; ($r2)=grep /Tc/, @r; $r1||="
+na"; $r2||="na";  $w1=$inw{$d}{$r1}; $w2= $inw{$d}{$r2}; $df=$w1-$w2; $n1=$inc{$d}{$r1}; $n2=$inc{$d}{$r2}; unless($df==0
+) { print join("\t",$d,$r1,$n1,$w1,$r2,$n2,$w2,$df),"\n"; }  } } BEGIN{ print join("\t",qw(TranscID Asm1 nInt wInt Asm2 n
+Int wInt wDiff)),"\n"; }  ' > $eset.intron.diff
+
+#.... est exon uniq / hints ....
+#  cat est.$grp.gff | perl -pe 's/\t(exon|HSP)/ep/; s/Parent=/src=E;pri=7;grp=/; ' > est.$grp.hints
+
+set grp=bean
+cat reads.*$grp*mars11.gmap.gff | grep 'exon' | grep -v mRNA | sort -k1,1 -k4,4n -k5,5n | perl -ne \
+'($r,$s,$t,$b,$e,$v,$o,$x,$at)=split; $n++; $v=1; $so=($o ne "." and $lo ne "." and $o ne $lo)?0:1;  \
+if($lr eq $r and $b< $lb+$XO and $e< $le+$XO and $so){ $v+= $lv; $nd++;} else{ puto() if($le); $nd=0; $lat=$at;}\
+($lr,$lb,$le,$lv,$lo)=($r,$b,$e,$v,$o); END{puto() if($le);} BEGIN{$XO=9;} \
+sub puto { $lat =~ s/;Target=.*$//; print join("\t",$lr,$s,$t,$lb,$le,$lv,$lo,".",$lat)."\n";}' \
+> est.$grp.gff
+
