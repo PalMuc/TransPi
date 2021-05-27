@@ -507,10 +507,8 @@ evi_c () {
             echo -e "\n\t -- EvidentialGene is not installed -- \n"
             mkdir -p ${confDir}/scripts && cd ${confDir}/scripts
             echo -e "\n\t -- Downloading EvidentialGene -- \n"
-            wget http://arthropods.eugenes.org/EvidentialGene/other/evigene_older/evigene19may14.tar
-            tar -xf evigene19may14.tar
-            find -name "*.pl" -exec sed -i 's|/perl|/env perl|' {} +;
-            rm evigene19may14.tar
+            git clone https://github.com/rivera10/TP-evigene.git
+            mv TP-evigene/ evigene/
             echo -e "\n\t -- Done with EvidentialGene -- \n"
         else
             echo -e "\n\t -- EvidentialGene directory was found at ${confDir}/scripts (local installation) -- \n"
