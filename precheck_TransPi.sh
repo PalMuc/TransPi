@@ -508,7 +508,7 @@ evi_c () {
             mkdir -p ${confDir}/scripts && cd ${confDir}/scripts
             echo -e "\n\t -- Downloading EvidentialGene -- \n"
             git clone https://github.com/rivera10/TP-evigene.git
-            mv TP-evigene/ evigene/
+            mv TP-evigene/evigene . && rm -rf TP-evigene/
             echo -e "\n\t -- Done with EvidentialGene -- \n"
         else
             echo -e "\n\t -- EvidentialGene directory was found at ${confDir}/scripts (local installation) -- \n"
