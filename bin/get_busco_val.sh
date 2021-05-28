@@ -19,9 +19,9 @@ if [ "$version" == "v3" ];then
         c=$( cat $x | grep "C:" | cut -f 2 -d "[" | cut -f 1,2,3,4 -d "," | tr -d "%" | tr -d "]" | tr -d [A-Z] | tr -d ":" )
         echo "${c}" >>pperc.txt
     done
-    paste tspec.txt pspec.txt | tr "\t" "\n" | tr -d "\n" >final_spec
-    paste tnum.txt pnum.txt | tr "\t" "\n" | tr -d "\n" >final_num
-    paste tperc.txt pperc.txt | tr "\t" "\n" | tr -d "\n" >final_perc
+    cat tspec.txt pspec.txt | tr "\t" "\n" | tr -d "\n" >final_spec
+    cat tnum.txt pnum.txt | tr "\t" "\n" | tr -d "\n" >final_num
+    cat tperc.txt pperc.txt | tr "\t" "\n" | tr -d "\n" >final_perc
     rm tnum.txt tperc.txt tspec.txt
     rm pnum.txt pperc.txt pspec.txt
 elif [ "$version" == "v4" ];then
@@ -41,9 +41,9 @@ elif [ "$version" == "v4" ];then
         c=$( cat $x | grep "C:" | cut -f 2 -d "[" | cut -f 1,2,3,4 -d "," | tr -d "%" | tr -d "]" | tr -d [A-Z] | tr -d ":" )
         echo "${c}" >>pperc.txt
     done
-    paste tspec.txt pspec.txt | tr "\t" "\n" | tr -d "\n" >final_spec
-    paste tnum.txt pnum.txt | tr "\t" "\n" | tr -d "\n" >final_num
-    paste tperc.txt pperc.txt | tr "\t" "\n" | tr -d "\n" >final_perc
+    cat tspec.txt pspec.txt | tr "\t" "\n" | tr -d "\n" >final_spec
+    cat tnum.txt pnum.txt | tr "\t" "\n" | tr -d "\n" >final_num
+    cat tperc.txt pperc.txt | tr "\t" "\n" | tr -d "\n" >final_perc
     rm tnum.txt tperc.txt tspec.txt
     rm pnum.txt pperc.txt pspec.txt
 fi
