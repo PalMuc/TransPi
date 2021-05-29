@@ -159,10 +159,21 @@ paged_table(trans_EG,options = list(rows.print = 10))
 ```{bash EG_final, include=FALSE}
 cat *_preEG.csv >preEG.csv
 cat *_EG.csv >EG.csv
-head -n1 EG.csv | tr "," "\n" >headers.tmp
-tail -n1 preEG.csv | tr "," "\n" >preEG.tmp
-tail -n1 EG.csv | tr "," "\n" >EG.tmp
-paste -d, headers.tmp preEG.tmp EG.tmp >EG_plot.csv
+head -n1 EG.csv | tr "," " " >headers.tmp
+tail -n1 preEG.csv | tr "," " " >preEG.tmp
+tail -n1 EG.csv | tr "," " " >EG.tmp
+cat headers.tmp preEG.tmp EG.tmp >EG_plot
+awk '{
+    for (f = 1; f <= NF; f++) { a[NR, f] = $f }
+    }
+    NF > nf { nf = NF }
+    END {
+        for (f = 1; f <= nf; f++) {
+            for (r = 1; r <= NR; r++) {
+                printf a[r, f] (r==NR ? RS : FS)
+            }
+        }
+    }' EG_plot | tr " " "," >EG_plot.csv
 rm *.tmp
 ```
 ```{r EG_plot, echo=FALSE, results='asis'}
