@@ -1732,13 +1732,13 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                     """
                     echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                    TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir --genetic_code ${params.genCode}
 
                     echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
                     echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-                    TransDecoder.Predict -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.Predict -t ${assembly} --output_dir ${sample_id}.transdecoder_dir --genetic_code ${params.genCode}
 
                     echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
@@ -1804,7 +1804,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                     echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                    TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.LongOrfs -t ${assembly} --output_dir ${sample_id}.transdecoder_dir --genetic_code ${params.genCode}
 
                     cp ${sample_id}.transdecoder_dir/longest_orfs.pep ${sample_id}.longest_orfs.pep
 
@@ -1943,13 +1943,13 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
 
                     echo -e "\\n-- TransDecoder.LongOrfs... --\\n"
 
-                    TransDecoder.LongOrfs -t \${ass} --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.LongOrfs -t \${ass} --output_dir ${sample_id}.transdecoder_dir --genetic_code ${params.genCode}
 
                     echo -e "\\n-- Done with TransDecoder.LongOrfs --\\n"
 
                     echo -e "\\n-- TransDecoder.Predict... --\\n"
 
-                    TransDecoder.Predict -t \${ass} --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia} --output_dir ${sample_id}.transdecoder_dir
+                    TransDecoder.Predict -t \${ass} --retain_pfam_hits \${pfa} --retain_blastp_hits \${dia} --output_dir ${sample_id}.transdecoder_dir -G ${params.genCode} 
 
                     echo -e "\\n-- Done with TransDecoder.Predict --\\n"
 
