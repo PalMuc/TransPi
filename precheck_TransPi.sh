@@ -460,7 +460,7 @@ uniprot_c () {
     fi
 }
 java_c () {
-	export NXF_VER=20.10.0 && curl -s https://get.nextflow.io | bash 2>.error_nextflow
+	export NXF_VER=21.04.1 && curl -s https://get.nextflow.io | bash 2>.error_nextflow
 	check_err=$( head -n 1 .error_nextflow | grep -c "java: command not found" )
 	if [ $check_err -eq 1 ];then
 		echo -e "\n\t\e[31m -- ERROR: Please install Java 1.8 (or later). Requirement for Nextflow --\e[39m\n"
