@@ -15,6 +15,12 @@ source_c() {
         source ~/.bashrc
     fi
 }
+cleanConda () {
+    cd $mypwd
+    echo -e "\n\t -- Cleaning conda environment -- \n"
+    conda clean -a -y
+    echo -e "\n\t -- Done cleaning conda environment -- \n"
+}
 conda_only() {
     source_c
     #Check conda and environment
@@ -24,7 +30,8 @@ conda_only() {
         ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." )
         vern=4.8
         if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
-            echo -e "\n\t -- Conda is installed (v4.8 or higher). Checking environment... --\n"
+            echo -e "\n\t -- Conda is installed (v4.8 or higher) --\n"
+            cleanConda
         fi
     else
         echo -e "\n\t -- Conda is not intalled --\n"
@@ -602,24 +609,6 @@ pfam_c() {
         fi
     fi
 }
-#temporary for buscoV4
-bus_env4 () {
-    echo -e "\n\t -- Creating BUSCO V4 environment --\n"
-    conda create -n busco4 -c conda-forge -c bioconda busco=4.1.4=py_0 -y
-    conda clean -a -y
-}
-bus4 () {
-    cd $mypwd
-    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " | tr -d "\"" )
-    if [ "$cpath" == "" ];then
-        echo -e "\n\t -- Cannot find the BUSCO V4 environment -- \n"
-        echo -e "\n\t -- Cleaning conda before installing BUSCO V4 environment -- \n"
-        conda clean -a -y
-        bus_env4
-    else
-        echo -e "\n\t -- BUSCO V4 environment found --\n"
-    fi
-}
 pfam_u() {
     cd $installDir
     if [ ! -d DBs/hmmerdb/ ];then
@@ -787,8 +776,8 @@ get_var () {
     echo "unpdate=\"$( if [ -f ${mypwd}/DBs/uniprot_db/.lastrun.txt ];then cat ${mypwd}/DBs/uniprot_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
-    echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep -w "TransPi\"" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
-    echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
+    #echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep -w "TransPi\"" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
+    #echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
@@ -802,8 +791,7 @@ get_var () {
     echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
     rm .varfile.sh
 }
 get_var_user() {
@@ -826,8 +814,7 @@ get_var_user() {
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
     rm .varfile.sh
 }
 container_pipeline_setup() {
@@ -869,7 +856,6 @@ conda_pipeline_setup() {
         buildsql_c
         trisql_c
         pfam_c
-        bus4
         echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
         get_var
     fi
