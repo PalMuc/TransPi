@@ -524,6 +524,23 @@ evi_c () {
         echo -e "\n\t -- EvidentialGene is already installed and in the PATH  -- \n"
     fi
 }
+buildsql_c () {
+    cd ${mypwd}
+    if [ -d DBs/sqlite_db/ ];then
+        cd DBs/sqlite_db/
+    else
+        mkdir -p DBs/sqlite_db/
+        cd DBs/sqlite_db/
+    fi
+}
+condaTrinotate () {
+    echo -e "\n\t -- Creating Trinotate conda environment -- \n"
+    conda create --mkdir --yes --quiet -n TPtrinotate -c conda-forge bioconda::trinotate=3.2.1=pl526_0
+    echo -e "\n\t -- Done with Trinotate conda environment -- \n"
+}
+condaTrinotateEnd () {
+    conda remove -n TPtrinotate --all -y
+}
 trisql_container () {
     if [ ! -e *.sqlite ];then
         echo -e "\n\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
@@ -554,7 +571,7 @@ trisql_c () {
         condaRoot=$( conda info --json | grep "CONDA_ROOT" | cut -f 2 -d ":" | tr -d "," | tr -d " " | tr -d "\"" )
         if [ -f ${condaRoot}/etc/profile.d/conda.sh ];then
             source ${condaRoot}/etc/profile.d/conda.sh
-            conda activate TransPi
+            condaTrinotate
             check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
             if [ $check_sql -eq 0 ];then
                 echo -e "\n\t -- Script \"Build_Trinotate_Boilerplate_SQLite_db.pl\" from Trinotate cannot be found -- \n"
@@ -564,21 +581,13 @@ trisql_c () {
                 Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                 rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
                 date -u >.lastrun.txt
+                condaTrinotateEnd
             fi
         fi
     elif [ -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
         DB=$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat .lastrun.txt;else echo "N/A";fi )
         echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
-    fi
-}
-buildsql_c () {
-    cd ${mypwd}
-    if [ -d DBs/sqlite_db/ ];then
-        cd DBs/sqlite_db/
-    else
-        mkdir -p DBs/sqlite_db/
-        cd DBs/sqlite_db/
     fi
 }
 pfam_c() {
