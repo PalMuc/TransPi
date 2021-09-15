@@ -1300,7 +1300,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
             // change container in oneContainer option
-            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco==4.1.4--py_2" : null)
+            conda (params.condaActivate && params.myConda ? params.cenv : params.condaActivate ? "-c conda-forge bioconda::busco=4.1.4=py_2" : null)
             if (params.oneContainer){ container "${params.v4container}" } else {
             container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/busco:4.1.4--py_2" : "quay.io/biocontainers/busco:4.1.4--py_2")
             }
