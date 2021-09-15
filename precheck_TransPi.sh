@@ -31,7 +31,7 @@ conda_only() {
         vern=4.8
         if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
             echo -e "\n\t -- Conda is installed (v4.8 or higher) --\n"
-            cleanConda
+            #cleanConda
         fi
     else
         echo -e "\n\t -- Conda is not intalled --\n"
