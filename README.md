@@ -18,7 +18,7 @@ M# TransPi - TRanscriptome ANalysiS PIpeline
   * [Pipeline processes](#Pipelie-processes)
   * [Manual](#Manual)
 * [Publication](#Publication)
-  * [Cite](#Cite)
+  * [Citation](#Citation)
 * [Funding](#Funding)
 * [Future work](#Future-work)
 * [Issues](#Issues)
