@@ -1,4 +1,4 @@
-# TransPi - TRanscriptome ANalysiS PIpeline
+M# TransPi - TRanscriptome ANalysiS PIpeline
 
 ```text
  _______                                 _____   _
@@ -44,9 +44,12 @@ TransPi documentation and examples can be found [here](https://palmuc.github.io/
 
 Preprint of TransPi including kmer, reads length, and reads quantities tests can be found [here](https://doi.org/10.1101/2021.02.18.431773). Also we tested the pipeline with over 45 samples from different phyla.
 
-## Cite
+TransPi has been peer-reviewed and recommended by Peer Community In Genomics
+(https://doi.org/10.24072/pci.genomics.100009)
 
-If you use TransPi please cite the preprint:
+## Citation
+
+If you use TransPi please cite the peer-reviewed publication:
 
 Rivera-Vicéns, R.E., García-Escudero, CA., Conci, N., Eitel, M., and Wörheide, G. (2021). TransPi – a comprehensive TRanscriptome ANalysiS PIpeline for de novo transcriptome assembly. bioRxiv 2021.02.18.431773; doi: https://doi.org/10.1101/2021.02.18.431773
 
