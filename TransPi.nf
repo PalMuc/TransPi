@@ -2873,7 +2873,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
                 input:
-                    file(assembly), file(annotation) from
+                    tuple file(assembly), file(annotation) from
 
                 output:
                     file("*.fasta") into
