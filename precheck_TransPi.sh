@@ -42,8 +42,8 @@ conda_c() {
     check_conda=$( command -v conda )
     if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
         echo -e "\n\t -- Conda seems to be installed in your system --\n"
-        ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." )
-        vern=4.8
+        ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." | tr -d "." )
+        vern=48
         if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
             echo -e "\n\t -- Conda is installed (v4.8 or higher). Checking environment... --\n"
             #Check environment
