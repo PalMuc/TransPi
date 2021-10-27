@@ -1,4 +1,4 @@
-M# TransPi - TRanscriptome ANalysiS PIpeline
+# TransPi - TRanscriptome ANalysiS PIpeline
 
 ```text
  _______                                 _____   _
