@@ -15,16 +15,23 @@ source_c() {
         source ~/.bashrc
     fi
 }
+cleanConda () {
+    cd $mypwd
+    echo -e "\n\t -- Cleaning conda environment -- \n"
+    conda clean -a -y
+    echo -e "\n\t -- Done cleaning conda environment -- \n"
+}
 conda_only() {
     source_c
     #Check conda and environment
     check_conda=$( command -v conda )
     if [ "$check_conda" != "" ];then #&& [ "$ver" -gt "45" ];then
         echo -e "\n\t -- Conda seems to be installed in your system --\n"
-        ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." )
-        vern=4.8
+        ver=$( conda -V | awk '{print $2}' | cut -f 1,2 -d "." | tr -d "." )
+        vern=48
         if [ $( echo "$ver >= $vern" | bc -l ) -eq 1 ];then
-            echo -e "\n\t -- Conda is installed (v4.8 or higher). Checking environment... --\n"
+            echo -e "\n\t -- Conda is installed (v4.8 or higher) --\n"
+            #cleanConda
         fi
     else
         echo -e "\n\t -- Conda is not intalled --\n"
@@ -517,6 +524,23 @@ evi_c () {
         echo -e "\n\t -- EvidentialGene is already installed and in the PATH  -- \n"
     fi
 }
+buildsql_c () {
+    cd ${mypwd}
+    if [ -d DBs/sqlite_db/ ];then
+        cd DBs/sqlite_db/
+    else
+        mkdir -p DBs/sqlite_db/
+        cd DBs/sqlite_db/
+    fi
+}
+condaTrinotate () {
+    echo -e "\n\t -- Creating Trinotate conda environment -- \n"
+    conda create --mkdir --yes --quiet -n TPtrinotate -c conda-forge bioconda::trinotate=3.2.1=pl526_0
+    echo -e "\n\t -- Done with Trinotate conda environment -- \n"
+}
+condaTrinotateEnd () {
+    conda remove -n TPtrinotate --all -y
+}
 trisql_container () {
     if [ ! -e *.sqlite ];then
         echo -e "\n\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
@@ -547,7 +571,7 @@ trisql_c () {
         condaRoot=$( conda info --json | grep "CONDA_ROOT" | cut -f 2 -d ":" | tr -d "," | tr -d " " | tr -d "\"" )
         if [ -f ${condaRoot}/etc/profile.d/conda.sh ];then
             source ${condaRoot}/etc/profile.d/conda.sh
-            conda activate TransPi
+            condaTrinotate
             check_sql=$( command -v Build_Trinotate_Boilerplate_SQLite_db.pl | wc -l )
             if [ $check_sql -eq 0 ];then
                 echo -e "\n\t -- Script \"Build_Trinotate_Boilerplate_SQLite_db.pl\" from Trinotate cannot be found -- \n"
@@ -557,21 +581,13 @@ trisql_c () {
                 Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
                 rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
                 date -u >.lastrun.txt
+                condaTrinotateEnd
             fi
         fi
     elif [ -e *.sqlite ];then
         echo -e "\n\t -- Custom sqlite database for Trinotate found at "${mypwd}/DBs/sqlite_db" -- \n"
         DB=$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat .lastrun.txt;else echo "N/A";fi )
         echo -e "\n\t -- Databases (PFAM,SwissProt,EggNOG,GO) last update: ${DB} --\n "
-    fi
-}
-buildsql_c () {
-    cd ${mypwd}
-    if [ -d DBs/sqlite_db/ ];then
-        cd DBs/sqlite_db/
-    else
-        mkdir -p DBs/sqlite_db/
-        cd DBs/sqlite_db/
     fi
 }
 pfam_c() {
@@ -600,24 +616,6 @@ pfam_c() {
             gunzip Pfam-A.hmm.gz
             date -u >.lastrun.txt
         fi
-    fi
-}
-#temporary for buscoV4
-bus_env4 () {
-    echo -e "\n\t -- Creating BUSCO V4 environment --\n"
-    conda create -n busco4 -c conda-forge -c bioconda busco=4.1.4=py_0 -y
-    conda clean -a -y
-}
-bus4 () {
-    cd $mypwd
-    cpath=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " | tr -d "\"" )
-    if [ "$cpath" == "" ];then
-        echo -e "\n\t -- Cannot find the BUSCO V4 environment -- \n"
-        echo -e "\n\t -- Cleaning conda before installing BUSCO V4 environment -- \n"
-        conda clean -a -y
-        bus_env4
-    else
-        echo -e "\n\t -- BUSCO V4 environment found --\n"
     fi
 }
 pfam_u() {
@@ -787,8 +785,8 @@ get_var () {
     echo "unpdate=\"$( if [ -f ${mypwd}/DBs/uniprot_db/.lastrun.txt ];then cat ${mypwd}/DBs/uniprot_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "pfdate=\"$( if [ -f ${mypwd}/DBs/hmmerdb/.lastrun.txt ];then cat ${mypwd}/DBs/hmmerdb/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
     echo "dbdate=\"$( if [ -f ${mypwd}/DBs/sqlite_db/.lastrun.txt ];then cat ${mypwd}/DBs/sqlite_db/.lastrun.txt;else echo "N/A";fi )\"" >>${mypwd}/.varfile.sh
-    echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep -w "TransPi\"" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
-    echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
+    #echo "tenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep -w "TransPi\"" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
+    #echo "cenv=$( conda info --json | sed -n '/\"envs\":/,/\],/p' | grep "busco4" | tr -d "," | tr -d " " )" >>${mypwd}/.varfile.sh
     vpwd=$mypwd
     echo "mypwd=$mypwd" >>${vpwd}/.varfile.sh
     source .varfile.sh
@@ -802,8 +800,7 @@ get_var () {
     echo -e "\t SQL DB last update: \t $dbdate"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
     rm .varfile.sh
 }
 get_var_user() {
@@ -826,8 +823,7 @@ get_var_user() {
     echo -e "\t PFAM files:\t\t $pfloc"
     echo -e "\t NEXTFLOW:\t\t $nextflow \n\n"
     cat ${confDir}/template.nextflow.config | sed -e "s|pipeInstall|pipeInstall=\"${mypwd}\"|" -e "s|busco4db|busco4db=\"${busco4db}\"|" -e "s|uniprot|uniprot=\"${uniprot}\"|" \
-        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" \
-        -e "s|myCondaInstall=\"\"|myCondaInstall=\"${tenv}\"|" -e "s|cenv=\"\"|cenv=\"${cenv}\"|" >nextflow.config
+        -e "s|uniname|uniname=\"${uniname}\"|" -e "s|pfloc|pfloc=\"${pfloc}\"|" -e "s|pfname|pfname=\"${pfname}\"|" -e "s|Tsql|Tsql=\"${Tsql}\"|" >nextflow.config
     rm .varfile.sh
 }
 container_pipeline_setup() {
@@ -869,7 +865,6 @@ conda_pipeline_setup() {
         buildsql_c
         trisql_c
         pfam_c
-        bus4
         echo -e "\n\t -- If no \"ERROR\" was found and all the neccesary databases are installed proceed to run TransPi -- \n"
         get_var
     fi
