@@ -541,6 +541,7 @@ condaTrinotate () {
     echo -e "\n\t -- Done with Trinotate conda environment -- \n"
 }
 condaTrinotateEnd () {
+    conda deactivate
     conda remove -n TPtrinotate --all -y
 }
 trisql_container () {
