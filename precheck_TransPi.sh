@@ -105,7 +105,7 @@ bus_dow () {
         if [ `cat ${confDir}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
             echo -e "\n\t -- Downloading BUSCO V4 \"$name\" database --\n";wait
             wname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
-            wget $wname
+            wget --no-check-certificate $wname
             echo -e "\n\t -- Preparing files ... --\n";wait
             tname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
             tar -xf ${tname}*.tar.gz
@@ -128,7 +128,7 @@ bus_dow () {
             if [ `cat ${confDir}/conf/busV4list.txt | grep "${bname};" | wc -l` -eq 1 ];then
                 echo -e "\n\t -- Downloading BUSCO V4 \"$name\" database --\n";wait
                 wname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 2 -d ";" )
-                wget $wname
+                wget --no-check-certificate $wname
                 echo -e "\n\t -- Preparing files ... --\n";wait
                 tname=$( cat ${confDir}/conf/busV4list.txt | grep "${bname};" | cut -f 1 -d ";" | tr [A-Z] [a-z] )
                 tar -xvf ${tname}*.tar.gz
