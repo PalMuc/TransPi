@@ -535,7 +535,7 @@ buildsql_c () {
 }
 condaTrinotate () {
     echo -e "\n\t -- Creating Trinotate conda environment -- \n"
-    conda create --mkdir --yes --quiet -n TPtrinotate -c conda-forge bioconda::trinotate=3.2.1=pl526_0
+    conda create --mkdir --yes --quiet -n TPtrinotate -c conda-forge bioconda::trinotate=3.2.2=pl5262hdfd78af_0
     echo -e "\n\t -- Done with Trinotate conda environment -- \n"
 }
 condaTrinotateEnd () {
@@ -546,9 +546,9 @@ trisql_container () {
         echo -e "\n\n\t -- Custom sqlite database for Trinotate is not installed -- \n"
         echo -e "\n\t -- This could take a couple of minutes depending on connection. Please wait -- \n"
         rm -rf *
-        wget https://github.com/Trinotate/Trinotate/archive/Trinotate-v3.2.1.tar.gz
-        tar -xf Trinotate-v3.2.1.tar.gz
-        mv Trinotate-Trinotate-v3.2.1/ Trinotate_build_scripts/
+        wget https://github.com/Trinotate/Trinotate/archive/Trinotate-v3.2.2.tar.gz
+        tar -xf Trinotate-v3.2.2.tar.gz
+        mv Trinotate-Trinotate-v3.2.2/ Trinotate_build_scripts/
         ./Trinotate_build_scripts/admin/Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
         rm uniprot_sprot.dat.gz Pfam-A.hmm.gz
         date -u >.lastrun.txt
