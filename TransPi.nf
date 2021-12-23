@@ -2310,9 +2310,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${params.outdir}/trinotate", mode: "copy", overwrite: true, pattern: "*.{terms.txt,xls}"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.1=pl526_0" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::trinotate=3.2.2=pl5262hdfd78af_0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.1--pl526_0" : "quay.io/biocontainers/trinotate:3.2.1--pl526_0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/trinotate:3.2.2--pl5262hdfd78af_0" : "quay.io/biocontainers/trinotate:3.2.2--pl5262hdfd78af_0")
             }
 
             input:
