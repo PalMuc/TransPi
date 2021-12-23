@@ -536,6 +536,8 @@ buildsql_c () {
 condaTrinotate () {
     echo -e "\n\t -- Creating Trinotate conda environment -- \n"
     conda create --mkdir --yes --quiet -n TPtrinotate -c conda-forge bioconda::trinotate=3.2.2=pl5262hdfd78af_0
+    source ~/.bashrc
+    conda activate TPtrinotate
     echo -e "\n\t -- Done with Trinotate conda environment -- \n"
 }
 condaTrinotateEnd () {
