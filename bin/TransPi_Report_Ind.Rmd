@@ -12,7 +12,7 @@ params:
   rRNAfilter: !r commandArgs(trailingOnly=T)[4]
   buscoDist: !r commandArgs(trailingOnly=T)[5]
   allBuscos: !r commandArgs(trailingOnly=T)[6]
-  skipKegg: !r commandArgs(trailingOnly=T)[7]
+  withKegg: !r commandArgs(trailingOnly=T)[7]
 ---
 
 <style>
@@ -486,7 +486,7 @@ p3
 <br>
 
 ```{r pathways_plot, echo=FALSE}
-if (params$skipKegg == "true") {
+if (params$withKegg == "false") {
     writeLines("\n--------------------------------------------------------------\n")
     writeLines("\t\t\t\tKEGG analysis was skipped")
     writeLines("\n--------------------------------------------------------------\n")

@@ -998,9 +998,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${params.outdir}/assemblies", mode: "copy", overwrite: true, pattern: "*.fa"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::spades=3.14.0=h2d02072_0" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::spades=3.15.3=h95f258a_1" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/spades:3.14.0--h2d02072_0" : "quay.io/biocontainers/spades:3.14.0--h2d02072_0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/spades:3.15.3--h95f258a_1" : "quay.io/biocontainers/spades:3.15.3--h95f258a_1")
             }
 
             input:
@@ -1205,9 +1205,9 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
             publishDir "${params.outdir}/rnaQuast", mode: "copy", overwrite: true, pattern: "*.{rna_quast,csv}"
             publishDir "${workDir}/.versions", mode: "copy", overwrite: true, pattern: "*.version.txt"
 
-            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::rnaquast=2.0.1=0" : null)
+            conda (params.condaActivate && params.myConda ? params.localConda : params.condaActivate ? "-c conda-forge bioconda::rnaquast=2.2.1=h9ee0642_0" : null)
             if (params.oneContainer){ container "${params.TPcontainer}" } else {
-            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/rnaquast:2.0.1--0" : "quay.io/biocontainers/rnaquast:2.0.1--0")
+            container (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? "https://depot.galaxyproject.org/singularity/rnaquast:2.2.1--h9ee0642_0" : "quay.io/biocontainers/rnaquast:2.2.1--h9ee0642_0")
             }
 
             input:
@@ -2559,7 +2559,7 @@ if (params.onlyAsm || params.onlyAnn || params.onlyEvi || params.all) {
                 """
         }
 
-        if (!params.skipKegg) {
+        if (params.withKegg) {
             process get_kegg {
 
                 tag "${sample_id}"
